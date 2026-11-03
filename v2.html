@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
@@ -204,7 +205,7 @@
                                     <th>Curso(s)</th>
                                     <th>Telefone</th>
                                     <th>E-mail</th>
-                                    <th>Ações</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaProfessoresSecretaria">
@@ -314,11 +315,16 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Curso(s) que Leciona *</label>
+                                    <label>Curso Principal *</label>
                                     <select id="cadProfessorCurso" required>
                                         <option value="">-- Selecione --</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cursos Adicionais (opcional)</label>
+                                <div id="cadProfessorCursosExtras" class="cursos-checklist"></div>
+                                <small style="color:#718096;font-size:0.85em;">Marque outros cursos que este professor também leciona</small>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -659,7 +665,7 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO DA PLANILHA
+        // CONFIGURAÇÃO
         // ============================================
         const SHEET_CONFIG = {
             sheetId: '1FRtD7cbV2tvK2og4NDkyWi8V_hziyERNZoSh20gG980',
@@ -676,7 +682,7 @@
         };
 
         // ============================================
-        // CURSOS (IDs = slug padronizado)
+        // CURSOS (IDs = slug)
         // ============================================
         const CURSOS = [
             { id: 'piano',                  nome: '🎹 Piano',                  tipo: 'Instrumento' },
@@ -723,38 +729,7 @@
         // ============================================
         function texto(valor) {
             if (valor === null || valor === undefined) return '';
-            if (Array.isArray(valor)) return valor.join(',');
             return String(valor).trim();
-        }
-
-        function normalizarTexto(s) {
-            return String(s || '')
-                .trim().toUpperCase()
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/\s+/g, ' ');
-        }
-
-        function normalizarCursoId(cursoRaw) {
-            if (!cursoRaw) return '';
-            let raw = String(cursoRaw).trim().toLowerCase();
-            raw = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            raw = raw.replace(/[_\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-
-            if (CURSOS_MAP[raw]) return raw;
-
-            const mapaAntigo = {
-                'viola': 'viola-erudita',
-                'viola-erudita': 'viola-erudita',
-                'contrabaixo': 'contrabaixo-acustico',
-                'contrabaixo-acustico': 'contrabaixo-acustico',
-                'teoria': 'teoria-musical',
-                'teoria-musical': 'teoria-musical',
-                'musicalizacao': 'musicalizacao-infantil',
-                'musicalizacao-infantil': 'musicalizacao-infantil'
-            };
-            if (mapaAntigo[raw]) return mapaAntigo[raw];
-
-            return raw;
         }
 
         function formatarDataParaExibicao(dataISO) {
@@ -788,9 +763,6 @@
             const toast = document.createElement('div');
             toast.className = `toast toast-${tipo}`;
             toast.textContent = mensagem;
-            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:' +
-                (tipo === 'success' ? '#48bb78' : tipo === 'error' ? '#f56565' : tipo === 'warning' ? '#ed8936' : '#4299e1') +
-                ';color:white;padding:14px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:9999;font-weight:500;max-width:400px;';
             document.body.appendChild(toast);
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -805,8 +777,57 @@
             return curso ? curso.nome : cursoId;
         }
 
+        /**
+         * Normaliza um valor de curso (string) para o slug canônico.
+         * Aceita nomes antigos, com acento, com emoji, etc.
+         */
+        function normalizarCursoId(cursoRaw) {
+            if (!cursoRaw) return '';
+            const raw = texto(cursoRaw).toLowerCase().trim();
+            if (!raw) return '';
+            if (CURSOS_MAP[raw]) return raw;
+
+            // Mapa de compatibilidade (nomes antigos / variações)
+            const mapa = {
+                'viola': 'viola-erudita',
+                'viola erudita': 'viola-erudita',
+                'contrabaixo': 'contrabaixo-acustico',
+                'contrabaixo acustico': 'contrabaixo-acustico',
+                'contrabaixo acústico': 'contrabaixo-acustico',
+                'teoria': 'teoria-musical',
+                'teoria musical': 'teoria-musical',
+                'musicalizacao': 'musicalizacao-infantil',
+                'musicalizacao infantil': 'musicalizacao-infantil',
+                'musicalização': 'musicalizacao-infantil',
+                'musicalização infantil': 'musicalizacao-infantil'
+            };
+            if (mapa[raw]) return mapa[raw];
+
+            // Tenta comparar com o nome exibido de cada curso
+            for (const c of CURSOS) {
+                const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim().toLowerCase();
+                if (nomeLimpo === raw) return c.id;
+            }
+
+            return raw; // fallback: devolve como veio
+        }
+
+        /**
+         * Extrai todos os cursos de um professor a partir do campo "Curso" da planilha.
+         * Aceita: "piano,violino" | "piano, violino" | "piano; violino" | "Piano, Violino"
+         */
+        function extrairCursosDoProfessor(professor) {
+            if (!professor || !professor.curso) return [];
+            const cursos = String(professor.curso)
+                .split(/[,;\n|]+/)
+                .map(c => normalizarCursoId(c))
+                .filter(Boolean);
+            // Remove duplicatas mantendo a ordem
+            return [...new Set(cursos)];
+        }
+
         // ============================================
-        // REQUISIÇÃO GAS
+        // GAS
         // ============================================
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
 
@@ -840,16 +861,33 @@
                 document.getElementById('syncStatus').textContent = '✅ Sincronizado';
                 mostrarToast('✅ Dados carregados com sucesso!', 'success');
 
+                // Re-renderiza tela atual
                 if (currentUser.cargo === 'secretaria') {
                     inicializarSecretaria();
                 } else if (currentUser.cargo.startsWith('professor')) {
-                    if (currentUser.professorData) {
-                        const profAtual = escolaData.professores.find(p => p.id === currentUser.professorData.id);
-                        if (profAtual) {
-                            currentUser.professorData = profAtual;
-                            currentUser.cursos = getCursosByProfessor(profAtual.id);
-                            console.log('🔄 Recarregando cursos do professor:', currentUser.cursos);
+                    // Recarrega dados do professor (cursos podem ter mudado)
+                    const profAtual = escolaData.professores.find(p =>
+                        p.nome === currentUser.nome
+                    );
+                    if (profAtual) {
+                        currentUser.professorData = profAtual;
+                        currentUser.cursos = extrairCursosDoProfessor(profAtual);
+                        if (currentUser.cursos.length > 0) {
+                            // Se o curso atual não está mais atribuído, troca
+                            if (!cursoSelecionado || !currentUser.cursos.includes(cursoSelecionado)) {
+                                cursoSelecionado = currentUser.cursos[0];
+                            }
                             renderMeusCursos();
+                            // Só re-renderiza se havia curso selecionado
+                            if (cursoSelecionado) {
+                                document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoSelecionado);
+                                carregarTabelaNotas();
+                                carregarPresenca();
+                                carregarConteudos();
+                                carregarObservacoes();
+                                carregarAlunosSelects();
+                                renderRelatoriosEnviados();
+                            }
                         }
                     }
                 } else if (currentUser.cargo === 'coordenacao') {
@@ -908,35 +946,16 @@
                 status: texto(a.Status || 'ATIVO').toUpperCase()
             })).filter(a => a.nome);
 
-            // Professores - normaliza curso como string "piano,violino"
-            escolaData.professores = dadosPlanilha.professores.map(p => {
-                let cursoRaw = p.Curso;
-                if (Array.isArray(cursoRaw)) cursoRaw = cursoRaw.join(',');
-                else if (cursoRaw === null || cursoRaw === undefined) cursoRaw = '';
-                else cursoRaw = String(cursoRaw);
-
-                cursoRaw = cursoRaw
-                    .split(/[,;\n]+/)
-                    .map(c => c.trim())
-                    .filter(Boolean)
-                    .join(',');
-
-                return {
-                    id: texto(p.ID_Professor || p.ID),
-                    nome: texto(p.Nome || p.Nome_Professor).toUpperCase(),
-                    tipo: texto(p.Tipo || ''),
-                    curso: cursoRaw,
-                    telefone: texto(p.Telefone || ''),
-                    email: texto(p.Email || '')
-                };
-            }).filter(p => p.nome);
-
-            // Diagnóstico de professores
-            if (escolaData.professores.length > 0) {
-                console.log('👨‍🏫 Professores carregados:', escolaData.professores.map(p => ({
-                    nome: p.nome, curso: p.curso
-                })));
-            }
+            // PROFESSORES - cabeçalho: ID_Professor, Nome, Tipo, Curso, Telefone, Email, Status, Data_Cadastro
+            escolaData.professores = dadosPlanilha.professores.map(p => ({
+                id: texto(p.ID_Professor || p.ID),
+                nome: texto(p.Nome || p.Nome_Professor).toUpperCase(),
+                tipo: texto(p.Tipo || ''),
+                curso: texto(p.Curso || ''),
+                telefone: texto(p.Telefone || ''),
+                email: texto(p.Email || ''),
+                status: texto(p.Status || 'ATIVO').toUpperCase()
+            })).filter(p => p.nome);
 
             db.matriculas = dadosPlanilha.matriculas.map(m => ({
                 id: texto(m.ID_Matricula || ''),
@@ -1015,26 +1034,13 @@
                 .filter(Boolean);
         }
 
+        /**
+         * Retorna TODOS os cursos do professor (a partir do campo Curso da planilha)
+         */
         function getCursosByProfessor(profId) {
             const prof = escolaData.professores.find(p => p.id === profId);
-            if (!prof) {
-                console.warn('⚠️ Professor não encontrado por ID:', profId);
-                return [];
-            }
-            if (!prof.curso) {
-                console.warn('⚠️ Professor sem campo Curso:', prof.nome);
-                return [];
-            }
-
-            console.log('🔍 getCursosByProfessor →', prof.nome, '| Curso bruto:', JSON.stringify(prof.curso));
-
-            const partes = String(prof.curso).split(/[,;\n]+/);
-            const cursos = partes
-                .map(c => normalizarCursoId(c))
-                .filter(id => id && CURSOS_MAP[id]);
-
-            console.log('✅ Cursos normalizados:', cursos);
-            return cursos;
+            if (!prof) return [];
+            return extrairCursosDoProfessor(prof);
         }
 
         function getProfessorByCurso(curso) {
@@ -1042,7 +1048,7 @@
             const alvo = normalizarCursoId(curso);
             return escolaData.professores.find(p => {
                 if (!p.curso) return false;
-                const cursos = String(p.curso).split(/[,;\n]+/).map(c => normalizarCursoId(c));
+                const cursos = extrairCursosDoProfessor(p);
                 return cursos.includes(alvo);
             }) || null;
         }
@@ -1080,51 +1086,54 @@
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const cargo = document.getElementById('cargo').value;
-            const nomeDigitado = document.getElementById('nome').value.trim().toUpperCase();
+            const nome = document.getElementById('nome').value.trim().toUpperCase();
 
-            if (!cargo || !nomeDigitado) { alert('Preencha todos os campos.'); return; }
+            if (!cargo || !nome) { alert('Preencha todos os campos.'); return; }
 
             currentUser.cargo = cargo;
-            currentUser.nome = nomeDigitado;
+            currentUser.nome = nome;
 
             if (cargo.startsWith('professor')) {
-                const alvo = normalizarTexto(nomeDigitado);
-                const prof = escolaData.professores.find(p => normalizarTexto(p.nome) === alvo);
-
+                const prof = escolaData.professores.find(p => p.nome === nome);
                 if (!prof) {
-                    alert('⚠️ Professor não encontrado. Verifique seu nome.\n\nProfessores cadastrados:\n' +
-                        escolaData.professores.map(p => '• ' + p.nome).join('\n'));
+                    alert('⚠️ Professor não encontrado. Verifique seu nome.');
                     return;
                 }
-
                 currentUser.professorData = prof;
-                currentUser.nome = prof.nome;
-
-                console.log('🔍 Professor logado:', {
-                    id: prof.id,
-                    nome: prof.nome,
-                    tipo: prof.tipo,
-                    cursoBRUTO: prof.curso,
-                    cursoTIPO: typeof prof.curso
-                });
-
-                const cursosProf = getCursosByProfessor(prof.id);
+                const cursosProf = extrairCursosDoProfessor(prof);
                 currentUser.cursos = cursosProf;
 
                 if (cursosProf.length === 0) {
-                    alert('⚠️ Nenhum curso válido atribuído a este professor.\n\n' +
-                        'Valor da coluna Curso na planilha: "' + (prof.curso || '(vazio)') + '"\n\n' +
-                        'Verifique se o curso está escrito corretamente (ex: "piano" ou "piano,violino").');
+                    alert('⚠️ Nenhum curso atribuído a este professor. Entre em contato com a coordenação.');
                     return;
                 }
 
-                console.log('✅ Professor ' + prof.nome + ' leciona em ' + cursosProf.length + ' curso(s):', cursosProf);
+                // Valida se o cargo corresponde ao tipo de curso
+                const tipoProf = (prof.tipo || '').toLowerCase();
+                const temInstrumento = cursosProf.some(c => {
+                    const curso = CURSOS_MAP[c];
+                    return curso && curso.tipo === 'Instrumento';
+                });
+                const temTeoria = cursosProf.some(c => {
+                    const curso = CURSOS_MAP[c];
+                    return curso && curso.tipo === 'Teoria Musical';
+                });
+                const temMusicalizacao = cursosProf.some(c => {
+                    const curso = CURSOS_MAP[c];
+                    return curso && curso.tipo === 'Musicalização';
+                });
+
+                // Aviso (não bloqueia) se cargo não corresponde exatamente
+                if (cargo === 'professor-instrumento' && !temInstrumento &&
+                    (temTeoria || temMusicalizacao)) {
+                    console.warn('Cargo selecionado não corresponde aos cursos do professor. Continuando mesmo assim.');
+                }
             }
 
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('dashboard').classList.add('active');
             document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[cargo].titulo}`;
-            document.getElementById('userDisplay').innerHTML = `👤 ${currentUser.nome} - ${cargoConfig[cargo].titulo}`;
+            document.getElementById('userDisplay').innerHTML = `👤 ${nome} - ${cargoConfig[cargo].titulo}`;
 
             renderDashboard(cargo);
         });
@@ -1234,7 +1243,7 @@
                         <td style="font-size:0.85em;">${cursosNomes}</td>
                         <td><span class="status-badge ${aluno.status === 'ATIVO' ? 'concluido' : 'inativo'}">${aluno.status}</span></td>
                         <td>
-                            <button onclick="editarAlunoSecretaria('${aluno.nome.replace(/'/g, "\\'")}')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
+                            <button onclick="mostrarToast('Edição de aluno em breve.','info')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
                         </td>
                     </tr>
                 `;
@@ -1242,10 +1251,6 @@
         }
 
         function filtrarAlunosSecretaria() { carregarAlunosSecretaria(); }
-
-        function editarAlunoSecretaria(nome) {
-            mostrarToast('✏️ Edição de aluno ainda não implementada nesta versão.', 'warning');
-        }
 
         function abrirModalCadastroAluno() {
             document.getElementById('formCadastroAluno').reset();
@@ -1349,9 +1354,7 @@
             const m = db.matriculas.find(m => m.aluno === aluno && m.curso === curso);
             if (m) {
                 m.status = 'CANCELADO';
-                await enviarParaGAS('atualizarMatricula', {
-                    aluno, curso, status: 'CANCELADO'
-                });
+                await enviarParaGAS('atualizarMatricula', { aluno, curso, status: 'CANCELADO' });
                 carregarMatriculasSecretaria();
                 atualizarDashboardSecretaria();
                 mostrarToast('✅ Matrícula cancelada.', 'success');
@@ -1376,11 +1379,10 @@
                 const professor = getProfessorByCurso(cursoId);
                 if (professor) {
                     profSelect.innerHTML = `<option value="${professor.nome}" selected>${professor.nome}</option>`;
-                    profSelect.disabled = true;
                 } else {
                     profSelect.innerHTML = '<option value="">⚠️ Nenhum professor cadastrado para este curso</option>';
-                    profSelect.disabled = true;
                 }
+                profSelect.disabled = true;
             };
 
             document.getElementById('modalNovaMatricula').classList.add('active');
@@ -1438,30 +1440,25 @@
             }
 
             tbody.innerHTML = professores.map(p => {
-                const cursos = p.curso
-                    ? String(p.curso).split(/[,;\n]+/).map(c => labelCurso(normalizarCursoId(c))).filter(Boolean).join(', ')
+                const cursosIds = extrairCursosDoProfessor(p);
+                const cursosNomes = cursosIds.length
+                    ? cursosIds.map(c => labelCurso(c)).join(', ')
                     : '-';
                 return `
                     <tr>
                         <td>${p.id || '-'}</td>
                         <td><strong>${p.nome}</strong></td>
                         <td>${p.tipo || '-'}</td>
-                        <td>${cursos}</td>
+                        <td style="font-size:0.85em;">${cursosNomes}</td>
                         <td>${p.telefone || '-'}</td>
                         <td>${p.email || '-'}</td>
-                        <td>
-                            <button onclick="editarProfessorSecretaria('${p.id}')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
-                        </td>
+                        <td><span class="status-badge ${p.status === 'ATIVO' ? 'concluido' : 'inativo'}">${p.status}</span></td>
                     </tr>
                 `;
             }).join('');
         }
 
         function filtrarProfessoresSecretaria() { carregarProfessoresSecretaria(); }
-
-        function editarProfessorSecretaria(id) {
-            mostrarToast('✏️ Edição de professor ainda não implementada nesta versão.', 'warning');
-        }
 
         function abrirModalCadastroProfessor() {
             const id = 'PROF_' + new Date().getTime();
@@ -1471,6 +1468,13 @@
             const selectCurso = document.getElementById('cadProfessorCurso');
             selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
                 CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            const container = document.getElementById('cadProfessorCursosExtras');
+            container.innerHTML = CURSOS.map(c => `
+                <label style="display:block; padding:4px 0;">
+                    <input type="checkbox" value="${c.id}" class="prof-curso-extra"> ${c.nome}
+                </label>
+            `).join('');
             
             document.getElementById('modalCadastroProfessor').classList.add('active');
         }
@@ -1480,21 +1484,31 @@
             const id = document.getElementById('cadProfessorID').value;
             const nome = document.getElementById('cadProfessorNome').value.trim().toUpperCase();
             const tipo = document.getElementById('cadProfessorTipo').value;
-            const curso = document.getElementById('cadProfessorCurso').value;
+            const cursoPrincipal = document.getElementById('cadProfessorCurso').value;
+            const cursosExtras = Array.from(document.querySelectorAll('.prof-curso-extra:checked')).map(cb => cb.value);
             const telefone = document.getElementById('cadProfessorTelefone').value.trim();
             const email = document.getElementById('cadProfessorEmail').value.trim();
 
-            if (!nome || !tipo || !curso || !telefone) { alert('Preencha os campos obrigatórios.'); return; }
+            if (!nome || !tipo || !cursoPrincipal || !telefone) {
+                alert('Preencha os campos obrigatórios.');
+                return;
+            }
 
-            const payload = { id, nome, tipo, curso, telefone, email };
+            // Combina principal + extras (sem duplicatas)
+            const todosCursos = [...new Set([cursoPrincipal, ...cursosExtras])];
+            const cursoString = todosCursos.join(',');
+
+            const payload = { id, nome, tipo, curso: cursoString, telefone, email };
             try {
                 const resultado = await enviarParaGAS('salvarProfessor', payload);
                 if (resultado.success) {
-                    escolaData.professores.push(payload);
+                    escolaData.professores.push({
+                        id, nome, tipo, curso: cursoString, telefone, email, status: 'ATIVO'
+                    });
                     fecharModal('modalCadastroProfessor');
                     carregarProfessoresSecretaria();
                     atualizarDashboardSecretaria();
-                    mostrarToast(`✅ Professor ${nome} cadastrado!`, 'success');
+                    mostrarToast(`✅ Professor ${nome} cadastrado em ${todosCursos.length} curso(s)!`, 'success');
                     setTimeout(() => carregarDadosPlanilha(), 1000);
                 }
             } catch (error) {
@@ -1612,18 +1626,17 @@
 
         function gerarRelatorioCompletoSecretaria() {
             gerarRelatorioAlunosSecretaria();
-            mostrarToast('💡 Relatório completo gerado abaixo do relatório de alunos.', 'info');
         }
 
         // ============================================
-        // PROFESSOR
+        // PROFESSOR - RENDERIZAÇÃO DOS CURSOS
         // ============================================
         function renderMeusCursos() {
             const container = document.getElementById('cursosContainer');
-            
-            if ((!currentUser.cursos || currentUser.cursos.length === 0) && currentUser.professorData?.curso) {
-                console.warn('🔄 Re-parseando cursos do professorData:', currentUser.professorData.curso);
-                currentUser.cursos = getCursosByProfessor(currentUser.professorData.id);
+
+            // Rede de segurança: recalcula cursos a partir do professorData
+            if (currentUser.professorData) {
+                currentUser.cursos = extrairCursosDoProfessor(currentUser.professorData);
             }
 
             if (!currentUser.cursos || currentUser.cursos.length === 0) {
@@ -1631,18 +1644,17 @@
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #718096;">
                         <p>📭 Nenhum curso atribuído.</p>
                         <p style="font-size: 0.9em;">Entre em contato com a coordenação.</p>
-                        <p style="font-size: 0.8em; margin-top: 10px; color: #a0aec0;">
-                            Valor na planilha: "${currentUser.professorData?.curso || '(vazio)'}"
-                        </p>
                     </div>
                 `;
                 return;
             }
 
             const header = `
-                <div style="grid-column: 1/-1; margin-bottom: 12px; padding: 10px 15px; background: #ebf8ff; border-radius: 8px; border-left: 4px solid #4299e1;">
+                <div style="grid-column: 1/-1; margin-bottom: 12px; padding: 12px 15px; background: #ebf8ff; border-radius: 8px; border-left: 4px solid #4299e1;">
                     <strong>👨‍🏫 Você leciona em ${currentUser.cursos.length} curso(s):</strong>
-                    ${currentUser.cursos.map(id => labelCurso(id)).join(' • ')}
+                    <div style="margin-top:6px; font-size: 0.95em;">
+                        ${currentUser.cursos.map(id => labelCurso(id)).join(' • ')}
+                    </div>
                 </div>
             `;
 
@@ -1660,6 +1672,7 @@
 
             container.innerHTML = header + cards;
 
+            // Auto-seleciona o primeiro curso se nenhum selecionado
             if (!cursoSelecionado && currentUser.cursos.length > 0) {
                 selecionarCurso(currentUser.cursos[0]);
             }
@@ -1988,15 +2001,13 @@
             const container = document.getElementById('professoresAtribuidos');
             if (!container) return;
             container.innerHTML = escolaData.professores.map(prof => {
-                const cursos = prof.curso
-                    ? String(prof.curso).split(/[,;\n]+/).map(c => labelCurso(normalizarCursoId(c))).filter(Boolean)
-                    : [];
+                const cursos = extrairCursosDoProfessor(prof);
                 return `
                     <div class="professor-item">
                         <strong>${prof.nome}</strong>
                         <div class="especialidade">${prof.tipo || ''}</div>
                         <div class="turmas-atribuidas">
-                            ${cursos.length > 0 ? cursos.map(c => `<span class="turma-tag">${c}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum curso</span>'}
+                            ${cursos.length > 0 ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum curso</span>'}
                         </div>
                     </div>
                 `;
@@ -2011,11 +2022,7 @@
             const prof = escolaData.professores.find(p => p.id === profId);
             if (!prof) return;
 
-            const cursosAtuais = (prof.curso || '')
-                .split(/[,;\n]+/)
-                .map(c => normalizarCursoId(c))
-                .filter(Boolean);
-
+            const cursosAtuais = extrairCursosDoProfessor(prof);
             if (cursosAtuais.includes(cursoId)) { alert('Curso já atribuído.'); return; }
             cursosAtuais.push(cursoId);
             prof.curso = cursosAtuais.join(',');
@@ -2025,7 +2032,6 @@
             renderProfessoresAtribuidos();
             renderVisaoCursos();
             mostrarToast(`✅ Curso ${labelCurso(cursoId)} atribuído a ${prof.nome}!`, 'success');
-            setTimeout(() => carregarDadosPlanilha(), 1000);
         }
 
         async function removerCurso() {
@@ -2036,11 +2042,7 @@
             const prof = escolaData.professores.find(p => p.id === profId);
             if (!prof) return;
 
-            const cursosAtuais = (prof.curso || '')
-                .split(/[,;\n]+/)
-                .map(c => normalizarCursoId(c))
-                .filter(c => c && c !== cursoId);
-
+            const cursosAtuais = extrairCursosDoProfessor(prof).filter(c => c !== cursoId);
             prof.curso = cursosAtuais.join(',');
 
             const payload = { id: profId, curso: prof.curso };
@@ -2048,7 +2050,6 @@
             renderProfessoresAtribuidos();
             renderVisaoCursos();
             mostrarToast(`✅ Curso removido de ${prof.nome}.`, 'success');
-            setTimeout(() => carregarDadosPlanilha(), 1000);
         }
 
         function renderRelatoriosRecebidos() {
@@ -2161,9 +2162,7 @@
                     <h4>📊 Relatório por Professor</h4>
                     <div style="margin-top:15px;">
                         ${escolaData.professores.map(prof => {
-                            const cursos = prof.curso
-                                ? String(prof.curso).split(/[,;\n]+/).map(c => normalizarCursoId(c)).filter(Boolean)
-                                : [];
+                            const cursos = extrairCursosDoProfessor(prof);
                             return `
                                 <div style="margin-bottom:15px;padding:10px;background:#f7fafc;border-radius:8px;">
                                     <h5>${prof.nome} (${prof.tipo || '-'})</h5>
@@ -2245,7 +2244,6 @@
             if (dataObs) dataObs.value = dataHoje;
             if (dataCont) dataCont.value = dataHoje;
 
-            console.log('🚀 Sistema iniciado');
             setTimeout(() => { carregarDadosPlanilha(); }, 500);
         });
     </script>
