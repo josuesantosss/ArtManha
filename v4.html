@@ -1032,7 +1032,6 @@
 
         /**
          * Busca uma chave em um objeto ignorando caixa, acentos e espaços.
-         * Ex: getColuna(row, 'curso') encontra 'Curso', 'CURSO', ' Curso ', 'Cursos'.
          */
         function getColuna(obj, ...nomes) {
             if (!obj) return '';
@@ -1100,7 +1099,6 @@
 
         /**
          * Normaliza um valor de curso (string) para o slug canônico.
-         * Aceita nomes antigos, com acento, com emoji, etc.
          */
         function normalizarCursoId(cursoRaw) {
             if (!cursoRaw) return '';
@@ -1108,7 +1106,6 @@
             if (!raw) return '';
             if (CURSOS_MAP[raw]) return raw;
 
-            // Mapa de compatibilidade (nomes antigos / variações)
             const mapa = {
                 'viola': 'viola-erudita',
                 'viola erudita': 'viola-erudita',
@@ -1124,44 +1121,47 @@
             };
             if (mapa[raw]) return mapa[raw];
 
-            // Tenta comparar com o nome exibido de cada curso
             for (const c of CURSOS) {
                 const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim().toLowerCase();
                 if (nomeLimpo === raw) return c.id;
             }
 
-            return raw; // fallback: devolve como veio
+            return raw;
         }
 
         /**
-         * Extrai TODOS os cursos de um professor a partir do campo "Curso".
-         * Aceita separadores: , ; | / \n e também " e " / "+" / "&".
-         * Sempre retorna array de slugs canônicos sem duplicatas.
+         * Extrai TODOS os cursos de um professor.
+         * Agora junta o campo 'Curso' com o campo 'Tipo' caso o professor
+         * lecione matérias como Teoria Musical em linhas diferentes.
          */
         function extrairCursosDoProfessor(professor) {
             if (!professor) return [];
-            const valor = professor.curso;
-            if (valor === null || valor === undefined) return [];
+            
+            // Concatena Curso e Tipo para não perder nada
+            const textoCursos = `${professor.curso || ''},${professor.tipo || ''}`;
 
-            let textoCursos = String(valor);
-            if (!textoCursos.trim()) return [];
+            if (!textoCursos.replace(/,/g, '').trim()) return [];
 
-            // Normaliza separadores para vírgula
-            textoCursos = textoCursos
+            // Normaliza separadores
+            let normalizado = textoCursos
                 .replace(/\r\n|\r|\n/g, ',')
                 .replace(/[;|/\\]+/g, ',')
                 .replace(/\s+(?:e|E|\+|&)\s+/g, ',');
 
-            const cursos = textoCursos
+            const cursos = normalizado
                 .split(/[,]+/)
                 .map(c => normalizarCursoId(c))
-                .filter(Boolean);
+                .filter(c => {
+                    // Filtra "lixo" que pode vir da coluna Tipo (Ex: "Instrumento")
+                    const lixo = ['instrumento', 'teoria musical', 'musicalização', 'musicalizacao'];
+                    return c && !lixo.includes(c.toLowerCase());
+                });
 
             return [...new Set(cursos)];
         }
 
         // ============================================
-        // GAS (envio) — usa no-cors (envio cego)
+        // GAS (envio)
         // ============================================
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
 
@@ -1195,7 +1195,6 @@
                 document.getElementById('syncStatus').textContent = '✅ Sincronizado';
                 mostrarToast('✅ Dados carregados com sucesso!', 'success');
 
-                // Re-renderiza tela atual
                 if (currentUser.cargo === 'secretaria') {
                     inicializarSecretaria();
                 } else if (currentUser.cargo.startsWith('professor')) {
@@ -1275,26 +1274,44 @@
                 status: texto(getColuna(a, 'Status') || 'ATIVO').toUpperCase()
             })).filter(a => a.nome);
 
-            // PROFESSORES — cabeçalho: ID_Professor, Nome, Tipo, Curso, Telefone, Email, Status, Data_Cadastro
-            // Usa getColuna para tolerar variações de nome e caixa
-            escolaData.professores = dadosPlanilha.professores.map(p => {
-                const cursosBrutos = getColuna(p, 'Curso', 'Cursos', 'Curso(s)', 'Curso_Principal', 'Cursos_Atribuidos');
-                return {
-                    id: texto(getColuna(p, 'ID_Professor', 'ID', 'Id', 'IdProfessor')),
-                    nome: texto(getColuna(p, 'Nome', 'Nome_Professor', 'NomeProfessor', 'Professor')).toUpperCase(),
-                    tipo: texto(getColuna(p, 'Tipo', 'Cargo')),
-                    curso: texto(cursosBrutos),
-                    telefone: texto(getColuna(p, 'Telefone', 'Tel', 'Contato')),
-                    email: texto(getColuna(p, 'Email', 'E-mail', 'EMail')),
-                    status: texto(getColuna(p, 'Status') || 'ATIVO').toUpperCase()
-                };
-            }).filter(p => p.nome);
+            // =========================================================
+            // CORREÇÃO: AGRUPAR PROFESSORES DUPLICADOS
+            // =========================================================
+            const professoresMap = {};
+            
+            dadosPlanilha.professores.forEach(p => {
+                const nome = texto(getColuna(p, 'Nome', 'Nome_Professor', 'NomeProfessor', 'Professor')).toUpperCase();
+                if (!nome) return; // Pula se não tiver nome
 
-            // Diagnóstico: loga quantos cursos cada professor tem
-            escolaData.professores.forEach(p => {
-                const cursos = extrairCursosDoProfessor(p);
-                console.log(`[PROFESSOR] ${p.nome} | campo Curso="${p.curso}" | cursos extraídos:`, cursos);
+                const curso = texto(getColuna(p, 'Curso', 'Cursos', 'Curso(s)'));
+                const tipo = texto(getColuna(p, 'Tipo', 'Cargo'));
+                
+                if (!professoresMap[nome]) {
+                    // Se é a primeira vez que vê o professor, cria o registro base
+                    professoresMap[nome] = {
+                        id: texto(getColuna(p, 'ID_Professor', 'ID')),
+                        nome: nome,
+                        tipo: tipo,
+                        curso: curso,
+                        telefone: texto(getColuna(p, 'Telefone', 'Tel')),
+                        email: texto(getColuna(p, 'Email', 'E-mail')),
+                        status: texto(getColuna(p, 'Status') || 'ATIVO').toUpperCase()
+                    };
+                } else {
+                    // Se o professor já existe, apenas adiciona os novos cursos na lista
+                    if (curso && !professoresMap[nome].curso.includes(curso)) {
+                        professoresMap[nome].curso += `,${curso}`;
+                    }
+                    // Se o tipo for diferente, junta também (ex: Instrumento e Teoria Musical)
+                    if (tipo && !professoresMap[nome].tipo.includes(tipo)) {
+                        professoresMap[nome].tipo += `, ${tipo}`;
+                    }
+                }
             });
+
+            // Transforma o Objeto de volta em Array
+            escolaData.professores = Object.values(professoresMap);
+            // =========================================================
 
             db.matriculas = dadosPlanilha.matriculas.map(m => ({
                 id: texto(getColuna(m, 'ID_Matricula', 'ID')),
@@ -1373,9 +1390,6 @@
                 .filter(Boolean);
         }
 
-        /**
-         * Retorna TODOS os cursos do professor (a partir do campo Curso da planilha)
-         */
         function getCursosByProfessor(profId) {
             const prof = escolaData.professores.find(p => p.id === profId);
             if (!prof) return [];
@@ -1812,7 +1826,6 @@
                 return;
             }
 
-            // Combina principal + extras (sem duplicatas)
             const todosCursos = [...new Set([cursoPrincipal, ...cursosExtras])];
             const cursoString = todosCursos.join(',');
 
@@ -1952,7 +1965,6 @@
         function renderMeusCursos() {
             const container = document.getElementById('cursosContainer');
 
-            // Rede de segurança: recalcula cursos a partir do professorData
             if (currentUser.professorData) {
                 currentUser.cursos = extrairCursosDoProfessor(currentUser.professorData);
             }
@@ -1990,7 +2002,6 @@
 
             container.innerHTML = header + cards;
 
-            // Auto-seleciona o primeiro curso se nenhum selecionado
             if (!cursoSelecionado && currentUser.cursos.length > 0) {
                 selecionarCurso(currentUser.cursos[0]);
             }
