@@ -1,0 +1,2251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão - Escola de Música</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>🔄 Carregando dados da planilha...</h3>
+            <p style="color: #718096;">Aguarde enquanto sincronizamos com o Google Sheets</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎵 Sistema de Gestão - Escola de Música</h1>
+                <p class="subtitle">Gestão de Cursos, Matrículas e Aulas</p>
+            </div>
+            <div class="badge-google">📊 Integrado com Google Sheets</div>
+        </div>
+
+        <!-- Tela de Login -->
+        <div id="loginContainer" class="login-container">
+            <h2>🔐 Acesso ao Sistema</h2>
+            <div class="login-info">
+                <strong>📌 Professores:</strong>
+                <span>Use o nome conforme cadastrado na planilha (ex: João Silva).</span>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="cargo">Selecione seu Cargo</label>
+                    <select id="cargo" required>
+                        <option value="">-- Escolha --</option>
+                        <option value="direcao">👔 Direção</option>
+                        <option value="secretaria">📁 Secretaria</option>
+                        <option value="coordenacao">📚 Coordenação Pedagógica</option>
+                        <option value="professor-instrumento">🎹 Professor de Instrumento</option>
+                        <option value="professor-teoria">🎼 Professor de Teoria Musical</option>
+                        <option value="professor-musicalizacao">🎵 Professor de Musicalização</option>
+                        <option value="financeiro">💰 Financeiro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nome">Seu Nome</label>
+                    <input type="text" id="nome" placeholder="Digite seu nome conforme cadastrado na planilha" required style="text-transform: uppercase;">
+                </div>
+                <button type="submit" class="btn">Entrar no Sistema</button>
+            </form>
+            <div style="margin-top: 15px; text-align: center; font-size: 0.9em; color: #718096;">
+                <span id="dataStatus">📊 Conectado à planilha: Escola de Música</span>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <div>
+                    <h2 id="dashboardTitle">📊 Painel de Controle</h2>
+                    <p id="userDisplay" class="user-info"></p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <span id="syncStatus" class="sync-status synced">✅ Sincronizado</span>
+                    <button onclick="carregarDadosPlanilha()" class="btn btn-secondary btn-small">🔄 Recarregar</button>
+                    <button onclick="logout()" class="btn-logout">🚪 Sair</button>
+                </div>
+            </div>
+
+            <div id="cardsContainer" class="cards-grid"></div>
+
+            <!-- ÁREA DA SECRETARIA -->
+            <div id="secretariaArea" class="hidden">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <button class="toggle-btn active" onclick="toggleSecretaria('dashboard', event)">📊 Dashboard</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('alunos', event)">👥 Gestão de Alunos</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('matriculas', event)">📋 Matrículas</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('professores', event)">👨‍🏫 Gestão de Professores</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('cursos', event)">🎵 Cursos</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('frequencia', event)">✅ Frequência</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('relatorios', event)">📄 Relatórios</button>
+                </div>
+
+                <div id="secretaria-dashboard" class="section-container">
+                    <h3>📊 Painel da Secretaria</h3>
+                    <div class="stats-grid" id="secretariaStats">
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-number" id="totalAlunosSecretaria">0</div>
+                            <div class="stat-label">Total de Alunos Ativos</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #48bb78;">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-number" id="matriculasAtivas">0</div>
+                            <div class="stat-label">Matrículas Ativas</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #4299e1;">
+                            <div class="stat-icon">🎵</div>
+                            <div class="stat-number" id="totalCursosSecretaria">0</div>
+                            <div class="stat-label">Cursos Ativos</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #9f7aea;">
+                            <div class="stat-icon">👨‍🏫</div>
+                            <div class="stat-number" id="totalProfessoresSecretaria">0</div>
+                            <div class="stat-label">Professores</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4>📌 Últimas Atividades</h4>
+                        <div id="ultimasAtividades" class="registros-list">
+                            <p style="color: #718096;">Nenhuma atividade registrada.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="secretaria-alunos" class="section-container hidden">
+                    <h3>👥 Gestão de Alunos</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Buscar Aluno</label>
+                            <input type="text" id="buscaAlunoSecretaria" placeholder="Digite o nome..." oninput="filtrarAlunosSecretaria()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="abrirModalCadastroAluno()" class="btn btn-secondary">➕ Novo Aluno</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Data Nascimento</th>
+                                    <th>Responsável</th>
+                                    <th>Contato</th>
+                                    <th>Cursos Matriculados</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaAlunosSecretaria">
+                                <tr><td colspan="7" style="text-align: center; color: #718096;">Carregando alunos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="secretaria-matriculas" class="section-container hidden">
+                    <h3>📋 Gestão de Matrículas</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Filtrar por Curso</label>
+                            <select id="filtroCursoMatricula" onchange="filtrarMatriculasSecretaria()">
+                                <option value="">Todos os Cursos</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Buscar Aluno</label>
+                            <input type="text" id="buscaMatriculaSecretaria" placeholder="Nome do aluno..." oninput="filtrarMatriculasSecretaria()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="abrirModalNovaMatricula()" class="btn btn-secondary">➕ Nova Matrícula</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Aluno</th>
+                                    <th>Curso</th>
+                                    <th>Professor</th>
+                                    <th>Data Matrícula</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaMatriculasSecretaria">
+                                <tr><td colspan="6" style="text-align: center; color: #718096;">Carregando matrículas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="secretaria-professores" class="section-container hidden">
+                    <h3>👨‍🏫 Gestão de Professores</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Buscar Professor</label>
+                            <input type="text" id="buscaProfessorSecretaria" placeholder="Digite o nome..." oninput="filtrarProfessoresSecretaria()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="abrirModalCadastroProfessor()" class="btn btn-secondary">➕ Novo Professor</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>Curso(s)</th>
+                                    <th>Telefone</th>
+                                    <th>E-mail</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaProfessoresSecretaria">
+                                <tr><td colspan="7" style="text-align: center; color: #718096;">Carregando professores...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="secretaria-cursos" class="section-container hidden">
+                    <h3>🎵 Cursos Disponíveis</h3>
+                    <div class="cards-grid" id="cursosGrid"></div>
+                </div>
+
+                <div id="secretaria-frequencia" class="section-container hidden">
+                    <h3>✅ Relatório de Frequência</h3>
+                    <div class="form-row" style="margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Curso</label>
+                            <select id="frequenciaCursoSelect" onchange="carregarFrequenciaSecretaria()">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="carregarFrequenciaSecretaria()" class="btn btn-info btn-small">📊 Carregar</button>
+                        </div>
+                    </div>
+                    <div id="frequenciaResultados">
+                        <p style="color: #718096;">Selecione um curso para visualizar a frequência.</p>
+                    </div>
+                </div>
+
+                <div id="secretaria-relatorios" class="section-container hidden">
+                    <h3>📄 Relatórios da Secretaria</h3>
+                    <div class="btn-group" style="margin-bottom: 20px;">
+                        <button onclick="gerarRelatorioAlunosSecretaria()" class="btn btn-secondary btn-small">📋 Lista de Alunos</button>
+                        <button onclick="gerarRelatorioMatriculasSecretaria()" class="btn btn-secondary btn-small">📋 Matrículas por Curso</button>
+                        <button onclick="gerarRelatorioCompletoSecretaria()" class="btn btn-secondary btn-small">📄 Relatório Completo</button>
+                    </div>
+                    <div id="relatorioSecretariaOutput" style="margin-top: 20px;">
+                        <p style="color: #718096;">Clique em um botão acima para gerar um relatório.</p>
+                    </div>
+                </div>
+
+                <!-- Modal Cadastro Aluno -->
+                <div id="modalCadastroAluno" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="modal-close" onclick="fecharModal('modalCadastroAluno')">&times;</span>
+                        <h2>📝 Cadastro de Aluno</h2>
+                        <form id="formCadastroAluno">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nome Completo *</label>
+                                    <input type="text" id="cadAlunoNome" required style="text-transform: uppercase;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Data de Nascimento *</label>
+                                    <input type="date" id="cadAlunoNascimento" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Responsável</label>
+                                    <input type="text" id="cadAlunoResponsavel" style="text-transform: uppercase;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contato</label>
+                                    <input type="tel" id="cadAlunoContato">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cursos de Interesse (selecione um ou mais)</label>
+                                <div id="cursosChecklist" class="cursos-checklist"></div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn btn-secondary">💾 Salvar Aluno</button>
+                                <button type="button" onclick="fecharModal('modalCadastroAluno')" class="btn btn-danger">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal Cadastro Professor -->
+                <div id="modalCadastroProfessor" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="modal-close" onclick="fecharModal('modalCadastroProfessor')">&times;</span>
+                        <h2>👨‍🏫 Cadastro de Professor</h2>
+                        <form id="formCadastroProfessor">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>ID Professor</label>
+                                    <input type="text" id="cadProfessorID" readonly style="background: #f7fafc;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nome Completo *</label>
+                                    <input type="text" id="cadProfessorNome" required style="text-transform: uppercase;">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tipo *</label>
+                                    <select id="cadProfessorTipo" required>
+                                        <option value="">-- Selecione --</option>
+                                        <option value="Instrumento">🎹 Instrumento</option>
+                                        <option value="Teoria Musical">🎼 Teoria Musical</option>
+                                        <option value="Musicalização">🎵 Musicalização</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Curso Principal *</label>
+                                    <select id="cadProfessorCurso" required>
+                                        <option value="">-- Selecione --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cursos Adicionais (opcional)</label>
+                                <div id="cadProfessorCursosExtras" class="cursos-checklist"></div>
+                                <small style="color:#718096;font-size:0.85em;">Marque outros cursos que este professor também leciona</small>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Telefone *</label>
+                                    <input type="tel" id="cadProfessorTelefone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <input type="email" id="cadProfessorEmail">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn btn-secondary">💾 Salvar Professor</button>
+                                <button type="button" onclick="fecharModal('modalCadastroProfessor')" class="btn btn-danger">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal Nova Matrícula -->
+                <div id="modalNovaMatricula" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="modal-close" onclick="fecharModal('modalNovaMatricula')">&times;</span>
+                        <h2>📋 Nova Matrícula</h2>
+                        <form id="formNovaMatricula">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Aluno *</label>
+                                    <select id="matriculaAluno" required>
+                                        <option value="">-- Selecione --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Curso *</label>
+                                    <select id="matriculaCurso" required>
+                                        <option value="">-- Selecione --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Professor *</label>
+                                    <select id="matriculaProfessor" required>
+                                        <option value="">-- Selecione o curso primeiro --</option>
+                                    </select>
+                                    <small style="color:#718096;font-size:0.85em;">Preenchido automaticamente pelo curso</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Ano Letivo *</label>
+                                    <input type="number" id="matriculaAno" value="2026" required>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn btn-secondary">📋 Registrar Matrícula</button>
+                                <button type="button" onclick="fecharModal('modalNovaMatricula')" class="btn btn-danger">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÁREA DO PROFESSOR -->
+            <div id="professorArea" class="hidden">
+                <div id="cursosSection" class="hidden">
+                    <h3 style="margin-top: 30px; color: #2d3748;">🎵 Meus Cursos</h3>
+                    <div id="cursosContainer" class="turmas-grid"></div>
+                </div>
+                <div id="registrosSection" class="hidden">
+                    <div class="section-container">
+                        <h3>📝 Registros do Curso: <span id="cursoSelecionadoNome">-</span></h3>
+                        
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                            <button class="toggle-btn active" onclick="toggleSection('notas', event)">📊 Avaliações</button>
+                            <button class="toggle-btn" onclick="toggleSection('presencas', event)">✅ Presenças</button>
+                            <button class="toggle-btn" onclick="toggleSection('conteudos', event)">📚 Conteúdos</button>
+                            <button class="toggle-btn" onclick="toggleSection('observacoes', event)">✏️ Observações</button>
+                            <button class="toggle-btn" onclick="toggleSection('relatorios', event)">📄 Relatórios</button>
+                        </div>
+
+                        <div id="section-notas" class="toggle-section">
+                            <div class="form-row" style="margin-bottom: 15px;">
+                                <div class="form-group">
+                                    <label>Bimestre</label>
+                                    <select id="bimestreNota" onchange="carregarTabelaNotas()">
+                                        <option value="1">1º Bimestre</option>
+                                        <option value="2">2º Bimestre</option>
+                                        <option value="3">3º Bimestre</option>
+                                        <option value="4">4º Bimestre</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: flex-end;">
+                                    <button onclick="carregarTabelaNotas()" class="btn btn-secondary btn-small">📊 Carregar</button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="tabelaNotas">
+                                    <thead>
+                                        <tr>
+                                            <th>Nº</th>
+                                            <th>Aluno</th>
+                                            <th>Avaliação</th>
+                                            <th>Média</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaNotasBody"></tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <button onclick="salvarNotas()" class="btn btn-secondary btn-small">💾 Salvar Avaliações</button>
+                            </div>
+                        </div>
+
+                        <div id="section-presencas" class="toggle-section hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Data</label>
+                                    <input type="date" id="dataPresenca">
+                                </div>
+                                <div class="form-group">
+                                    <label>Observação da Aula</label>
+                                    <input type="text" id="obsPresenca" placeholder="Ex: Aula sobre escalas">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Alunos Presentes</label>
+                                <div class="table-container" style="max-height: none !important; overflow-y: visible !important;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 15%; text-align: center;">Nº</th>
+                                                <th style="width: 70%;">Nome do Aluno</th>
+                                                <th style="width: 15%; text-align: center;">Presença</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="alunosPresencaTabela"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <button onclick="salvarPresenca()" class="btn btn-secondary btn-small" style="margin-top: 15px;">✅ Salvar Presença</button>
+                            <div id="registrosPresenca" class="registros-list" style="margin-top: 20px;"></div>
+                        </div>
+
+                        <div id="section-conteudos" class="toggle-section hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Data</label>
+                                    <input type="date" id="dataConteudo">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Conteúdo</label>
+                                <textarea id="conteudoText" placeholder="Descreva o conteúdo trabalhado..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Objetivos</label>
+                                <textarea id="objetivosConteudo" placeholder="Descreva os objetivos da aula..."></textarea>
+                            </div>
+                            <button onclick="salvarConteudo()" class="btn btn-secondary btn-small">💾 Salvar Conteúdo</button>
+                            <div id="registrosConteudos" class="registros-list" style="margin-top: 20px;"></div>
+                        </div>
+
+                        <div id="section-observacoes" class="toggle-section hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Aluno</label>
+                                    <select id="alunoObservacao"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Data</label>
+                                    <input type="date" id="dataObservacao">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo</label>
+                                <select id="tipoObservacao">
+                                    <option value="Positiva">✅ Positiva</option>
+                                    <option value="Negativa">⚠️ Negativa</option>
+                                    <option value="Neutra">ℹ️ Neutra</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Observação</label>
+                                <textarea id="observacaoText" placeholder="Registre observações sobre o aluno..."></textarea>
+                            </div>
+                            <button onclick="salvarObservacao()" class="btn btn-secondary btn-small">💾 Salvar Observação</button>
+                            <div id="registrosObservacoes" class="registros-list" style="margin-top: 20px;"></div>
+                        </div>
+
+                        <div id="section-relatorios" class="toggle-section hidden">
+                            <div style="margin-top: 20px; padding: 20px; background: #ebf8ff; border-radius: 10px; border-left: 4px solid #4299e1;">
+                                <h4>✏️ Preencher Relatório Pedagógico</h4>
+                                <div class="form-group">
+                                    <label>Aluno</label>
+                                    <select id="alunoRelatorioPreencher"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Bimestre</label>
+                                    <select id="bimestreRelatorioPreencher">
+                                        <option value="1">1º Bimestre</option>
+                                        <option value="2">2º Bimestre</option>
+                                        <option value="3">3º Bimestre</option>
+                                        <option value="4">4º Bimestre</option>
+                                        <option value="anual">Anual</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Relatório Pedagógico</label>
+                                    <textarea id="relatorioTexto" rows="6" placeholder="Digite o relatório pedagógico do aluno..."></textarea>
+                                </div>
+                                <button onclick="enviarRelatorioCoordenacao()" class="btn btn-info btn-small">📤 Enviar Relatório para Coordenação</button>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <h4>📄 Relatórios Enviados</h4>
+                                <div id="relatoriosEnviados" class="registros-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÁREA DO COORDENADOR -->
+            <div id="coordenadorArea" class="hidden">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <button class="toggle-btn active" onclick="toggleCoordenacao('visao', event)">📊 Visão por Curso</button>
+                    <button class="toggle-btn" onclick="toggleCoordenacao('atribuicao', event)">📋 Atribuição</button>
+                    <button class="toggle-btn" onclick="toggleCoordenacao('receber', event)">📥 Receber Relatórios <span id="notificacaoRelatorios" class="notification-badge hidden">0</span></button>
+                </div>
+
+                <div id="coordenacao-visao" class="section-container">
+                    <h3>📊 Visão Geral por Curso</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Curso</th>
+                                    <th>Professor</th>
+                                    <th>Média Geral</th>
+                                    <th>Presença</th>
+                                    <th>Alunos</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visaoGeralCursos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="coordenacao-atribuicao" class="section-container hidden">
+                    <h3>📋 Atribuição de Cursos</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Professor</label>
+                            <select id="professorSelect">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Curso</label>
+                            <select id="cursoSelect">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="btn-group" style="margin-top: 15px;">
+                        <button onclick="atribuirCurso()" class="btn btn-secondary btn-small">➕ Atribuir</button>
+                        <button onclick="removerCurso()" class="btn btn-danger btn-small">❌ Remover</button>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4>📌 Professores e seus Cursos</h4>
+                        <div id="professoresAtribuidos" class="professores-list"></div>
+                    </div>
+                </div>
+
+                <div id="coordenacao-receber" class="section-container hidden">
+                    <h3>📥 Relatórios Recebidos</h3>
+                    <div id="listaRelatoriosRecebidos" class="registros-list"></div>
+                </div>
+            </div>
+
+            <!-- ÁREA DA DIREÇÃO -->
+            <div id="direcaoArea" class="hidden">
+                <div class="section-container">
+                    <h3>📊 Painel Gerencial</h3>
+                    <div class="stats-grid" id="statsGerenciais"></div>
+                </div>
+                <div class="section-container">
+                    <h3>📋 Relatórios Consolidados</h3>
+                    <div class="btn-group" style="margin-bottom: 20px;">
+                        <button onclick="gerarRelatorioGeral()" class="btn btn-secondary btn-small">📊 Relatório Geral</button>
+                        <button onclick="gerarRelatorioPorCurso()" class="btn btn-secondary btn-small">📊 Por Curso</button>
+                        <button onclick="gerarRelatorioPorProfessor()" class="btn btn-secondary btn-small">📊 Por Professor</button>
+                    </div>
+                    <div id="relatorioConsolidado" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <!-- ÁREA DO FINANCEIRO -->
+            <div id="financeiroArea" class="hidden">
+                <div class="section-container">
+                    <h3>💰 Painel Financeiro</h3>
+                    <div class="stats-grid" id="statsFinanceiro">
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-number" id="finTotalAlunos">0</div>
+                            <div class="stat-label">Alunos Matriculados</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #48bb78;">
+                            <div class="stat-icon">📋</div>
+                            <div class="stat-number" id="finTotalMatriculas">0</div>
+                            <div class="stat-label">Matrículas Ativas</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #4299e1;">
+                            <div class="stat-icon">🎵</div>
+                            <div class="stat-number" id="finTotalCursos">0</div>
+                            <div class="stat-label">Cursos Ativos</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4>📊 Matrículas por Curso</h4>
+                        <div id="finMatriculasPorCurso"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalRelatorio" class="modal-overlay">
+        <div class="modal-content" id="modalRelatorioContentWrapper">
+            <span class="modal-close" onclick="fecharModal('modalRelatorio')">&times;</span>
+            <h2>📄 Relatório</h2>
+            <div id="modalRelatorioContent"></div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button onclick="imprimirRelatorioModal()" class="btn btn-info" style="padding: 10px 20px; font-size: 16px; width: auto;">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO
+        // ============================================
+        const SHEET_CONFIG = {
+            sheetId: '1FRtD7cbV2tvK2og4NDkyWi8V_hziyERNZoSh20gG980',
+            abas: {
+                alunos: 'ALUNOS',
+                matriculas: 'MATRICULAS',
+                professores: 'PROFESSORES',
+                avaliacoes: 'AVALIACOES',
+                presencas: 'PRESENCAS',
+                conteudos: 'CONTEUDOS',
+                observacoes: 'OBSERVACOES',
+                relatorios: 'RELATORIOS'
+            }
+        };
+
+        // ============================================
+        // CURSOS (IDs = slug)
+        // ============================================
+        const CURSOS = [
+            { id: 'piano',                  nome: '🎹 Piano',                  tipo: 'Instrumento' },
+            { id: 'teclado',                nome: '🎹 Teclado',                tipo: 'Instrumento' },
+            { id: 'orgao',                  nome: '🎹 Órgão',                  tipo: 'Instrumento' },
+            { id: 'violao',                 nome: '🎸 Violão',                 tipo: 'Instrumento' },
+            { id: 'guitarra',               nome: '🎸 Guitarra',               tipo: 'Instrumento' },
+            { id: 'violino',                nome: '🎻 Violino',                tipo: 'Instrumento' },
+            { id: 'violoncelo',             nome: '🎻 Violoncelo',             tipo: 'Instrumento' },
+            { id: 'viola-erudita',          nome: '🎻 Viola Erudita',          tipo: 'Instrumento' },
+            { id: 'contrabaixo-acustico',   nome: '🎻 Contrabaixo Acústico',   tipo: 'Instrumento' },
+            { id: 'bateria',                nome: '🥁 Bateria',                tipo: 'Instrumento' },
+            { id: 'trompete',               nome: '🎺 Trompete',               tipo: 'Instrumento' },
+            { id: 'trombone',               nome: '🎺 Trombone',               tipo: 'Instrumento' },
+            { id: 'euphonio',               nome: '🎺 Eufônio',                tipo: 'Instrumento' },
+            { id: 'tuba',                   nome: '🎺 Tuba',                   tipo: 'Instrumento' },
+            { id: 'saxofone',               nome: '🎷 Saxofone',               tipo: 'Instrumento' },
+            { id: 'flauta',                 nome: '🎶 Flauta',                 tipo: 'Instrumento' },
+            { id: 'clarinete',              nome: '🎶 Clarinete',              tipo: 'Instrumento' },
+            { id: 'canto',                  nome: '🎤 Canto',                  tipo: 'Instrumento' },
+            { id: 'teoria-musical',         nome: '🎼 Teoria Musical',         tipo: 'Teoria Musical' },
+            { id: 'musicalizacao-infantil', nome: '🎵 Musicalização Infantil', tipo: 'Musicalização' }
+        ];
+
+        const CURSOS_MAP = {};
+        CURSOS.forEach(c => { CURSOS_MAP[c.id] = c; });
+
+        // ============================================
+        // DADOS
+        // ============================================
+        let dadosPlanilha = {
+            alunos: [], matriculas: [], professores: [],
+            avaliacoes: [], presencas: [], conteudos: [],
+            observacoes: [], relatorios: []
+        };
+
+        let escolaData = { alunos: [], professores: [], cursos: CURSOS };
+        let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [] };
+        let currentUser = { cargo: '', nome: '', professorData: null, cursos: [] };
+        let cursoSelecionado = null;
+
+        // ============================================
+        // HELPERS
+        // ============================================
+        function texto(valor) {
+            if (valor === null || valor === undefined) return '';
+            return String(valor).trim();
+        }
+
+        function formatarDataParaExibicao(dataISO) {
+            if (!dataISO) return '';
+            if (/^\d{2}-\d{2}-\d{4}$/.test(dataISO)) return dataISO;
+            try {
+                const partes = String(dataISO).split('T')[0].split('-');
+                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
+                return dataISO;
+            } catch (e) { return dataISO; }
+        }
+
+        function formatarDataParaPlanilha(data) {
+            if (!data) return '';
+            if (/^\d{2}-\d{2}-\d{4}$/.test(data)) return data;
+            try {
+                const d = new Date(data);
+                if (!isNaN(d.getTime())) {
+                    return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                }
+                return data;
+            } catch (e) { return data; }
+        }
+
+        function getDataAtualFormatada() {
+            const hoje = new Date();
+            return `${String(hoje.getDate()).padStart(2, '0')}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${hoje.getFullYear()}`;
+        }
+
+        function mostrarToast(mensagem, tipo = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${tipo}`;
+            toast.textContent = mensagem;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function labelCurso(cursoId) {
+            if (!cursoId) return '-';
+            const curso = CURSOS_MAP[cursoId];
+            return curso ? curso.nome : cursoId;
+        }
+
+        /**
+         * Normaliza um valor de curso (string) para o slug canônico.
+         * Aceita nomes antigos, com acento, com emoji, etc.
+         */
+        function normalizarCursoId(cursoRaw) {
+            if (!cursoRaw) return '';
+            const raw = texto(cursoRaw).toLowerCase().trim();
+            if (!raw) return '';
+            if (CURSOS_MAP[raw]) return raw;
+
+            // Mapa de compatibilidade (nomes antigos / variações)
+            const mapa = {
+                'viola': 'viola-erudita',
+                'viola erudita': 'viola-erudita',
+                'contrabaixo': 'contrabaixo-acustico',
+                'contrabaixo acustico': 'contrabaixo-acustico',
+                'contrabaixo acústico': 'contrabaixo-acustico',
+                'teoria': 'teoria-musical',
+                'teoria musical': 'teoria-musical',
+                'musicalizacao': 'musicalizacao-infantil',
+                'musicalizacao infantil': 'musicalizacao-infantil',
+                'musicalização': 'musicalizacao-infantil',
+                'musicalização infantil': 'musicalizacao-infantil'
+            };
+            if (mapa[raw]) return mapa[raw];
+
+            // Tenta comparar com o nome exibido de cada curso
+            for (const c of CURSOS) {
+                const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim().toLowerCase();
+                if (nomeLimpo === raw) return c.id;
+            }
+
+            return raw; // fallback: devolve como veio
+        }
+
+        /**
+         * Extrai todos os cursos de um professor a partir do campo "Curso" da planilha.
+         * Aceita: "piano,violino" | "piano, violino" | "piano; violino" | "Piano, Violino"
+         */
+        function extrairCursosDoProfessor(professor) {
+            if (!professor || !professor.curso) return [];
+            const cursos = String(professor.curso)
+                .split(/[,;\n|]+/)
+                .map(c => normalizarCursoId(c))
+                .filter(Boolean);
+            // Remove duplicatas mantendo a ordem
+            return [...new Set(cursos)];
+        }
+
+        // ============================================
+        // GAS
+        // ============================================
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
+
+        async function enviarParaGAS(acao, payload) {
+            try {
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ acao, payload })
+                });
+                return { success: true };
+            } catch (error) {
+                console.error('Erro:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // ============================================
+        // CARREGAR DADOS
+        // ============================================
+        async function carregarDadosPlanilha() {
+            const loading = document.getElementById('loadingOverlay');
+            loading.classList.add('active');
+            try {
+                for (const [key, aba] of Object.entries(SHEET_CONFIG.abas)) {
+                    await carregarAbaEspecifica(aba, key);
+                }
+                atualizarBancoDados();
+                document.getElementById('syncStatus').className = 'sync-status synced';
+                document.getElementById('syncStatus').textContent = '✅ Sincronizado';
+                mostrarToast('✅ Dados carregados com sucesso!', 'success');
+
+                // Re-renderiza tela atual
+                if (currentUser.cargo === 'secretaria') {
+                    inicializarSecretaria();
+                } else if (currentUser.cargo.startsWith('professor')) {
+                    // Recarrega dados do professor (cursos podem ter mudado)
+                    const profAtual = escolaData.professores.find(p =>
+                        p.nome === currentUser.nome
+                    );
+                    if (profAtual) {
+                        currentUser.professorData = profAtual;
+                        currentUser.cursos = extrairCursosDoProfessor(profAtual);
+                        if (currentUser.cursos.length > 0) {
+                            // Se o curso atual não está mais atribuído, troca
+                            if (!cursoSelecionado || !currentUser.cursos.includes(cursoSelecionado)) {
+                                cursoSelecionado = currentUser.cursos[0];
+                            }
+                            renderMeusCursos();
+                            // Só re-renderiza se havia curso selecionado
+                            if (cursoSelecionado) {
+                                document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoSelecionado);
+                                carregarTabelaNotas();
+                                carregarPresenca();
+                                carregarConteudos();
+                                carregarObservacoes();
+                                carregarAlunosSelects();
+                                renderRelatoriosEnviados();
+                            }
+                        }
+                    }
+                } else if (currentUser.cargo === 'coordenacao') {
+                    renderVisaoCursos();
+                    carregarProfessoresAtribuicao();
+                    renderRelatoriosRecebidos();
+                } else if (currentUser.cargo === 'direcao') {
+                    renderStatsGerenciais();
+                } else if (currentUser.cargo === 'financeiro') {
+                    renderFinanceiro();
+                }
+            } catch (error) {
+                document.getElementById('syncStatus').className = 'sync-status error';
+                document.getElementById('syncStatus').textContent = '❌ Erro ao carregar';
+                mostrarToast('❌ Erro ao carregar dados.', 'error');
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        async function carregarAbaEspecifica(nomeAba, chave) {
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const text = await response.text();
+                const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonStr);
+                if (data.table && data.table.rows) {
+                    const cols = data.table.cols.map(c => texto(c.label) || c.id || '');
+                    dadosPlanilha[chave] = data.table.rows.map(row => {
+                        const obj = {};
+                        (row.c || []).forEach((cell, i) => {
+                            obj[cols[i] || `coluna_${i}`] = cell ? cell.v : '';
+                        });
+                        return obj;
+                    });
+                } else {
+                    dadosPlanilha[chave] = [];
+                }
+            } catch (error) {
+                console.warn(`Erro ao carregar aba ${nomeAba}:`, error);
+                dadosPlanilha[chave] = [];
+            }
+        }
+
+        // ============================================
+        // ATUALIZAR BANCO
+        // ============================================
+        function atualizarBancoDados() {
+            escolaData.alunos = dadosPlanilha.alunos.map(a => ({
+                nome: texto(a.Nome || a.Nome_Aluno).toUpperCase(),
+                dataNascimento: formatarDataParaExibicao(texto(a.Data_Nascimento)),
+                responsavel: texto(a.Responsavel || ''),
+                contato: texto(a.Contato || ''),
+                status: texto(a.Status || 'ATIVO').toUpperCase()
+            })).filter(a => a.nome);
+
+            // PROFESSORES - cabeçalho: ID_Professor, Nome, Tipo, Curso, Telefone, Email, Status, Data_Cadastro
+            escolaData.professores = dadosPlanilha.professores.map(p => ({
+                id: texto(p.ID_Professor || p.ID),
+                nome: texto(p.Nome || p.Nome_Professor).toUpperCase(),
+                tipo: texto(p.Tipo || ''),
+                curso: texto(p.Curso || ''),
+                telefone: texto(p.Telefone || ''),
+                email: texto(p.Email || ''),
+                status: texto(p.Status || 'ATIVO').toUpperCase()
+            })).filter(p => p.nome);
+
+            db.matriculas = dadosPlanilha.matriculas.map(m => ({
+                id: texto(m.ID_Matricula || ''),
+                aluno: texto(m.Aluno).toUpperCase(),
+                curso: normalizarCursoId(m.Curso),
+                professor: texto(m.Professor || ''),
+                dataMatricula: formatarDataParaExibicao(texto(m.Data_Matricula)),
+                anoLetivo: texto(m.Ano_Letivo || ''),
+                status: texto(m.Status || 'ATIVO').toUpperCase()
+            }));
+
+            db.avaliacoes = dadosPlanilha.avaliacoes.map(a => ({
+                aluno: texto(a.Aluno).toUpperCase(),
+                curso: normalizarCursoId(a.Curso),
+                bimestre: parseInt(a.Bimestre) || 1,
+                nota: parseFloat(a.Nota) || 0
+            }));
+
+            db.presencas = {};
+            dadosPlanilha.presencas.forEach(p => {
+                const curso = normalizarCursoId(p.Curso);
+                if (!curso) return;
+                if (!db.presencas[curso]) db.presencas[curso] = [];
+                db.presencas[curso].push({
+                    data: formatarDataParaExibicao(texto(p.Data)),
+                    presentes: texto(p.Presentes).split(',').map(n => n.trim().toUpperCase()).filter(Boolean)
+                });
+            });
+
+            db.conteudos = {};
+            dadosPlanilha.conteudos.forEach(c => {
+                const curso = normalizarCursoId(c.Curso);
+                if (!curso) return;
+                if (!db.conteudos[curso]) db.conteudos[curso] = [];
+                db.conteudos[curso].push({
+                    data: formatarDataParaExibicao(texto(c.Data)),
+                    conteudo: texto(c.Conteudo || ''),
+                    objetivos: texto(c.Objetivos || '')
+                });
+            });
+
+            db.observacoes = {};
+            dadosPlanilha.observacoes.forEach(o => {
+                const curso = normalizarCursoId(o.Curso);
+                if (!curso) return;
+                if (!db.observacoes[curso]) db.observacoes[curso] = [];
+                db.observacoes[curso].push({
+                    data: formatarDataParaExibicao(texto(o.Data)),
+                    aluno: texto(o.Aluno).toUpperCase(),
+                    observacao: texto(o.Observacao || ''),
+                    tipo: texto(o.Tipo || 'Neutra')
+                });
+            });
+
+            db.relatorios = dadosPlanilha.relatorios.map(r => ({
+                aluno: texto(r.Aluno).toUpperCase(),
+                curso: normalizarCursoId(r.Curso),
+                bimestre: texto(r.Bimestre || '1'),
+                professor: texto(r.Professor || ''),
+                relatorio: texto(r.Relatorio || ''),
+                data: formatarDataParaExibicao(texto(r.Data)),
+                visto: texto(r.Visto || '')
+            }));
+        }
+
+        // ============================================
+        // FUNÇÕES AUXILIARES
+        // ============================================
+        function getAlunosByCurso(curso) {
+            if (!curso) return [];
+            const matriculas = db.matriculas.filter(m =>
+                m.curso === curso && m.status === 'ATIVO'
+            );
+            return matriculas
+                .map(m => escolaData.alunos.find(a => a.nome === m.aluno))
+                .filter(Boolean);
+        }
+
+        /**
+         * Retorna TODOS os cursos do professor (a partir do campo Curso da planilha)
+         */
+        function getCursosByProfessor(profId) {
+            const prof = escolaData.professores.find(p => p.id === profId);
+            if (!prof) return [];
+            return extrairCursosDoProfessor(prof);
+        }
+
+        function getProfessorByCurso(curso) {
+            if (!curso) return null;
+            const alvo = normalizarCursoId(curso);
+            return escolaData.professores.find(p => {
+                if (!p.curso) return false;
+                const cursos = extrairCursosDoProfessor(p);
+                return cursos.includes(alvo);
+            }) || null;
+        }
+
+        function getNotaAluno(aluno, curso, bimestre) {
+            const av = db.avaliacoes.find(a => a.aluno === aluno && a.curso === curso && a.bimestre === bimestre);
+            return av ? av.nota : 0;
+        }
+
+        function getMediaAluno(aluno, curso) {
+            let soma = 0, count = 0;
+            for (let b = 1; b <= 4; b++) {
+                const n = getNotaAluno(aluno, curso, b);
+                if (n > 0) { soma += n; count++; }
+            }
+            return count > 0 ? soma / count : 0;
+        }
+
+        // ============================================
+        // CARGO CONFIG
+        // ============================================
+        const cargoConfig = {
+            'direcao': { titulo: '👔 Direção', cores: 'direcao' },
+            'secretaria': { titulo: '📁 Secretaria', cores: 'secretaria' },
+            'coordenacao': { titulo: '📚 Coordenação Pedagógica', cores: 'coordenacao' },
+            'professor-instrumento': { titulo: '🎹 Professor de Instrumento', cores: 'professor' },
+            'professor-teoria': { titulo: '🎼 Professor de Teoria Musical', cores: 'professor' },
+            'professor-musicalizacao': { titulo: '🎵 Professor de Musicalização', cores: 'professor' },
+            'financeiro': { titulo: '💰 Financeiro', cores: 'financeiro' }
+        };
+
+        // ============================================
+        // LOGIN
+        // ============================================
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const cargo = document.getElementById('cargo').value;
+            const nome = document.getElementById('nome').value.trim().toUpperCase();
+
+            if (!cargo || !nome) { alert('Preencha todos os campos.'); return; }
+
+            currentUser.cargo = cargo;
+            currentUser.nome = nome;
+
+            if (cargo.startsWith('professor')) {
+                const prof = escolaData.professores.find(p => p.nome === nome);
+                if (!prof) {
+                    alert('⚠️ Professor não encontrado. Verifique seu nome.');
+                    return;
+                }
+                currentUser.professorData = prof;
+                const cursosProf = extrairCursosDoProfessor(prof);
+                currentUser.cursos = cursosProf;
+
+                if (cursosProf.length === 0) {
+                    alert('⚠️ Nenhum curso atribuído a este professor. Entre em contato com a coordenação.');
+                    return;
+                }
+
+                // Valida se o cargo corresponde ao tipo de curso
+                const tipoProf = (prof.tipo || '').toLowerCase();
+                const temInstrumento = cursosProf.some(c => {
+                    const curso = CURSOS_MAP[c];
+                    return curso && curso.tipo === 'Instrumento';
+                });
+                const temTeoria = cursosProf.some(c => {
+                    const curso = CURSOS_MAP[c];
+                    return curso && curso.tipo === 'Teoria Musical';
+                });
+                const temMusicalizacao = cursosProf.some(c => {
+                    const curso = CURSOS_MAP[c];
+                    return curso && curso.tipo === 'Musicalização';
+                });
+
+                // Aviso (não bloqueia) se cargo não corresponde exatamente
+                if (cargo === 'professor-instrumento' && !temInstrumento &&
+                    (temTeoria || temMusicalizacao)) {
+                    console.warn('Cargo selecionado não corresponde aos cursos do professor. Continuando mesmo assim.');
+                }
+            }
+
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[cargo].titulo}`;
+            document.getElementById('userDisplay').innerHTML = `👤 ${nome} - ${cargoConfig[cargo].titulo}`;
+
+            renderDashboard(cargo);
+        });
+
+        // ============================================
+        // RENDER DASHBOARD
+        // ============================================
+        function renderDashboard(cargo) {
+            const config = cargoConfig[cargo];
+            document.getElementById('cardsContainer').innerHTML = `
+                <div class="card ${config.cores}">
+                    <h3>📌 ${config.titulo}</h3>
+                    <p>Bem-vindo ao painel de controle</p>
+                    <span class="badge">Acesso Ativo</span>
+                </div>
+            `;
+
+            document.getElementById('secretariaArea').classList.add('hidden');
+            document.getElementById('professorArea').classList.add('hidden');
+            document.getElementById('coordenadorArea').classList.add('hidden');
+            document.getElementById('direcaoArea').classList.add('hidden');
+            document.getElementById('financeiroArea').classList.add('hidden');
+
+            if (cargo === 'secretaria') {
+                document.getElementById('secretariaArea').classList.remove('hidden');
+                inicializarSecretaria();
+            }
+            if (cargo.startsWith('professor')) {
+                document.getElementById('professorArea').classList.remove('hidden');
+                document.getElementById('cursosSection').classList.remove('hidden');
+                document.getElementById('registrosSection').classList.remove('hidden');
+                renderMeusCursos();
+            }
+            if (cargo === 'coordenacao') {
+                document.getElementById('coordenadorArea').classList.remove('hidden');
+                renderVisaoCursos();
+                carregarProfessoresAtribuicao();
+                renderRelatoriosRecebidos();
+            }
+            if (cargo === 'direcao') {
+                document.getElementById('direcaoArea').classList.remove('hidden');
+                renderStatsGerenciais();
+            }
+            if (cargo === 'financeiro') {
+                document.getElementById('financeiroArea').classList.remove('hidden');
+                renderFinanceiro();
+            }
+        }
+
+        // ============================================
+        // SECRETARIA
+        // ============================================
+        function inicializarSecretaria() {
+            carregarAlunosSecretaria();
+            carregarMatriculasSecretaria();
+            carregarProfessoresSecretaria();
+            atualizarDashboardSecretaria();
+            carregarCursosGrid();
+            carregarFrequenciaSelectsSecretaria();
+        }
+
+        function toggleSecretaria(section, event) {
+            document.querySelectorAll('#secretariaArea .section-container').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`secretaria-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#secretariaArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+            
+            if (section === 'alunos') carregarAlunosSecretaria();
+            if (section === 'matriculas') carregarMatriculasSecretaria();
+            if (section === 'professores') carregarProfessoresSecretaria();
+            if (section === 'cursos') carregarCursosGrid();
+            if (section === 'frequencia') carregarFrequenciaSelectsSecretaria();
+        }
+
+        function atualizarDashboardSecretaria() {
+            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO');
+            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
+            const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso));
+            
+            document.getElementById('totalAlunosSecretaria').textContent = alunosAtivos.length;
+            document.getElementById('matriculasAtivas').textContent = matriculasAtivas.length;
+            document.getElementById('totalCursosSecretaria').textContent = cursosAtivos.size;
+            document.getElementById('totalProfessoresSecretaria').textContent = escolaData.professores.length;
+        }
+
+        function carregarAlunosSecretaria() {
+            const busca = document.getElementById('buscaAlunoSecretaria')?.value.toLowerCase() || '';
+            let alunos = escolaData.alunos;
+            if (busca) alunos = alunos.filter(a => a.nome.toLowerCase().includes(busca));
+
+            const tbody = document.getElementById('tabelaAlunosSecretaria');
+            if (alunos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum aluno encontrado.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = alunos.map(aluno => {
+                const matriculas = db.matriculas.filter(m => m.aluno === aluno.nome && m.status === 'ATIVO');
+                const cursosNomes = matriculas.map(m => labelCurso(m.curso)).join(', ') || 'Nenhum';
+                return `
+                    <tr>
+                        <td><strong>${aluno.nome}</strong></td>
+                        <td>${aluno.dataNascimento || '-'}</td>
+                        <td>${aluno.responsavel || '-'}</td>
+                        <td>${aluno.contato || '-'}</td>
+                        <td style="font-size:0.85em;">${cursosNomes}</td>
+                        <td><span class="status-badge ${aluno.status === 'ATIVO' ? 'concluido' : 'inativo'}">${aluno.status}</span></td>
+                        <td>
+                            <button onclick="mostrarToast('Edição de aluno em breve.','info')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filtrarAlunosSecretaria() { carregarAlunosSecretaria(); }
+
+        function abrirModalCadastroAluno() {
+            document.getElementById('formCadastroAluno').reset();
+            const container = document.getElementById('cursosChecklist');
+            container.innerHTML = CURSOS.map(c => `
+                <label style="display:block; padding:4px 0;">
+                    <input type="checkbox" value="${c.id}" class="curso-checkbox"> ${c.nome}
+                </label>
+            `).join('');
+            document.getElementById('modalCadastroAluno').classList.add('active');
+        }
+
+        document.getElementById('formCadastroAluno').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const nome = document.getElementById('cadAlunoNome').value.trim().toUpperCase();
+            const dataNascimento = document.getElementById('cadAlunoNascimento').value;
+            const responsavel = document.getElementById('cadAlunoResponsavel').value.trim().toUpperCase();
+            const contato = document.getElementById('cadAlunoContato').value.trim();
+            const cursosSelecionados = Array.from(document.querySelectorAll('.curso-checkbox:checked')).map(cb => cb.value);
+
+            if (!nome) { alert('Nome é obrigatório.'); return; }
+
+            const payload = { nome, dataNascimento, responsavel, contato, status: 'ATIVO' };
+            try {
+                const resultado = await enviarParaGAS('salvarAluno', payload);
+                if (resultado.success) {
+                    escolaData.alunos.push({
+                        nome,
+                        dataNascimento: formatarDataParaExibicao(dataNascimento),
+                        responsavel,
+                        contato,
+                        status: 'ATIVO'
+                    });
+
+                    for (const cursoId of cursosSelecionados) {
+                        const professor = getProfessorByCurso(cursoId);
+                        const matriculaPayload = {
+                            aluno: nome,
+                            curso: cursoId,
+                            professor: professor ? professor.nome : '',
+                            dataMatricula: getDataAtualFormatada(),
+                            anoLetivo: new Date().getFullYear().toString(),
+                            status: 'ATIVO'
+                        };
+                        await enviarParaGAS('salvarMatricula', matriculaPayload);
+                        db.matriculas.push(matriculaPayload);
+                    }
+
+                    fecharModal('modalCadastroAluno');
+                    carregarAlunosSecretaria();
+                    atualizarDashboardSecretaria();
+                    mostrarToast(
+                        `✅ Aluno ${nome} cadastrado${cursosSelecionados.length ? ' em ' + cursosSelecionados.length + ' curso(s)' : ''}!`,
+                        'success'
+                    );
+                    setTimeout(() => carregarDadosPlanilha(), 1000);
+                }
+            } catch (error) {
+                mostrarToast(`❌ Erro: ${error.message}`, 'error');
+            }
+        });
+
+        function carregarMatriculasSecretaria() {
+            const filtroCurso = document.getElementById('filtroCursoMatricula')?.value || '';
+            const busca = document.getElementById('buscaMatriculaSecretaria')?.value.toLowerCase() || '';
+            
+            const selectFiltro = document.getElementById('filtroCursoMatricula');
+            if (selectFiltro) {
+                selectFiltro.innerHTML = '<option value="">Todos os Cursos</option>' +
+                    CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            }
+
+            let matriculas = db.matriculas;
+            if (filtroCurso) matriculas = matriculas.filter(m => m.curso === filtroCurso);
+            if (busca) matriculas = matriculas.filter(m => m.aluno.toLowerCase().includes(busca));
+
+            const tbody = document.getElementById('tabelaMatriculasSecretaria');
+            if (matriculas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhuma matrícula encontrada.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = matriculas.map(m => `
+                <tr>
+                    <td><strong>${m.aluno}</strong></td>
+                    <td>${labelCurso(m.curso)}</td>
+                    <td>${m.professor || '-'}</td>
+                    <td>${m.dataMatricula || '-'}</td>
+                    <td><span class="status-badge ${m.status === 'ATIVO' ? 'concluido' : 'inativo'}">${m.status}</span></td>
+                    <td>
+                        <button onclick="cancelarMatricula('${m.aluno.replace(/'/g, "\\'")}', '${m.curso}')" class="btn btn-small btn-danger" style="padding:2px 8px;">❌</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filtrarMatriculasSecretaria() { carregarMatriculasSecretaria(); }
+
+        async function cancelarMatricula(aluno, curso) {
+            if (!confirm(`Cancelar matrícula de ${aluno} no curso ${labelCurso(curso)}?`)) return;
+            const m = db.matriculas.find(m => m.aluno === aluno && m.curso === curso);
+            if (m) {
+                m.status = 'CANCELADO';
+                await enviarParaGAS('atualizarMatricula', { aluno, curso, status: 'CANCELADO' });
+                carregarMatriculasSecretaria();
+                atualizarDashboardSecretaria();
+                mostrarToast('✅ Matrícula cancelada.', 'success');
+            }
+        }
+
+        function abrirModalNovaMatricula() {
+            const selectAluno = document.getElementById('matriculaAluno');
+            selectAluno.innerHTML = '<option value="">-- Selecione --</option>' +
+                escolaData.alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
+
+            const selectCurso = document.getElementById('matriculaCurso');
+            selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
+                CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            const profSelect = document.getElementById('matriculaProfessor');
+            profSelect.innerHTML = '<option value="">-- Selecione o curso primeiro --</option>';
+            profSelect.disabled = true;
+
+            selectCurso.onchange = function() {
+                const cursoId = this.value;
+                const professor = getProfessorByCurso(cursoId);
+                if (professor) {
+                    profSelect.innerHTML = `<option value="${professor.nome}" selected>${professor.nome}</option>`;
+                } else {
+                    profSelect.innerHTML = '<option value="">⚠️ Nenhum professor cadastrado para este curso</option>';
+                }
+                profSelect.disabled = true;
+            };
+
+            document.getElementById('modalNovaMatricula').classList.add('active');
+        }
+
+        document.getElementById('formNovaMatricula').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const aluno = document.getElementById('matriculaAluno').value;
+            const curso = document.getElementById('matriculaCurso').value;
+            const ano = document.getElementById('matriculaAno').value;
+
+            if (!aluno || !curso) { alert('Preencha aluno e curso.'); return; }
+
+            const professor = getProfessorByCurso(curso);
+            const professorNome = professor ? professor.nome : '';
+
+            if (!professorNome) {
+                if (!confirm('⚠️ Nenhum professor cadastrado para este curso. Deseja continuar mesmo assim?')) return;
+            }
+
+            const payload = {
+                aluno, curso,
+                professor: professorNome,
+                dataMatricula: getDataAtualFormatada(),
+                anoLetivo: ano, status: 'ATIVO'
+            };
+
+            try {
+                const resultado = await enviarParaGAS('salvarMatricula', payload);
+                if (resultado.success) {
+                    db.matriculas.push(payload);
+                    fecharModal('modalNovaMatricula');
+                    carregarMatriculasSecretaria();
+                    atualizarDashboardSecretaria();
+                    mostrarToast(
+                        `✅ Matrícula registrada${professorNome ? ' com Prof. ' + professorNome : ''}!`,
+                        'success'
+                    );
+                    setTimeout(() => carregarDadosPlanilha(), 1000);
+                }
+            } catch (error) {
+                mostrarToast(`❌ Erro: ${error.message}`, 'error');
+            }
+        });
+
+        function carregarProfessoresSecretaria() {
+            const busca = document.getElementById('buscaProfessorSecretaria')?.value.toLowerCase() || '';
+            let professores = escolaData.professores;
+            if (busca) professores = professores.filter(p => p.nome.toLowerCase().includes(busca));
+
+            const tbody = document.getElementById('tabelaProfessoresSecretaria');
+            if (professores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum professor encontrado.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = professores.map(p => {
+                const cursosIds = extrairCursosDoProfessor(p);
+                const cursosNomes = cursosIds.length
+                    ? cursosIds.map(c => labelCurso(c)).join(', ')
+                    : '-';
+                return `
+                    <tr>
+                        <td>${p.id || '-'}</td>
+                        <td><strong>${p.nome}</strong></td>
+                        <td>${p.tipo || '-'}</td>
+                        <td style="font-size:0.85em;">${cursosNomes}</td>
+                        <td>${p.telefone || '-'}</td>
+                        <td>${p.email || '-'}</td>
+                        <td><span class="status-badge ${p.status === 'ATIVO' ? 'concluido' : 'inativo'}">${p.status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filtrarProfessoresSecretaria() { carregarProfessoresSecretaria(); }
+
+        function abrirModalCadastroProfessor() {
+            const id = 'PROF_' + new Date().getTime();
+            document.getElementById('formCadastroProfessor').reset();
+            document.getElementById('cadProfessorID').value = id;
+            
+            const selectCurso = document.getElementById('cadProfessorCurso');
+            selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
+                CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            const container = document.getElementById('cadProfessorCursosExtras');
+            container.innerHTML = CURSOS.map(c => `
+                <label style="display:block; padding:4px 0;">
+                    <input type="checkbox" value="${c.id}" class="prof-curso-extra"> ${c.nome}
+                </label>
+            `).join('');
+            
+            document.getElementById('modalCadastroProfessor').classList.add('active');
+        }
+
+        document.getElementById('formCadastroProfessor').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('cadProfessorID').value;
+            const nome = document.getElementById('cadProfessorNome').value.trim().toUpperCase();
+            const tipo = document.getElementById('cadProfessorTipo').value;
+            const cursoPrincipal = document.getElementById('cadProfessorCurso').value;
+            const cursosExtras = Array.from(document.querySelectorAll('.prof-curso-extra:checked')).map(cb => cb.value);
+            const telefone = document.getElementById('cadProfessorTelefone').value.trim();
+            const email = document.getElementById('cadProfessorEmail').value.trim();
+
+            if (!nome || !tipo || !cursoPrincipal || !telefone) {
+                alert('Preencha os campos obrigatórios.');
+                return;
+            }
+
+            // Combina principal + extras (sem duplicatas)
+            const todosCursos = [...new Set([cursoPrincipal, ...cursosExtras])];
+            const cursoString = todosCursos.join(',');
+
+            const payload = { id, nome, tipo, curso: cursoString, telefone, email };
+            try {
+                const resultado = await enviarParaGAS('salvarProfessor', payload);
+                if (resultado.success) {
+                    escolaData.professores.push({
+                        id, nome, tipo, curso: cursoString, telefone, email, status: 'ATIVO'
+                    });
+                    fecharModal('modalCadastroProfessor');
+                    carregarProfessoresSecretaria();
+                    atualizarDashboardSecretaria();
+                    mostrarToast(`✅ Professor ${nome} cadastrado em ${todosCursos.length} curso(s)!`, 'success');
+                    setTimeout(() => carregarDadosPlanilha(), 1000);
+                }
+            } catch (error) {
+                mostrarToast(`❌ Erro: ${error.message}`, 'error');
+            }
+        });
+
+        function carregarCursosGrid() {
+            const container = document.getElementById('cursosGrid');
+            container.innerHTML = CURSOS.map(curso => {
+                const professor = getProfessorByCurso(curso.id);
+                const alunos = getAlunosByCurso(curso.id);
+                return `
+                    <div class="stat-card" style="border-left: 4px solid #4299e1;">
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">${curso.nome}</div>
+                        <div style="color: #718096; font-size: 0.85em; margin-bottom: 8px;">
+                            <strong>Professor:</strong> ${professor ? professor.nome : 'Não atribuído'}
+                        </div>
+                        <div style="color: #718096; font-size: 0.85em;">
+                            <strong>Alunos:</strong> ${alunos.length}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function carregarFrequenciaSelectsSecretaria() {
+            const select = document.getElementById('frequenciaCursoSelect');
+            if (select) {
+                select.innerHTML = '<option value="">-- Selecione --</option>' +
+                    CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            }
+        }
+
+        function carregarFrequenciaSecretaria() {
+            const curso = document.getElementById('frequenciaCursoSelect').value;
+            const container = document.getElementById('frequenciaResultados');
+            if (!curso) {
+                container.innerHTML = '<p style="color:#718096;">Selecione um curso.</p>';
+                return;
+            }
+
+            const alunos = getAlunosByCurso(curso);
+            const presencas = db.presencas[curso] || [];
+            
+            if (alunos.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum aluno matriculado neste curso.</p>';
+                return;
+            }
+
+            let html = `
+                <div class="table-container">
+                    <h4>${labelCurso(curso)}</h4>
+                    <table>
+                        <thead><tr><th>Aluno</th><th>Presenças</th><th>Faltas</th><th>Frequência</th></tr></thead>
+                        <tbody>
+            `;
+            alunos.forEach(aluno => {
+                let presentes = 0;
+                presencas.forEach(p => { if (p.presentes.includes(aluno.nome)) presentes++; });
+                const total = presencas.length || 1;
+                const taxa = (presentes / total * 100);
+                html += `<tr>
+                    <td><strong>${aluno.nome}</strong></td>
+                    <td>${presentes}</td>
+                    <td>${total - presentes}</td>
+                    <td><span style="color:${taxa >= 75 ? '#48bb78' : '#f56565'};font-weight:bold;">${taxa.toFixed(1)}%</span></td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // RELATÓRIOS SECRETARIA
+        // ============================================
+        function gerarRelatorioAlunosSecretaria() {
+            const out = document.getElementById('relatorioSecretariaOutput');
+            out.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📋 Lista de Alunos</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Total:</strong> ${escolaData.alunos.length}</div>
+                    <table style="margin-top:15px;width:100%;border-collapse:collapse;">
+                        <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Nome</th><th style="padding:8px;border:1px solid #e2e8f0;">Responsável</th><th style="padding:8px;border:1px solid #e2e8f0;">Contato</th><th style="padding:8px;border:1px solid #e2e8f0;">Status</th></tr></thead>
+                        <tbody>
+                            ${escolaData.alunos.map(a => `<tr><td style="padding:8px;border:1px solid #e2e8f0;">${a.nome}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.responsavel||'-'}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.contato||'-'}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.status}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioMatriculasSecretaria() {
+            const out = document.getElementById('relatorioSecretariaOutput');
+            const ativas = db.matriculas.filter(m => m.status === 'ATIVO');
+            out.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📋 Matrículas por Curso</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Matrículas Ativas:</strong> ${ativas.length}</div>
+                    <div style="margin-top:15px;">
+                        ${CURSOS.map(c => {
+                            const ms = ativas.filter(m => m.curso === c.id);
+                            if (ms.length === 0) return '';
+                            return `<div style="margin-bottom:10px;padding:10px;background:#f7fafc;border-radius:8px;">
+                                <strong>${c.nome}</strong> — ${ms.length} aluno(s)
+                                <div style="font-size:0.85em;color:#718096;">${ms.map(m => m.aluno).join(', ')}</div>
+                            </div>`;
+                        }).join('') || '<p>Nenhuma matrícula ativa.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioCompletoSecretaria() {
+            gerarRelatorioAlunosSecretaria();
+        }
+
+        // ============================================
+        // PROFESSOR - RENDERIZAÇÃO DOS CURSOS
+        // ============================================
+        function renderMeusCursos() {
+            const container = document.getElementById('cursosContainer');
+
+            // Rede de segurança: recalcula cursos a partir do professorData
+            if (currentUser.professorData) {
+                currentUser.cursos = extrairCursosDoProfessor(currentUser.professorData);
+            }
+
+            if (!currentUser.cursos || currentUser.cursos.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #718096;">
+                        <p>📭 Nenhum curso atribuído.</p>
+                        <p style="font-size: 0.9em;">Entre em contato com a coordenação.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const header = `
+                <div style="grid-column: 1/-1; margin-bottom: 12px; padding: 12px 15px; background: #ebf8ff; border-radius: 8px; border-left: 4px solid #4299e1;">
+                    <strong>👨‍🏫 Você leciona em ${currentUser.cursos.length} curso(s):</strong>
+                    <div style="margin-top:6px; font-size: 0.95em;">
+                        ${currentUser.cursos.map(id => labelCurso(id)).join(' • ')}
+                    </div>
+                </div>
+            `;
+
+            const cards = currentUser.cursos.map(cursoId => {
+                const curso = CURSOS_MAP[cursoId];
+                const alunos = getAlunosByCurso(cursoId);
+                return `
+                    <div class="turma-item ${cursoSelecionado === cursoId ? 'selected' : ''}" onclick="selecionarCurso('${cursoId}')">
+                        ${labelCurso(cursoId)}
+                        <span class="ano">${curso ? curso.tipo : ''}</span>
+                        <span class="status">👥 ${alunos.length} aluno(s)</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = header + cards;
+
+            // Auto-seleciona o primeiro curso se nenhum selecionado
+            if (!cursoSelecionado && currentUser.cursos.length > 0) {
+                selecionarCurso(currentUser.cursos[0]);
+            }
+        }
+
+        function selecionarCurso(cursoId) {
+            cursoSelecionado = cursoId;
+            document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoId);
+            renderMeusCursos();
+            carregarTabelaNotas();
+            carregarPresenca();
+            carregarConteudos();
+            carregarObservacoes();
+            carregarAlunosSelects();
+            renderRelatoriosEnviados();
+        }
+
+        function toggleSection(section, event) {
+            document.querySelectorAll('#professorArea .toggle-section').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`section-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#professorArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+
+            if (section === 'presencas') carregarPresenca();
+            if (section === 'conteudos') carregarConteudos();
+            if (section === 'observacoes') carregarObservacoes();
+            if (section === 'relatorios') renderRelatoriosEnviados();
+        }
+
+        function carregarTabelaNotas() {
+            if (!cursoSelecionado) return;
+            const bimestre = parseInt(document.getElementById('bimestreNota').value);
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            const tbody = document.getElementById('tabelaNotasBody');
+
+            if (alunos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#718096;">Nenhum aluno neste curso.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = alunos.map((aluno, idx) => {
+                const nota = getNotaAluno(aluno.nome, cursoSelecionado, bimestre);
+                const media = getMediaAluno(aluno.nome, cursoSelecionado);
+                const alunoId = aluno.nome.replace(/\s/g, '_').replace(/[^A-Za-z0-9_]/g, '');
+                return `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><strong>${aluno.nome}</strong></td>
+                        <td><input type="number" class="nota-input" id="nota_${alunoId}" value="${nota}" min="0" max="10" step="0.5"></td>
+                        <td><strong>${media.toFixed(1)}</strong></td>
+                        <td><span class="status-badge ${media >= 7 ? 'concluido' : media >= 5 ? 'pendente' : 'inativo'}">${media >= 7 ? 'Aprovado' : media >= 5 ? 'Recuperação' : 'Reprovado'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function salvarNotas() {
+            if (!cursoSelecionado) return;
+            const bimestre = parseInt(document.getElementById('bimestreNota').value);
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            const avaliacoes = [];
+
+            alunos.forEach(aluno => {
+                const alunoId = aluno.nome.replace(/\s/g, '_').replace(/[^A-Za-z0-9_]/g, '');
+                const input = document.getElementById(`nota_${alunoId}`);
+                if (input) {
+                    const nota = parseFloat(input.value) || 0;
+                    avaliacoes.push({ aluno: aluno.nome, curso: cursoSelecionado, bimestre, nota, professor: currentUser.nome });
+                }
+            });
+
+            const resultado = await enviarParaGAS('salvarAvaliacoes', { avaliacoes });
+            if (resultado.success) {
+                avaliacoes.forEach(av => {
+                    const idx = db.avaliacoes.findIndex(a => a.aluno === av.aluno && a.curso === av.curso && a.bimestre === av.bimestre);
+                    if (idx > -1) db.avaliacoes[idx] = av;
+                    else db.avaliacoes.push(av);
+                });
+                mostrarToast('✅ Avaliações salvas!', 'success');
+                carregarTabelaNotas();
+            }
+        }
+
+        function carregarPresenca() {
+            if (!cursoSelecionado) return;
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            const container = document.getElementById('alunosPresencaTabela');
+            if (!container) return;
+
+            container.innerHTML = alunos.map((aluno, idx) => `
+                <tr>
+                    <td style="text-align:center;">${idx + 1}</td>
+                    <td>${aluno.nome}</td>
+                    <td style="text-align:center;"><input type="checkbox" class="presenca-checkbox" data-aluno="${aluno.nome}" checked></td>
+                </tr>
+            `).join('');
+
+            const inputData = document.getElementById('dataPresenca');
+            if (inputData && !inputData.value) inputData.value = new Date().toISOString().split('T')[0];
+
+            renderRegistrosPresenca();
+        }
+
+        function renderRegistrosPresenca() {
+            const container = document.getElementById('registrosPresenca');
+            const registros = db.presencas[cursoSelecionado] || [];
+            if (registros.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum registro.</p>';
+                return;
+            }
+            container.innerHTML = registros.slice(-10).reverse().map(r => `
+                <div class="registro-item">
+                    <div class="data">📅 ${r.data}</div>
+                    <div class="conteudo">✅ ${r.presentes.length} presentes</div>
+                </div>
+            `).join('');
+        }
+
+        async function salvarPresenca() {
+            if (!cursoSelecionado) return;
+            const data = formatarDataParaPlanilha(document.getElementById('dataPresenca').value);
+            const checkboxes = document.querySelectorAll('#alunosPresencaTabela input:checked');
+            const presentes = Array.from(checkboxes).map(cb => cb.dataset.aluno);
+            const observacao = document.getElementById('obsPresenca').value.trim();
+
+            const payload = {
+                curso: cursoSelecionado, data, presentes,
+                observacao, professor: currentUser.nome
+            };
+            const resultado = await enviarParaGAS('salvarPresenca', payload);
+            if (resultado.success) {
+                if (!db.presencas[cursoSelecionado]) db.presencas[cursoSelecionado] = [];
+                db.presencas[cursoSelecionado].push({ data, presentes });
+                renderRegistrosPresenca();
+                mostrarToast('✅ Presença salva!', 'success');
+            }
+        }
+
+        function carregarConteudos() {
+            const container = document.getElementById('registrosConteudos');
+            const registros = db.conteudos[cursoSelecionado] || [];
+            if (registros.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum conteúdo registrado.</p>';
+                return;
+            }
+            container.innerHTML = registros.slice(-10).reverse().map(c => `
+                <div class="registro-item">
+                    <div class="data">📚 ${c.data}</div>
+                    <div class="conteudo">${c.conteudo}</div>
+                </div>
+            `).join('');
+        }
+
+        async function salvarConteudo() {
+            if (!cursoSelecionado) return;
+            const data = formatarDataParaPlanilha(document.getElementById('dataConteudo').value);
+            const conteudo = document.getElementById('conteudoText').value.trim();
+            const objetivos = document.getElementById('objetivosConteudo').value.trim();
+            if (!conteudo) { alert('Digite o conteúdo.'); return; }
+
+            const payload = {
+                curso: cursoSelecionado, data, conteudo, objetivos,
+                professor: currentUser.nome
+            };
+            const resultado = await enviarParaGAS('salvarConteudo', payload);
+            if (resultado.success) {
+                if (!db.conteudos[cursoSelecionado]) db.conteudos[cursoSelecionado] = [];
+                db.conteudos[cursoSelecionado].push({ data, conteudo, objetivos });
+                carregarConteudos();
+                document.getElementById('conteudoText').value = '';
+                mostrarToast('✅ Conteúdo salvo!', 'success');
+            }
+        }
+
+        function carregarObservacoes() {
+            const container = document.getElementById('registrosObservacoes');
+            const registros = db.observacoes[cursoSelecionado] || [];
+            if (registros.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhuma observação.</p>';
+                return;
+            }
+            container.innerHTML = registros.slice(-10).reverse().map(o => `
+                <div class="registro-item">
+                    <div class="data">✏️ ${o.data} - ${o.aluno}</div>
+                    <div class="conteudo">${o.observacao}</div>
+                </div>
+            `).join('');
+        }
+
+        async function salvarObservacao() {
+            if (!cursoSelecionado) return;
+            const data = formatarDataParaPlanilha(document.getElementById('dataObservacao').value);
+            const aluno = document.getElementById('alunoObservacao').value;
+            const observacao = document.getElementById('observacaoText').value.trim();
+            const tipo = document.getElementById('tipoObservacao').value;
+            if (!observacao) { alert('Digite a observação.'); return; }
+
+            const payload = {
+                curso: cursoSelecionado, data, aluno, observacao, tipo,
+                professor: currentUser.nome
+            };
+            const resultado = await enviarParaGAS('salvarObservacao', payload);
+            if (resultado.success) {
+                if (!db.observacoes[cursoSelecionado]) db.observacoes[cursoSelecionado] = [];
+                db.observacoes[cursoSelecionado].push({ data, aluno, observacao, tipo });
+                carregarObservacoes();
+                document.getElementById('observacaoText').value = '';
+                mostrarToast('✅ Observação salva!', 'success');
+            }
+        }
+
+        function carregarAlunosSelects() {
+            if (!cursoSelecionado) return;
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            ['alunoRelatorioPreencher', 'alunoObservacao'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = alunos.length
+                        ? alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('')
+                        : '<option value="">Nenhum aluno</option>';
+                }
+            });
+        }
+
+        function renderRelatoriosEnviados() {
+            const container = document.getElementById('relatoriosEnviados');
+            const relatorios = db.relatorios.filter(r =>
+                r.curso === cursoSelecionado && r.professor === currentUser.nome
+            );
+            if (relatorios.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum relatório enviado.</p>';
+                return;
+            }
+            container.innerHTML = relatorios.map(r => `
+                <div class="registro-item">
+                    <div class="data">📄 ${r.aluno} - ${r.bimestre}º Bim</div>
+                    <div class="conteudo">Enviado em: ${r.data}</div>
+                </div>
+            `).join('');
+        }
+
+        async function enviarRelatorioCoordenacao() {
+            if (!cursoSelecionado) return;
+            const aluno = document.getElementById('alunoRelatorioPreencher').value;
+            const bimestre = document.getElementById('bimestreRelatorioPreencher').value;
+            const relatorio = document.getElementById('relatorioTexto').value.trim();
+            if (!aluno) { alert('Selecione um aluno.'); return; }
+            if (!relatorio) { alert('Digite o relatório.'); return; }
+
+            const payload = {
+                aluno, curso: cursoSelecionado, bimestre,
+                professor: currentUser.nome, relatorio,
+                data: getDataAtualFormatada()
+            };
+
+            const resultado = await enviarParaGAS('salvarRelatorio', payload);
+            if (resultado.success) {
+                db.relatorios.push(payload);
+                renderRelatoriosEnviados();
+                document.getElementById('relatorioTexto').value = '';
+                mostrarToast('✅ Relatório enviado!', 'success');
+            }
+        }
+
+        // ============================================
+        // COORDENAÇÃO
+        // ============================================
+        function toggleCoordenacao(section, event) {
+            document.querySelectorAll('#coordenadorArea .section-container').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`coordenacao-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#coordenadorArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+        }
+
+        function renderVisaoCursos() {
+            const tbody = document.getElementById('visaoGeralCursos');
+            tbody.innerHTML = CURSOS.map(curso => {
+                const alunos = getAlunosByCurso(curso.id);
+                const professor = getProfessorByCurso(curso.id);
+                const presencas = db.presencas[curso.id] || [];
+                
+                let totalPres = 0, totalDias = presencas.length;
+                alunos.forEach(aluno => {
+                    presencas.forEach(p => { if (p.presentes.includes(aluno.nome)) totalPres++; });
+                });
+                const taxaPres = totalDias > 0 && alunos.length > 0 ? (totalPres / (totalDias * alunos.length) * 100) : 0;
+
+                let somaMedias = 0, count = 0;
+                alunos.forEach(aluno => {
+                    const media = getMediaAluno(aluno.nome, curso.id);
+                    if (media > 0) { somaMedias += media; count++; }
+                });
+                const mediaGeral = count > 0 ? somaMedias / count : 0;
+
+                return `
+                    <tr>
+                        <td><strong>${curso.nome}</strong></td>
+                        <td>${professor ? professor.nome : 'Não atribuído'}</td>
+                        <td>${mediaGeral.toFixed(1)}</td>
+                        <td>${taxaPres.toFixed(1)}%</td>
+                        <td>${alunos.length}</td>
+                        <td><button onclick="alert('Curso: ${curso.nome}\\nProfessor: ${professor ? professor.nome : '-'}\\nAlunos: ${alunos.length}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️ Ver</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function carregarProfessoresAtribuicao() {
+            const select = document.getElementById('professorSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Selecione --</option>' +
+                escolaData.professores.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+
+            const cursoSelect = document.getElementById('cursoSelect');
+            if (cursoSelect) {
+                cursoSelect.innerHTML = '<option value="">-- Selecione --</option>' +
+                    CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            }
+
+            renderProfessoresAtribuidos();
+        }
+
+        function renderProfessoresAtribuidos() {
+            const container = document.getElementById('professoresAtribuidos');
+            if (!container) return;
+            container.innerHTML = escolaData.professores.map(prof => {
+                const cursos = extrairCursosDoProfessor(prof);
+                return `
+                    <div class="professor-item">
+                        <strong>${prof.nome}</strong>
+                        <div class="especialidade">${prof.tipo || ''}</div>
+                        <div class="turmas-atribuidas">
+                            ${cursos.length > 0 ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum curso</span>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function atribuirCurso() {
+            const profId = document.getElementById('professorSelect').value;
+            const cursoId = document.getElementById('cursoSelect').value;
+            if (!profId || !cursoId) { alert('Selecione professor e curso.'); return; }
+
+            const prof = escolaData.professores.find(p => p.id === profId);
+            if (!prof) return;
+
+            const cursosAtuais = extrairCursosDoProfessor(prof);
+            if (cursosAtuais.includes(cursoId)) { alert('Curso já atribuído.'); return; }
+            cursosAtuais.push(cursoId);
+            prof.curso = cursosAtuais.join(',');
+
+            const payload = { id: profId, curso: prof.curso };
+            await enviarParaGAS('atualizarProfessor', payload);
+            renderProfessoresAtribuidos();
+            renderVisaoCursos();
+            mostrarToast(`✅ Curso ${labelCurso(cursoId)} atribuído a ${prof.nome}!`, 'success');
+        }
+
+        async function removerCurso() {
+            const profId = document.getElementById('professorSelect').value;
+            const cursoId = document.getElementById('cursoSelect').value;
+            if (!profId || !cursoId) { alert('Selecione professor e curso.'); return; }
+
+            const prof = escolaData.professores.find(p => p.id === profId);
+            if (!prof) return;
+
+            const cursosAtuais = extrairCursosDoProfessor(prof).filter(c => c !== cursoId);
+            prof.curso = cursosAtuais.join(',');
+
+            const payload = { id: profId, curso: prof.curso };
+            await enviarParaGAS('atualizarProfessor', payload);
+            renderProfessoresAtribuidos();
+            renderVisaoCursos();
+            mostrarToast(`✅ Curso removido de ${prof.nome}.`, 'success');
+        }
+
+        function renderRelatoriosRecebidos() {
+            const container = document.getElementById('listaRelatoriosRecebidos');
+            if (!container) return;
+            if (db.relatorios.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum relatório recebido.</p>';
+                return;
+            }
+            container.innerHTML = db.relatorios.slice().reverse().map(r => `
+                <div class="registro-item">
+                    <div class="data">📄 ${r.aluno} - ${labelCurso(r.curso)} - ${r.bimestre}º Bim</div>
+                    <div class="conteudo">${(r.relatorio || '').substring(0, 150)}...</div>
+                    <div style="font-size:0.85em;color:#718096;">Professor: ${r.professor} | Data: ${r.data}</div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // DIREÇÃO
+        // ============================================
+        function renderStatsGerenciais() {
+            const container = document.getElementById('statsGerenciais');
+            if (!container) return;
+            
+            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO').length;
+            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO').length;
+            const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso)).size;
+            
+            let somaMedias = 0, count = 0;
+            db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => {
+                const media = getMediaAluno(m.aluno, m.curso);
+                if (media > 0) { somaMedias += media; count++; }
+            });
+            const mediaGeral = count > 0 ? somaMedias / count : 0;
+
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-number">${alunosAtivos}</div>
+                    <div class="stat-label">Alunos Ativos</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #48bb78;">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-number">${matriculasAtivas}</div>
+                    <div class="stat-label">Matrículas Ativas</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #4299e1;">
+                    <div class="stat-icon">🎵</div>
+                    <div class="stat-number">${cursosAtivos}</div>
+                    <div class="stat-label">Cursos Ativos</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #9f7aea;">
+                    <div class="stat-icon">👨‍🏫</div>
+                    <div class="stat-number">${escolaData.professores.length}</div>
+                    <div class="stat-label">Professores</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #ed8936;">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-number">${mediaGeral.toFixed(1)}</div>
+                    <div class="stat-label">Média Geral</div>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioGeral() {
+            const container = document.getElementById('relatorioConsolidado');
+            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO');
+            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
+            
+            container.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📊 Relatório Geral da Escola de Música</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Total de Alunos Ativos:</strong> ${alunosAtivos.length}</div>
+                    <div class="info-line"><strong>Total de Matrículas Ativas:</strong> ${matriculasAtivas.length}</div>
+                    <div class="info-line"><strong>Total de Professores:</strong> ${escolaData.professores.length}</div>
+                    <div style="margin-top:15px;">
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Curso</th><th style="padding:8px;border:1px solid #e2e8f0;">Alunos</th><th style="padding:8px;border:1px solid #e2e8f0;">Professor</th><th style="padding:8px;border:1px solid #e2e8f0;">Média</th></tr></thead>
+                            <tbody>
+                                ${CURSOS.map(curso => {
+                                    const alunos = getAlunosByCurso(curso.id);
+                                    const professor = getProfessorByCurso(curso.id);
+                                    let soma = 0, c = 0;
+                                    alunos.forEach(a => {
+                                        const m = getMediaAluno(a.nome, curso.id);
+                                        if (m > 0) { soma += m; c++; }
+                                    });
+                                    return `<tr>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${curso.nome}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${alunos.length}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${professor ? professor.nome : '-'}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${c > 0 ? (soma / c).toFixed(1) : '0.0'}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioPorCurso() { gerarRelatorioGeral(); }
+
+        function gerarRelatorioPorProfessor() {
+            const container = document.getElementById('relatorioConsolidado');
+            container.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📊 Relatório por Professor</h4>
+                    <div style="margin-top:15px;">
+                        ${escolaData.professores.map(prof => {
+                            const cursos = extrairCursosDoProfessor(prof);
+                            return `
+                                <div style="margin-bottom:15px;padding:10px;background:#f7fafc;border-radius:8px;">
+                                    <h5>${prof.nome} (${prof.tipo || '-'})</h5>
+                                    <p style="color:#718096;font-size:0.9em;">Cursos: ${cursos.map(c => labelCurso(c)).join(', ') || 'Nenhum'}</p>
+                                    <p style="color:#718096;font-size:0.9em;">Telefone: ${prof.telefone || '-'}</p>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // FINANCEIRO
+        // ============================================
+        function renderFinanceiro() {
+            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO').length;
+            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO').length;
+            const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso)).size;
+            
+            document.getElementById('finTotalAlunos').textContent = alunosAtivos;
+            document.getElementById('finTotalMatriculas').textContent = matriculasAtivas;
+            document.getElementById('finTotalCursos').textContent = cursosAtivos;
+
+            const container = document.getElementById('finMatriculasPorCurso');
+            container.innerHTML = CURSOS.map(curso => {
+                const alunos = getAlunosByCurso(curso.id);
+                return `
+                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
+                        <span>${curso.nome}</span>
+                        <strong>${alunos.length} aluno(s)</strong>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // MODAL / UTILITÁRIOS
+        // ============================================
+        function fecharModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        function logout() {
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('loginForm').reset();
+            currentUser = { cargo: '', nome: '', professorData: null, cursos: [] };
+            cursoSelecionado = null;
+        }
+
+        function imprimirRelatorioModal() {
+            const conteudo = document.getElementById('modalRelatorioContent');
+            if (conteudo) {
+                const janela = window.open('', '_blank');
+                janela.document.write(`<html><head><title>Relatório</title></head><body>${conteudo.innerHTML}</body></html>`);
+                janela.document.close();
+                janela.print();
+            }
+        }
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const hoje = new Date();
+            const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+            const dataPresenca = document.getElementById('dataPresenca');
+            const dataObs = document.getElementById('dataObservacao');
+            const dataCont = document.getElementById('dataConteudo');
+            if (dataPresenca) dataPresenca.value = dataHoje;
+            if (dataObs) dataObs.value = dataHoje;
+            if (dataCont) dataCont.value = dataHoje;
+
+            setTimeout(() => { carregarDadosPlanilha(); }, 500);
+        });
+    </script>
+</body>
+</html>
