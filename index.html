@@ -4,7 +4,305 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Gestão - Escola de Música</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: white; border-radius: 15px; padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .header h1 { color: #2d3748; font-size: 1.5em; }
+        .subtitle { color: #718096; font-size: 0.9em; margin-top: 5px; }
+        .badge-google {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 0.85em; font-weight: 600;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column;
+        }
+        .loading-overlay.active { display: flex; }
+        .loading-content { text-align: center; }
+        .loading-spinner {
+            width: 50px; height: 50px; border: 5px solid #e2e8f0;
+            border-top-color: #667eea; border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== LOGIN ===== */
+        .login-container {
+            background: white; border-radius: 15px; padding: 40px;
+            max-width: 500px; margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .login-container h2 { margin-bottom: 20px; color: #2d3748; }
+        .login-info {
+            background: #ebf8ff; border-left: 4px solid #4299e1;
+            padding: 12px 15px; border-radius: 8px; margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        .login-info strong { display: block; margin-bottom: 4px; }
+
+        /* ===== FORMS ===== */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block; margin-bottom: 6px; font-weight: 600;
+            font-size: 0.9em; color: #4a5568;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 0.95em; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #667eea;
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-size: 1em; font-weight: 600;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+        .btn-secondary { background: linear-gradient(135deg, #4299e1, #3182ce); }
+        .btn-danger { background: linear-gradient(135deg, #f56565, #e53e3e); }
+        .btn-info { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .btn-small { padding: 6px 14px; font-size: 0.85em; width: auto; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn-logout {
+            background: #fed7d7; color: #c53030; border: none;
+            padding: 10px 18px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 0.9em;
+        }
+        .btn-logout:hover { background: #feb2b2; }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard { display: none; }
+        .dashboard.active { display: block; }
+        .dashboard-header {
+            background: white; border-radius: 15px; padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .user-info { color: #718096; font-size: 0.9em; margin-top: 5px; }
+
+        .sync-status {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85em; font-weight: 600;
+        }
+        .sync-status.synced { background: #c6f6d5; color: #22543d; }
+        .sync-status.error { background: #fed7d7; color: #742a2a; }
+
+        /* ===== CARDS ===== */
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px; margin-bottom: 20px;
+        }
+        .card {
+            background: white; border-radius: 15px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .card h3 { margin-bottom: 8px; color: #2d3748; }
+        .card p { color: #718096; font-size: 0.9em; }
+        .badge {
+            display: inline-block; margin-top: 12px; padding: 4px 12px;
+            background: #c6f6d5; color: #22543d; border-radius: 12px;
+            font-size: 0.8em; font-weight: 600;
+        }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .stat-card {
+            background: white; border-radius: 12px; padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+        }
+        .stat-icon { font-size: 1.8em; margin-bottom: 8px; }
+        .stat-number { font-size: 2em; font-weight: 700; color: #2d3748; }
+        .stat-label { color: #718096; font-size: 0.85em; margin-top: 4px; }
+
+        /* ===== SECTIONS ===== */
+        .section-container {
+            background: white; border-radius: 15px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px;
+        }
+        .section-container h3 { margin-bottom: 20px; color: #2d3748; }
+        .hidden { display: none !important; }
+
+        /* ===== TOGGLE BUTTONS ===== */
+        .toggle-btn {
+            background: #edf2f7; color: #4a5568; border: none;
+            padding: 10px 18px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 0.9em; transition: all 0.2s;
+        }
+        .toggle-btn:hover { background: #e2e8f0; }
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        /* ===== TABLES ===== */
+        .table-container {
+            overflow-x: auto; border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f7fafc; }
+        th {
+            padding: 12px 15px; text-align: left; font-weight: 600;
+            color: #4a5568; font-size: 0.85em; text-transform: uppercase;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 0.9em; }
+        tbody tr:hover { background: #f7fafc; }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 4px 10px; border-radius: 12px;
+            font-size: 0.8em; font-weight: 600;
+        }
+        .status-badge.concluido { background: #c6f6d5; color: #22543d; }
+        .status-badge.pendente { background: #feebc8; color: #7b341e; }
+        .status-badge.inativo { background: #fed7d7; color: #742a2a; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; padding: 20px; overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; border-radius: 15px; padding: 30px;
+            max-width: 700px; width: 100%; position: relative;
+            max-height: 90vh; overflow-y: auto;
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-close {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 1.8em; cursor: pointer; color: #a0aec0;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #4a5568; }
+
+        /* ===== CHECKLIST ===== */
+        .cursos-checklist {
+            max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 10px 15px; background: #f7fafc;
+        }
+        .cursos-checklist label { cursor: pointer; }
+
+        /* ===== CURSOS GRID / TURMAS ===== */
+        .turmas-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .turma-item {
+            background: white; border: 2px solid #e2e8f0; border-radius: 12px;
+            padding: 18px; cursor: pointer; transition: all 0.2s;
+            font-weight: 600; color: #2d3748;
+        }
+        .turma-item:hover { border-color: #667eea; transform: translateY(-2px); }
+        .turma-item.selected {
+            border-color: #667eea; background: #ebf8ff;
+            box-shadow: 0 5px 15px rgba(102,126,234,0.2);
+        }
+        .turma-item .ano, .turma-item .status {
+            display: block; font-size: 0.8em; font-weight: 500;
+            color: #718096; margin-top: 4px;
+        }
+
+        /* ===== REGISTROS ===== */
+        .registros-list { display: flex; flex-direction: column; gap: 10px; }
+        .registro-item {
+            background: #f7fafc; border-left: 4px solid #4299e1;
+            border-radius: 8px; padding: 12px 15px;
+        }
+        .registro-item .data { font-weight: 600; color: #4a5568; font-size: 0.9em; }
+        .registro-item .conteudo { color: #2d3748; margin-top: 4px; font-size: 0.9em; }
+
+        /* ===== PROFESSORES LIST ===== */
+        .professores-list { display: flex; flex-direction: column; gap: 12px; }
+        .professor-item {
+            background: #f7fafc; border-radius: 10px; padding: 15px;
+            border-left: 4px solid #9f7aea;
+        }
+        .professor-item .especialidade { color: #718096; font-size: 0.85em; margin: 4px 0; }
+        .turmas-atribuidas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .turma-tag {
+            background: #e9d8fd; color: #553c9a; padding: 3px 10px;
+            border-radius: 12px; font-size: 0.8em; font-weight: 600;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #2d3748; color: white; padding: 15px 25px;
+            border-radius: 10px; font-weight: 600; z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: toastIn 0.3s ease;
+        }
+        .toast-success { background: #38a169; }
+        .toast-error { background: #e53e3e; }
+        .toast-info { background: #3182ce; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== NOTIFICATION BADGE ===== */
+        .notification-badge {
+            background: #f56565; color: white; padding: 2px 8px;
+            border-radius: 10px; font-size: 0.75em; font-weight: 700;
+            margin-left: 4px;
+        }
+        .notification-badge.hidden { display: none; }
+
+        /* ===== RELATÓRIO ===== */
+        .relatorio-content {
+            background: #f7fafc; border-radius: 10px; padding: 20px;
+        }
+        .relatorio-content h4 { margin-bottom: 12px; color: #2d3748; }
+        .info-line { margin-bottom: 6px; font-size: 0.9em; color: #4a5568; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .dashboard-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -71,7 +369,6 @@
                 </div>
             </div>
 
-            <!-- Cards dinâmicos -->
             <div id="cardsContainer" class="cards-grid"></div>
 
             <!-- ÁREA DA SECRETARIA -->
@@ -86,7 +383,6 @@
                     <button class="toggle-btn" onclick="toggleSecretaria('relatorios', event)">📄 Relatórios</button>
                 </div>
 
-                <!-- Dashboard da Secretaria -->
                 <div id="secretaria-dashboard" class="section-container">
                     <h3>📊 Painel da Secretaria</h3>
                     <div class="stats-grid" id="secretariaStats">
@@ -119,7 +415,6 @@
                     </div>
                 </div>
 
-                <!-- Gestão de Alunos -->
                 <div id="secretaria-alunos" class="section-container hidden">
                     <h3>👥 Gestão de Alunos</h3>
                     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
@@ -151,7 +446,6 @@
                     </div>
                 </div>
 
-                <!-- Matrículas -->
                 <div id="secretaria-matriculas" class="section-container hidden">
                     <h3>📋 Gestão de Matrículas</h3>
                     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
@@ -188,7 +482,6 @@
                     </div>
                 </div>
 
-                <!-- Gestão de Professores -->
                 <div id="secretaria-professores" class="section-container hidden">
                     <h3>👨‍🏫 Gestão de Professores</h3>
                     <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
@@ -210,7 +503,7 @@
                                     <th>Curso(s)</th>
                                     <th>Telefone</th>
                                     <th>E-mail</th>
-                                    <th>Ações</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaProfessoresSecretaria">
@@ -220,13 +513,11 @@
                     </div>
                 </div>
 
-                <!-- Cursos -->
                 <div id="secretaria-cursos" class="section-container hidden">
                     <h3>🎵 Cursos Disponíveis</h3>
                     <div class="cards-grid" id="cursosGrid"></div>
                 </div>
 
-                <!-- Frequência -->
                 <div id="secretaria-frequencia" class="section-container hidden">
                     <h3>✅ Relatório de Frequência</h3>
                     <div class="form-row" style="margin-bottom: 20px;">
@@ -245,7 +536,6 @@
                     </div>
                 </div>
 
-                <!-- Relatórios -->
                 <div id="secretaria-relatorios" class="section-container hidden">
                     <h3>📄 Relatórios da Secretaria</h3>
                     <div class="btn-group" style="margin-bottom: 20px;">
@@ -258,7 +548,7 @@
                     </div>
                 </div>
 
-                <!-- Modal para cadastro de aluno -->
+                <!-- Modal Cadastro Aluno -->
                 <div id="modalCadastroAluno" class="modal-overlay">
                     <div class="modal-content">
                         <span class="modal-close" onclick="fecharModal('modalCadastroAluno')">&times;</span>
@@ -296,7 +586,7 @@
                     </div>
                 </div>
 
-                <!-- Modal para cadastro de professor -->
+                <!-- Modal Cadastro Professor -->
                 <div id="modalCadastroProfessor" class="modal-overlay">
                     <div class="modal-content">
                         <span class="modal-close" onclick="fecharModal('modalCadastroProfessor')">&times;</span>
@@ -323,11 +613,16 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Curso(s) que Leciona *</label>
+                                    <label>Curso Principal *</label>
                                     <select id="cadProfessorCurso" required>
                                         <option value="">-- Selecione --</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cursos Adicionais (opcional)</label>
+                                <div id="cadProfessorCursosExtras" class="cursos-checklist"></div>
+                                <small style="color:#718096;font-size:0.85em;">Marque outros cursos que este professor também leciona</small>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -347,7 +642,7 @@
                     </div>
                 </div>
 
-                <!-- Modal para nova matrícula -->
+                <!-- Modal Nova Matrícula -->
                 <div id="modalNovaMatricula" class="modal-overlay">
                     <div class="modal-content">
                         <span class="modal-close" onclick="fecharModal('modalNovaMatricula')">&times;</span>
@@ -371,8 +666,9 @@
                                 <div class="form-group">
                                     <label>Professor *</label>
                                     <select id="matriculaProfessor" required>
-                                        <option value="">-- Selecione --</option>
+                                        <option value="">-- Selecione o curso primeiro --</option>
                                     </select>
+                                    <small style="color:#718096;font-size:0.85em;">Preenchido automaticamente pelo curso</small>
                                 </div>
                                 <div class="form-group">
                                     <label>Ano Letivo *</label>
@@ -406,7 +702,6 @@
                             <button class="toggle-btn" onclick="toggleSection('relatorios', event)">📄 Relatórios</button>
                         </div>
 
-                        <!-- Seção de Avaliações -->
                         <div id="section-notas" class="toggle-section">
                             <div class="form-row" style="margin-bottom: 15px;">
                                 <div class="form-group">
@@ -441,7 +736,6 @@
                             </div>
                         </div>
 
-                        <!-- Seção de Presenças -->
                         <div id="section-presencas" class="toggle-section hidden">
                             <div class="form-row">
                                 <div class="form-group">
@@ -472,7 +766,6 @@
                             <div id="registrosPresenca" class="registros-list" style="margin-top: 20px;"></div>
                         </div>
 
-                        <!-- Seção de Conteúdos -->
                         <div id="section-conteudos" class="toggle-section hidden">
                             <div class="form-row">
                                 <div class="form-group">
@@ -492,7 +785,6 @@
                             <div id="registrosConteudos" class="registros-list" style="margin-top: 20px;"></div>
                         </div>
 
-                        <!-- Seção de Observações -->
                         <div id="section-observacoes" class="toggle-section hidden">
                             <div class="form-row">
                                 <div class="form-group">
@@ -520,7 +812,6 @@
                             <div id="registrosObservacoes" class="registros-list" style="margin-top: 20px;"></div>
                         </div>
 
-                        <!-- Seção de Relatórios -->
                         <div id="section-relatorios" class="toggle-section hidden">
                             <div style="margin-top: 20px; padding: 20px; background: #ebf8ff; border-radius: 10px; border-left: 4px solid #4299e1;">
                                 <h4>✏️ Preencher Relatório Pedagógico</h4>
@@ -561,7 +852,6 @@
                     <button class="toggle-btn" onclick="toggleCoordenacao('receber', event)">📥 Receber Relatórios <span id="notificacaoRelatorios" class="notification-badge hidden">0</span></button>
                 </div>
 
-                <!-- Visão por Curso -->
                 <div id="coordenacao-visao" class="section-container">
                     <h3>📊 Visão Geral por Curso</h3>
                     <div class="table-container">
@@ -581,7 +871,6 @@
                     </div>
                 </div>
 
-                <!-- Atribuição de Cursos -->
                 <div id="coordenacao-atribuicao" class="section-container hidden">
                     <h3>📋 Atribuição de Cursos</h3>
                     <div class="form-row">
@@ -608,14 +897,13 @@
                     </div>
                 </div>
 
-                <!-- Receber Relatórios -->
                 <div id="coordenacao-receber" class="section-container hidden">
                     <h3>📥 Relatórios Recebidos</h3>
                     <div id="listaRelatoriosRecebidos" class="registros-list"></div>
                 </div>
             </div>
 
-            <!-- ÁREA DA DIRETORIA -->
+            <!-- ÁREA DA DIREÇÃO -->
             <div id="direcaoArea" class="hidden">
                 <div class="section-container">
                     <h3>📊 Painel Gerencial</h3>
@@ -662,7 +950,6 @@
         </div>
     </div>
 
-    <!-- Modal para Relatório -->
     <div id="modalRelatorio" class="modal-overlay">
         <div class="modal-content" id="modalRelatorioContentWrapper">
             <span class="modal-close" onclick="fecharModal('modalRelatorio')">&times;</span>
@@ -676,7 +963,7 @@
 
     <script>
         // ============================================
-        // CONFIGURAÇÃO DA PLANILHA
+        // CONFIGURAÇÃO
         // ============================================
         const SHEET_CONFIG = {
             sheetId: '1FRtD7cbV2tvK2og4NDkyWi8V_hziyERNZoSh20gG980',
@@ -693,70 +980,47 @@
         };
 
         // ============================================
-        // CURSOS DISPONÍVEIS
+        // CURSOS (IDs = slug)
         // ============================================
         const CURSOS = [
-            { id: 'piano', nome: '🎹 Piano', tipo: 'Instrumento' },
-            { id: 'teclado', nome: '🎹 Teclado', tipo: 'Instrumento' },
-            { id: 'orgao', nome: '🎹 Órgão', tipo: 'Instrumento' },
-            { id: 'violao', nome: '🎸 Violão', tipo: 'Instrumento' },
-            { id: 'guitarra', nome: '🎸 Guitarra', tipo: 'Instrumento' },
-            { id: 'violino', nome: '🎻 Violino', tipo: 'Instrumento' },
-            { id: 'violoncelo', nome: '🎻 Violoncelo', tipo: 'Instrumento' },
-            { id: 'viola', nome: '🎻 Viola Erudita', tipo: 'Instrumento' },
-            { id: 'contrabaixo', nome: '🎻 Contrabaixo Acústico', tipo: 'Instrumento' },
-            { id: 'bateria', nome: '🥁 Bateria', tipo: 'Instrumento' },
-            { id: 'trompete', nome: '🎺 Trompete', tipo: 'Instrumento' },
-            { id: 'trombone', nome: '🎺 Trombone', tipo: 'Instrumento' },
-            { id: 'euphonio', nome: '🎺 Eufônio', tipo: 'Instrumento' },
-            { id: 'tuba', nome: '🎺 Tuba', tipo: 'Instrumento' },
-            { id: 'saxofone', nome: '🎷 Saxofone', tipo: 'Instrumento' },
-            { id: 'flauta', nome: '🎶 Flauta', tipo: 'Instrumento' },
-            { id: 'clarinete', nome: '🎶 Clarinete', tipo: 'Instrumento' },
-            { id: 'canto', nome: '🎤 Canto', tipo: 'Instrumento' },
-            { id: 'teoria', nome: '🎼 Teoria Musical', tipo: 'Teoria Musical' },
-            { id: 'musicalizacao', nome: '🎵 Musicalização Infantil', tipo: 'Musicalização' }
+            { id: 'piano',                  nome: '🎹 Piano',                  tipo: 'Instrumento' },
+            { id: 'teclado',                nome: '🎹 Teclado',                tipo: 'Instrumento' },
+            { id: 'orgao',                  nome: '🎹 Órgão',                  tipo: 'Instrumento' },
+            { id: 'violao',                 nome: '🎸 Violão',                 tipo: 'Instrumento' },
+            { id: 'guitarra',               nome: '🎸 Guitarra',               tipo: 'Instrumento' },
+            { id: 'violino',                nome: '🎻 Violino',                tipo: 'Instrumento' },
+            { id: 'violoncelo',             nome: '🎻 Violoncelo',             tipo: 'Instrumento' },
+            { id: 'viola-erudita',          nome: '🎻 Viola Erudita',          tipo: 'Instrumento' },
+            { id: 'contrabaixo-acustico',   nome: '🎻 Contrabaixo Acústico',   tipo: 'Instrumento' },
+            { id: 'bateria',                nome: '🥁 Bateria',                tipo: 'Instrumento' },
+            { id: 'trompete',               nome: '🎺 Trompete',               tipo: 'Instrumento' },
+            { id: 'trombone',               nome: '🎺 Trombone',               tipo: 'Instrumento' },
+            { id: 'euphonio',               nome: '🎺 Eufônio',                tipo: 'Instrumento' },
+            { id: 'tuba',                   nome: '🎺 Tuba',                   tipo: 'Instrumento' },
+            { id: 'saxofone',               nome: '🎷 Saxofone',               tipo: 'Instrumento' },
+            { id: 'flauta',                 nome: '🎶 Flauta',                 tipo: 'Instrumento' },
+            { id: 'clarinete',              nome: '🎶 Clarinete',              tipo: 'Instrumento' },
+            { id: 'canto',                  nome: '🎤 Canto',                  tipo: 'Instrumento' },
+            { id: 'teoria-musical1',         nome: '🎼 Teoria Musical 1',         tipo: 'Teoria Musical 1' },
+            { id: 'teoria-musical2',         nome: '🎼 Teoria Musical 2',         tipo: 'Teoria Musical 2' },
+            { id: 'musicalizacao-infantil', nome: '🎵 Musicalização Infantil', tipo: 'Musicalização' }
         ];
 
         const CURSOS_MAP = {};
         CURSOS.forEach(c => { CURSOS_MAP[c.id] = c; });
 
         // ============================================
-        // DADOS CARREGADOS
+        // DADOS
         // ============================================
         let dadosPlanilha = {
-            alunos: [],
-            matriculas: [],
-            professores: [],
-            avaliacoes: [],
-            presencas: [],
-            conteudos: [],
-            observacoes: [],
-            relatorios: []
+            alunos: [], matriculas: [], professores: [],
+            avaliacoes: [], presencas: [], conteudos: [],
+            observacoes: [], relatorios: []
         };
 
-        let escolaData = {
-            alunos: [],
-            professores: [],
-            cursos: CURSOS
-        };
-
-        let db = {
-            matriculas: [],
-            avaliacoes: [],
-            presencas: {},
-            conteudos: {},
-            observacoes: {},
-            relatorios: []
-        };
-
-        let currentUser = {
-            cargo: '',
-            nome: '',
-            professorData: null,
-            cursos: []
-        };
-
+        let escolaData = { alunos: [], professores: [], cursos: CURSOS };
+        let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [] };
+        let currentUser = { cargo: '', nome: '', professorData: null, cursos: [] };
         let cursoSelecionado = null;
 
         // ============================================
@@ -767,11 +1031,33 @@
             return String(valor).trim();
         }
 
+        /**
+         * Busca uma chave em um objeto ignorando caixa, acentos e espaços.
+         */
+        function getColuna(obj, ...nomes) {
+            if (!obj) return '';
+            const chaves = Object.keys(obj);
+            for (const nome of nomes) {
+                const alvo = String(nome)
+                    .toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[\s_\-]+/g, '');
+                for (const chave of chaves) {
+                    const chaveNorm = String(chave)
+                        .toLowerCase()
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[\s_\-]+/g, '');
+                    if (chaveNorm === alvo) return obj[chave];
+                }
+            }
+            return '';
+        }
+
         function formatarDataParaExibicao(dataISO) {
             if (!dataISO) return '';
             if (/^\d{2}-\d{2}-\d{4}$/.test(dataISO)) return dataISO;
             try {
-                const partes = dataISO.split('-');
+                const partes = String(dataISO).split('T')[0].split('-');
                 if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
                 return dataISO;
             } catch (e) { return dataISO; }
@@ -807,18 +1093,82 @@
         }
 
         function labelCurso(cursoId) {
+            if (!cursoId) return '-';
             const curso = CURSOS_MAP[cursoId];
             return curso ? curso.nome : cursoId;
         }
 
+        /**
+         * Normaliza um valor de curso (string) para o slug canônico.
+         */
+        function normalizarCursoId(cursoRaw) {
+            if (!cursoRaw) return '';
+            const raw = texto(cursoRaw).toLowerCase().trim();
+            if (!raw) return '';
+            if (CURSOS_MAP[raw]) return raw;
+
+            const mapa = {
+                'viola': 'viola-erudita',
+                'viola erudita': 'viola-erudita',
+                'contrabaixo': 'contrabaixo-acustico',
+                'contrabaixo acustico': 'contrabaixo-acustico',
+                'contrabaixo acústico': 'contrabaixo-acustico',
+                'teoria': 'teoria-musical',
+                'teoria musical': 'teoria-musical',
+                'musicalizacao': 'musicalizacao-infantil',
+                'musicalizacao infantil': 'musicalizacao-infantil',
+                'musicalização': 'musicalizacao-infantil',
+                'musicalização infantil': 'musicalizacao-infantil'
+            };
+            if (mapa[raw]) return mapa[raw];
+
+            for (const c of CURSOS) {
+                const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim().toLowerCase();
+                if (nomeLimpo === raw) return c.id;
+            }
+
+            return raw;
+        }
+
+        /**
+         * Extrai TODOS os cursos de um professor.
+         * Agora junta o campo 'Curso' com o campo 'Tipo' caso o professor
+         * lecione matérias como Teoria Musical em linhas diferentes.
+         */
+        function extrairCursosDoProfessor(professor) {
+            if (!professor) return [];
+            
+            // Concatena Curso e Tipo para não perder nada
+            const textoCursos = `${professor.curso || ''},${professor.tipo || ''}`;
+
+            if (!textoCursos.replace(/,/g, '').trim()) return [];
+
+            // Normaliza separadores
+            let normalizado = textoCursos
+                .replace(/\r\n|\r|\n/g, ',')
+                .replace(/[;|/\\]+/g, ',')
+                .replace(/\s+(?:e|E|\+|&)\s+/g, ',');
+
+            const cursos = normalizado
+                .split(/[,]+/)
+                .map(c => normalizarCursoId(c))
+                .filter(c => {
+                    // Filtra "lixo" que pode vir da coluna Tipo (Ex: "Instrumento")
+                    const lixo = ['instrumento', 'teoria musical', 'musicalização', 'musicalizacao'];
+                    return c && !lixo.includes(c.toLowerCase());
+                });
+
+            return [...new Set(cursos)];
+        }
+
         // ============================================
-        // REQUISIÇÃO GAS
+        // GAS (envio)
         // ============================================
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
 
         async function enviarParaGAS(acao, payload) {
             try {
-                const response = await fetch(GAS_URL, {
+                await fetch(GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
@@ -832,7 +1182,7 @@
         }
 
         // ============================================
-        // CARREGAR DADOS DA PLANILHA
+        // CARREGAR DADOS
         // ============================================
         async function carregarDadosPlanilha() {
             const loading = document.getElementById('loadingOverlay');
@@ -845,6 +1195,39 @@
                 document.getElementById('syncStatus').className = 'sync-status synced';
                 document.getElementById('syncStatus').textContent = '✅ Sincronizado';
                 mostrarToast('✅ Dados carregados com sucesso!', 'success');
+
+                if (currentUser.cargo === 'secretaria') {
+                    inicializarSecretaria();
+                } else if (currentUser.cargo.startsWith('professor')) {
+                    const profAtual = escolaData.professores.find(p => p.nome === currentUser.nome);
+                    if (profAtual) {
+                        currentUser.professorData = profAtual;
+                        currentUser.cursos = extrairCursosDoProfessor(profAtual);
+                        if (currentUser.cursos.length > 0) {
+                            if (!cursoSelecionado || !currentUser.cursos.includes(cursoSelecionado)) {
+                                cursoSelecionado = currentUser.cursos[0];
+                            }
+                            renderMeusCursos();
+                            if (cursoSelecionado) {
+                                document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoSelecionado);
+                                carregarTabelaNotas();
+                                carregarPresenca();
+                                carregarConteudos();
+                                carregarObservacoes();
+                                carregarAlunosSelects();
+                                renderRelatoriosEnviados();
+                            }
+                        }
+                    }
+                } else if (currentUser.cargo === 'coordenacao') {
+                    renderVisaoCursos();
+                    carregarProfessoresAtribuicao();
+                    renderRelatoriosRecebidos();
+                } else if (currentUser.cargo === 'direcao') {
+                    renderStatsGerenciais();
+                } else if (currentUser.cargo === 'financeiro') {
+                    renderFinanceiro();
+                }
             } catch (error) {
                 document.getElementById('syncStatus').className = 'sync-status error';
                 document.getElementById('syncStatus').textContent = '❌ Erro ao carregar';
@@ -881,95 +1264,117 @@
         }
 
         // ============================================
-        // ATUALIZAR BANCO DE DADOS
+        // ATUALIZAR BANCO
         // ============================================
         function atualizarBancoDados() {
-            // Alunos
             escolaData.alunos = dadosPlanilha.alunos.map(a => ({
-                nome: texto(a.Nome || a.Nome_Aluno).toUpperCase(),
-                dataNascimento: formatarDataParaExibicao(texto(a.Data_Nascimento)),
-                responsavel: texto(a.Responsavel || ''),
-                contato: texto(a.Contato || ''),
-                status: texto(a.Status || 'ATIVO').toUpperCase()
+                nome: texto(getColuna(a, 'Nome', 'Nome_Aluno', 'NomeAluno', 'Aluno')).toUpperCase(),
+                dataNascimento: formatarDataParaExibicao(texto(getColuna(a, 'Data_Nascimento', 'DataNascimento', 'Nascimento'))),
+                responsavel: texto(getColuna(a, 'Responsavel', 'Responsável')),
+                contato: texto(getColuna(a, 'Contato', 'Telefone', 'Tel')),
+                status: texto(getColuna(a, 'Status') || 'ATIVO').toUpperCase()
             })).filter(a => a.nome);
 
-            // Professores
-            escolaData.professores = dadosPlanilha.professores.map(p => ({
-                id: texto(p.ID_Professor || p.ID),
-                nome: texto(p.Nome || p.Nome_Professor).toUpperCase(),
-                tipo: texto(p.Tipo || ''),
-                curso: texto(p.Curso || ''),
-                telefone: texto(p.Telefone || ''),
-                email: texto(p.Email || '')
-            })).filter(p => p.nome);
+            // =========================================================
+            // CORREÇÃO: AGRUPAR PROFESSORES DUPLICADOS
+            // =========================================================
+            const professoresMap = {};
+            
+            dadosPlanilha.professores.forEach(p => {
+                const nome = texto(getColuna(p, 'Nome', 'Nome_Professor', 'NomeProfessor', 'Professor')).toUpperCase();
+                if (!nome) return; // Pula se não tiver nome
 
-            // Matrículas
+                const curso = texto(getColuna(p, 'Curso', 'Cursos', 'Curso(s)'));
+                const tipo = texto(getColuna(p, 'Tipo', 'Cargo'));
+                
+                if (!professoresMap[nome]) {
+                    // Se é a primeira vez que vê o professor, cria o registro base
+                    professoresMap[nome] = {
+                        id: texto(getColuna(p, 'ID_Professor', 'ID')),
+                        nome: nome,
+                        tipo: tipo,
+                        curso: curso,
+                        telefone: texto(getColuna(p, 'Telefone', 'Tel')),
+                        email: texto(getColuna(p, 'Email', 'E-mail')),
+                        status: texto(getColuna(p, 'Status') || 'ATIVO').toUpperCase()
+                    };
+                } else {
+                    // Se o professor já existe, apenas adiciona os novos cursos na lista
+                    if (curso && !professoresMap[nome].curso.includes(curso)) {
+                        professoresMap[nome].curso += `,${curso}`;
+                    }
+                    // Se o tipo for diferente, junta também (ex: Instrumento e Teoria Musical)
+                    if (tipo && !professoresMap[nome].tipo.includes(tipo)) {
+                        professoresMap[nome].tipo += `, ${tipo}`;
+                    }
+                }
+            });
+
+            // Transforma o Objeto de volta em Array
+            escolaData.professores = Object.values(professoresMap);
+            // =========================================================
+
             db.matriculas = dadosPlanilha.matriculas.map(m => ({
-                id: texto(m.ID_Matricula || ''),
-                aluno: texto(m.Aluno).toUpperCase(),
-                curso: texto(m.Curso || ''),
-                professor: texto(m.Professor || ''),
-                dataMatricula: formatarDataParaExibicao(texto(m.Data_Matricula)),
-                anoLetivo: texto(m.Ano_Letivo || ''),
-                status: texto(m.Status || 'ATIVO').toUpperCase()
+                id: texto(getColuna(m, 'ID_Matricula', 'ID')),
+                aluno: texto(getColuna(m, 'Aluno', 'Nome_Aluno')).toUpperCase(),
+                curso: normalizarCursoId(texto(getColuna(m, 'Curso'))),
+                professor: texto(getColuna(m, 'Professor')),
+                dataMatricula: formatarDataParaExibicao(texto(getColuna(m, 'Data_Matricula', 'DataMatricula', 'Data'))),
+                anoLetivo: texto(getColuna(m, 'Ano_Letivo', 'AnoLetivo', 'Ano')),
+                status: texto(getColuna(m, 'Status') || 'ATIVO').toUpperCase()
             }));
 
-            // Avaliações
             db.avaliacoes = dadosPlanilha.avaliacoes.map(a => ({
-                aluno: texto(a.Aluno).toUpperCase(),
-                curso: texto(a.Curso || ''),
-                bimestre: parseInt(a.Bimestre) || 1,
-                nota: parseFloat(a.Nota) || 0
+                aluno: texto(getColuna(a, 'Aluno')).toUpperCase(),
+                curso: normalizarCursoId(texto(getColuna(a, 'Curso'))),
+                bimestre: parseInt(getColuna(a, 'Bimestre')) || 1,
+                nota: parseFloat(getColuna(a, 'Nota')) || 0
             }));
 
-            // Presenças
             db.presencas = {};
             dadosPlanilha.presencas.forEach(p => {
-                const curso = texto(p.Curso || '');
+                const curso = normalizarCursoId(texto(getColuna(p, 'Curso')));
                 if (!curso) return;
                 if (!db.presencas[curso]) db.presencas[curso] = [];
                 db.presencas[curso].push({
-                    data: formatarDataParaExibicao(texto(p.Data)),
-                    presentes: texto(p.Presentes).split(',').map(n => n.trim().toUpperCase()).filter(Boolean)
+                    data: formatarDataParaExibicao(texto(getColuna(p, 'Data'))),
+                    presentes: texto(getColuna(p, 'Presentes')).split(',').map(n => n.trim().toUpperCase()).filter(Boolean)
                 });
             });
 
-            // Conteúdos
             db.conteudos = {};
             dadosPlanilha.conteudos.forEach(c => {
-                const curso = texto(c.Curso || '');
+                const curso = normalizarCursoId(texto(getColuna(c, 'Curso')));
                 if (!curso) return;
                 if (!db.conteudos[curso]) db.conteudos[curso] = [];
                 db.conteudos[curso].push({
-                    data: formatarDataParaExibicao(texto(c.Data)),
-                    conteudo: texto(c.Conteudo || ''),
-                    objetivos: texto(c.Objetivos || '')
+                    data: formatarDataParaExibicao(texto(getColuna(c, 'Data'))),
+                    conteudo: texto(getColuna(c, 'Conteudo', 'Conteúdo')),
+                    objetivos: texto(getColuna(c, 'Objetivos'))
                 });
             });
 
-            // Observações
             db.observacoes = {};
             dadosPlanilha.observacoes.forEach(o => {
-                const curso = texto(o.Curso || '');
+                const curso = normalizarCursoId(texto(getColuna(o, 'Curso')));
                 if (!curso) return;
                 if (!db.observacoes[curso]) db.observacoes[curso] = [];
                 db.observacoes[curso].push({
-                    data: formatarDataParaExibicao(texto(o.Data)),
-                    aluno: texto(o.Aluno).toUpperCase(),
-                    observacao: texto(o.Observacao || ''),
-                    tipo: texto(o.Tipo || 'Neutra')
+                    data: formatarDataParaExibicao(texto(getColuna(o, 'Data'))),
+                    aluno: texto(getColuna(o, 'Aluno')).toUpperCase(),
+                    observacao: texto(getColuna(o, 'Observacao', 'Observação')),
+                    tipo: texto(getColuna(o, 'Tipo') || 'Neutra')
                 });
             });
 
-            // Relatórios
             db.relatorios = dadosPlanilha.relatorios.map(r => ({
-                aluno: texto(r.Aluno).toUpperCase(),
-                curso: texto(r.Curso || ''),
-                bimestre: texto(r.Bimestre || '1'),
-                professor: texto(r.Professor || ''),
-                relatorio: texto(r.Relatorio || ''),
-                data: formatarDataParaExibicao(texto(r.Data)),
-                visto: texto(r.Visto || '')
+                aluno: texto(getColuna(r, 'Aluno')).toUpperCase(),
+                curso: normalizarCursoId(texto(getColuna(r, 'Curso'))),
+                bimestre: texto(getColuna(r, 'Bimestre') || '1'),
+                professor: texto(getColuna(r, 'Professor')),
+                relatorio: texto(getColuna(r, 'Relatorio', 'Relatório')),
+                data: formatarDataParaExibicao(texto(getColuna(r, 'Data'))),
+                visto: texto(getColuna(r, 'Visto'))
             }));
         }
 
@@ -977,20 +1382,29 @@
         // FUNÇÕES AUXILIARES
         // ============================================
         function getAlunosByCurso(curso) {
-            const matriculas = db.matriculas.filter(m => m.curso === curso && m.status === 'ATIVO');
-            return matriculas.map(m => escolaData.alunos.find(a => a.nome === m.aluno)).filter(Boolean);
+            if (!curso) return [];
+            const matriculas = db.matriculas.filter(m =>
+                m.curso === curso && m.status === 'ATIVO'
+            );
+            return matriculas
+                .map(m => escolaData.alunos.find(a => a.nome === m.aluno))
+                .filter(Boolean);
         }
 
         function getCursosByProfessor(profId) {
             const prof = escolaData.professores.find(p => p.id === profId);
             if (!prof) return [];
-            return prof.curso ? prof.curso.split(',').map(c => c.trim()) : [];
+            return extrairCursosDoProfessor(prof);
         }
 
         function getProfessorByCurso(curso) {
-            return escolaData.professores.find(p => 
-                p.curso && p.curso.toLowerCase().includes(curso.toLowerCase())
-            );
+            if (!curso) return null;
+            const alvo = normalizarCursoId(curso);
+            return escolaData.professores.find(p => {
+                if (!p.curso) return false;
+                const cursos = extrairCursosDoProfessor(p);
+                return cursos.includes(alvo);
+            }) || null;
         }
 
         function getNotaAluno(aluno, curso, bimestre) {
@@ -1040,10 +1454,11 @@
                     return;
                 }
                 currentUser.professorData = prof;
-                const cursosProf = getCursosByProfessor(prof.id);
+                const cursosProf = extrairCursosDoProfessor(prof);
                 currentUser.cursos = cursosProf;
+
                 if (cursosProf.length === 0) {
-                    alert('⚠️ Nenhum curso atribuído a este professor.');
+                    alert('⚠️ Nenhum curso atribuído a este professor. Entre em contato com a coordenação.');
                     return;
                 }
             }
@@ -1161,7 +1576,7 @@
                         <td style="font-size:0.85em;">${cursosNomes}</td>
                         <td><span class="status-badge ${aluno.status === 'ATIVO' ? 'concluido' : 'inativo'}">${aluno.status}</span></td>
                         <td>
-                            <button onclick="editarAlunoSecretaria('${aluno.nome}')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
+                            <button onclick="mostrarToast('Edição de aluno em breve.','info')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
                         </td>
                     </tr>
                 `;
@@ -1195,9 +1610,14 @@
             try {
                 const resultado = await enviarParaGAS('salvarAluno', payload);
                 if (resultado.success) {
-                    escolaData.alunos.push({ nome, dataNascimento: formatarDataParaExibicao(dataNascimento), responsavel, contato, status: 'ATIVO' });
-                    
-                    // Criar matrículas nos cursos selecionados
+                    escolaData.alunos.push({
+                        nome,
+                        dataNascimento: formatarDataParaExibicao(dataNascimento),
+                        responsavel,
+                        contato,
+                        status: 'ATIVO'
+                    });
+
                     for (const cursoId of cursosSelecionados) {
                         const professor = getProfessorByCurso(cursoId);
                         const matriculaPayload = {
@@ -1215,7 +1635,11 @@
                     fecharModal('modalCadastroAluno');
                     carregarAlunosSecretaria();
                     atualizarDashboardSecretaria();
-                    mostrarToast(`✅ Aluno ${nome} cadastrado com sucesso!`, 'success');
+                    mostrarToast(
+                        `✅ Aluno ${nome} cadastrado${cursosSelecionados.length ? ' em ' + cursosSelecionados.length + ' curso(s)' : ''}!`,
+                        'success'
+                    );
+                    setTimeout(() => carregarDadosPlanilha(), 1000);
                 }
             } catch (error) {
                 mostrarToast(`❌ Erro: ${error.message}`, 'error');
@@ -1226,7 +1650,6 @@
             const filtroCurso = document.getElementById('filtroCursoMatricula')?.value || '';
             const busca = document.getElementById('buscaMatriculaSecretaria')?.value.toLowerCase() || '';
             
-            // Popular filtro de cursos
             const selectFiltro = document.getElementById('filtroCursoMatricula');
             if (selectFiltro) {
                 selectFiltro.innerHTML = '<option value="">Todos os Cursos</option>' +
@@ -1251,7 +1674,7 @@
                     <td>${m.dataMatricula || '-'}</td>
                     <td><span class="status-badge ${m.status === 'ATIVO' ? 'concluido' : 'inativo'}">${m.status}</span></td>
                     <td>
-                        <button onclick="cancelarMatricula('${m.aluno}', '${m.curso}')" class="btn btn-small btn-danger" style="padding:2px 8px;">❌</button>
+                        <button onclick="cancelarMatricula('${m.aluno.replace(/'/g, "\\'")}', '${m.curso}')" class="btn btn-small btn-danger" style="padding:2px 8px;">❌</button>
                     </td>
                 </tr>
             `).join('');
@@ -1259,14 +1682,15 @@
 
         function filtrarMatriculasSecretaria() { carregarMatriculasSecretaria(); }
 
-        function cancelarMatricula(aluno, curso) {
+        async function cancelarMatricula(aluno, curso) {
             if (!confirm(`Cancelar matrícula de ${aluno} no curso ${labelCurso(curso)}?`)) return;
             const m = db.matriculas.find(m => m.aluno === aluno && m.curso === curso);
             if (m) {
                 m.status = 'CANCELADO';
+                await enviarParaGAS('atualizarMatricula', { aluno, curso, status: 'CANCELADO' });
                 carregarMatriculasSecretaria();
                 atualizarDashboardSecretaria();
-                mostrarToast('Matrícula cancelada.', 'success');
+                mostrarToast('✅ Matrícula cancelada.', 'success');
             }
         }
 
@@ -1279,13 +1703,19 @@
             selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
                 CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 
+            const profSelect = document.getElementById('matriculaProfessor');
+            profSelect.innerHTML = '<option value="">-- Selecione o curso primeiro --</option>';
+            profSelect.disabled = true;
+
             selectCurso.onchange = function() {
                 const cursoId = this.value;
-                const profSelect = document.getElementById('matriculaProfessor');
                 const professor = getProfessorByCurso(cursoId);
-                profSelect.innerHTML = '<option value="">-- Selecione --</option>' +
-                    (professor ? `<option value="${professor.nome}" selected>${professor.nome}</option>` : 
-                     escolaData.professores.map(p => `<option value="${p.nome}">${p.nome}</option>`).join(''));
+                if (professor) {
+                    profSelect.innerHTML = `<option value="${professor.nome}" selected>${professor.nome}</option>`;
+                } else {
+                    profSelect.innerHTML = '<option value="">⚠️ Nenhum professor cadastrado para este curso</option>';
+                }
+                profSelect.disabled = true;
             };
 
             document.getElementById('modalNovaMatricula').classList.add('active');
@@ -1295,13 +1725,20 @@
             e.preventDefault();
             const aluno = document.getElementById('matriculaAluno').value;
             const curso = document.getElementById('matriculaCurso').value;
-            const professor = document.getElementById('matriculaProfessor').value;
             const ano = document.getElementById('matriculaAno').value;
 
-            if (!aluno || !curso) { alert('Preencha todos os campos.'); return; }
+            if (!aluno || !curso) { alert('Preencha aluno e curso.'); return; }
+
+            const professor = getProfessorByCurso(curso);
+            const professorNome = professor ? professor.nome : '';
+
+            if (!professorNome) {
+                if (!confirm('⚠️ Nenhum professor cadastrado para este curso. Deseja continuar mesmo assim?')) return;
+            }
 
             const payload = {
-                aluno, curso, professor,
+                aluno, curso,
+                professor: professorNome,
                 dataMatricula: getDataAtualFormatada(),
                 anoLetivo: ano, status: 'ATIVO'
             };
@@ -1313,7 +1750,11 @@
                     fecharModal('modalNovaMatricula');
                     carregarMatriculasSecretaria();
                     atualizarDashboardSecretaria();
-                    mostrarToast('✅ Matrícula registrada!', 'success');
+                    mostrarToast(
+                        `✅ Matrícula registrada${professorNome ? ' com Prof. ' + professorNome : ''}!`,
+                        'success'
+                    );
+                    setTimeout(() => carregarDadosPlanilha(), 1000);
                 }
             } catch (error) {
                 mostrarToast(`❌ Erro: ${error.message}`, 'error');
@@ -1332,18 +1773,19 @@
             }
 
             tbody.innerHTML = professores.map(p => {
-                const cursos = p.curso ? p.curso.split(',').map(c => labelCurso(c.trim())).join(', ') : '-';
+                const cursosIds = extrairCursosDoProfessor(p);
+                const cursosNomes = cursosIds.length
+                    ? cursosIds.map(c => labelCurso(c)).join(', ')
+                    : '-';
                 return `
                     <tr>
                         <td>${p.id || '-'}</td>
                         <td><strong>${p.nome}</strong></td>
                         <td>${p.tipo || '-'}</td>
-                        <td>${cursos}</td>
+                        <td style="font-size:0.85em;">${cursosNomes}</td>
                         <td>${p.telefone || '-'}</td>
                         <td>${p.email || '-'}</td>
-                        <td>
-                            <button onclick="editarProfessorSecretaria('${p.id}')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
-                        </td>
+                        <td><span class="status-badge ${p.status === 'ATIVO' ? 'concluido' : 'inativo'}">${p.status}</span></td>
                     </tr>
                 `;
             }).join('');
@@ -1353,13 +1795,19 @@
 
         function abrirModalCadastroProfessor() {
             const id = 'PROF_' + new Date().getTime();
-            document.getElementById('cadProfessorID').value = id;
             document.getElementById('formCadastroProfessor').reset();
             document.getElementById('cadProfessorID').value = id;
             
             const selectCurso = document.getElementById('cadProfessorCurso');
             selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
                 CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            const container = document.getElementById('cadProfessorCursosExtras');
+            container.innerHTML = CURSOS.map(c => `
+                <label style="display:block; padding:4px 0;">
+                    <input type="checkbox" value="${c.id}" class="prof-curso-extra"> ${c.nome}
+                </label>
+            `).join('');
             
             document.getElementById('modalCadastroProfessor').classList.add('active');
         }
@@ -1369,21 +1817,31 @@
             const id = document.getElementById('cadProfessorID').value;
             const nome = document.getElementById('cadProfessorNome').value.trim().toUpperCase();
             const tipo = document.getElementById('cadProfessorTipo').value;
-            const curso = document.getElementById('cadProfessorCurso').value;
+            const cursoPrincipal = document.getElementById('cadProfessorCurso').value;
+            const cursosExtras = Array.from(document.querySelectorAll('.prof-curso-extra:checked')).map(cb => cb.value);
             const telefone = document.getElementById('cadProfessorTelefone').value.trim();
             const email = document.getElementById('cadProfessorEmail').value.trim();
 
-            if (!nome || !tipo || !curso || !telefone) { alert('Preencha os campos obrigatórios.'); return; }
+            if (!nome || !tipo || !cursoPrincipal || !telefone) {
+                alert('Preencha os campos obrigatórios.');
+                return;
+            }
 
-            const payload = { id, nome, tipo, curso, telefone, email };
+            const todosCursos = [...new Set([cursoPrincipal, ...cursosExtras])];
+            const cursoString = todosCursos.join(',');
+
+            const payload = { id, nome, tipo, curso: cursoString, telefone, email };
             try {
                 const resultado = await enviarParaGAS('salvarProfessor', payload);
                 if (resultado.success) {
-                    escolaData.professores.push(payload);
+                    escolaData.professores.push({
+                        id, nome, tipo, curso: cursoString, telefone, email, status: 'ATIVO'
+                    });
                     fecharModal('modalCadastroProfessor');
                     carregarProfessoresSecretaria();
                     atualizarDashboardSecretaria();
-                    mostrarToast(`✅ Professor ${nome} cadastrado!`, 'success');
+                    mostrarToast(`✅ Professor ${nome} cadastrado em ${todosCursos.length} curso(s)!`, 'success');
+                    setTimeout(() => carregarDadosPlanilha(), 1000);
                 }
             } catch (error) {
                 mostrarToast(`❌ Erro: ${error.message}`, 'error');
@@ -1457,20 +1915,93 @@
         }
 
         // ============================================
-        // PROFESSOR
+        // RELATÓRIOS SECRETARIA
+        // ============================================
+        function gerarRelatorioAlunosSecretaria() {
+            const out = document.getElementById('relatorioSecretariaOutput');
+            out.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📋 Lista de Alunos</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Total:</strong> ${escolaData.alunos.length}</div>
+                    <table style="margin-top:15px;width:100%;border-collapse:collapse;">
+                        <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Nome</th><th style="padding:8px;border:1px solid #e2e8f0;">Responsável</th><th style="padding:8px;border:1px solid #e2e8f0;">Contato</th><th style="padding:8px;border:1px solid #e2e8f0;">Status</th></tr></thead>
+                        <tbody>
+                            ${escolaData.alunos.map(a => `<tr><td style="padding:8px;border:1px solid #e2e8f0;">${a.nome}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.responsavel||'-'}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.contato||'-'}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.status}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioMatriculasSecretaria() {
+            const out = document.getElementById('relatorioSecretariaOutput');
+            const ativas = db.matriculas.filter(m => m.status === 'ATIVO');
+            out.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📋 Matrículas por Curso</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Matrículas Ativas:</strong> ${ativas.length}</div>
+                    <div style="margin-top:15px;">
+                        ${CURSOS.map(c => {
+                            const ms = ativas.filter(m => m.curso === c.id);
+                            if (ms.length === 0) return '';
+                            return `<div style="margin-bottom:10px;padding:10px;background:#f7fafc;border-radius:8px;">
+                                <strong>${c.nome}</strong> — ${ms.length} aluno(s)
+                                <div style="font-size:0.85em;color:#718096;">${ms.map(m => m.aluno).join(', ')}</div>
+                            </div>`;
+                        }).join('') || '<p>Nenhuma matrícula ativa.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioCompletoSecretaria() {
+            gerarRelatorioAlunosSecretaria();
+        }
+
+        // ============================================
+        // PROFESSOR - RENDERIZAÇÃO DOS CURSOS
         // ============================================
         function renderMeusCursos() {
             const container = document.getElementById('cursosContainer');
-            if (currentUser.cursos.length === 0) {
-                container.innerHTML = '<p style="color:#718096;">Nenhum curso atribuído.</p>';
+
+            if (currentUser.professorData) {
+                currentUser.cursos = extrairCursosDoProfessor(currentUser.professorData);
+            }
+
+            if (!currentUser.cursos || currentUser.cursos.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #718096;">
+                        <p>📭 Nenhum curso atribuído.</p>
+                        <p style="font-size: 0.9em;">Entre em contato com a coordenação.</p>
+                    </div>
+                `;
                 return;
             }
-            container.innerHTML = currentUser.cursos.map(cursoId => `
-                <div class="turma-item ${cursoSelecionado === cursoId ? 'selected' : ''}" onclick="selecionarCurso('${cursoId}')">
-                    ${labelCurso(cursoId)}
-                    <span class="ano">${CURSOS_MAP[cursoId]?.tipo || ''}</span>
+
+            const header = `
+                <div style="grid-column: 1/-1; margin-bottom: 12px; padding: 12px 15px; background: #ebf8ff; border-radius: 8px; border-left: 4px solid #4299e1;">
+                    <strong>👨‍🏫 Você leciona em ${currentUser.cursos.length} curso(s):</strong>
+                    <div style="margin-top:6px; font-size: 0.95em;">
+                        ${currentUser.cursos.map(id => labelCurso(id)).join(' • ')}
+                    </div>
                 </div>
-            `).join('');
+            `;
+
+            const cards = currentUser.cursos.map(cursoId => {
+                const curso = CURSOS_MAP[cursoId];
+                const alunos = getAlunosByCurso(cursoId);
+                return `
+                    <div class="turma-item ${cursoSelecionado === cursoId ? 'selected' : ''}" onclick="selecionarCurso('${cursoId}')">
+                        ${labelCurso(cursoId)}
+                        <span class="ano">${curso ? curso.tipo : ''}</span>
+                        <span class="status">👥 ${alunos.length} aluno(s)</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = header + cards;
 
             if (!cursoSelecionado && currentUser.cursos.length > 0) {
                 selecionarCurso(currentUser.cursos[0]);
@@ -1486,6 +2017,7 @@
             carregarConteudos();
             carregarObservacoes();
             carregarAlunosSelects();
+            renderRelatoriosEnviados();
         }
 
         function toggleSection(section, event) {
@@ -1515,7 +2047,7 @@
             tbody.innerHTML = alunos.map((aluno, idx) => {
                 const nota = getNotaAluno(aluno.nome, cursoSelecionado, bimestre);
                 const media = getMediaAluno(aluno.nome, cursoSelecionado);
-                const alunoId = aluno.nome.replace(/\s/g, '_');
+                const alunoId = aluno.nome.replace(/\s/g, '_').replace(/[^A-Za-z0-9_]/g, '');
                 return `
                     <tr>
                         <td>${idx + 1}</td>
@@ -1535,11 +2067,11 @@
             const avaliacoes = [];
 
             alunos.forEach(aluno => {
-                const alunoId = aluno.nome.replace(/\s/g, '_');
+                const alunoId = aluno.nome.replace(/\s/g, '_').replace(/[^A-Za-z0-9_]/g, '');
                 const input = document.getElementById(`nota_${alunoId}`);
                 if (input) {
                     const nota = parseFloat(input.value) || 0;
-                    avaliacoes.push({ aluno: aluno.nome, curso: cursoSelecionado, bimestre, nota });
+                    avaliacoes.push({ aluno: aluno.nome, curso: cursoSelecionado, bimestre, nota, professor: currentUser.nome });
                 }
             });
 
@@ -1595,8 +2127,12 @@
             const data = formatarDataParaPlanilha(document.getElementById('dataPresenca').value);
             const checkboxes = document.querySelectorAll('#alunosPresencaTabela input:checked');
             const presentes = Array.from(checkboxes).map(cb => cb.dataset.aluno);
+            const observacao = document.getElementById('obsPresenca').value.trim();
 
-            const payload = { curso: cursoSelecionado, data, presentes };
+            const payload = {
+                curso: cursoSelecionado, data, presentes,
+                observacao, professor: currentUser.nome
+            };
             const resultado = await enviarParaGAS('salvarPresenca', payload);
             if (resultado.success) {
                 if (!db.presencas[cursoSelecionado]) db.presencas[cursoSelecionado] = [];
@@ -1628,7 +2164,10 @@
             const objetivos = document.getElementById('objetivosConteudo').value.trim();
             if (!conteudo) { alert('Digite o conteúdo.'); return; }
 
-            const payload = { curso: cursoSelecionado, data, conteudo, objetivos };
+            const payload = {
+                curso: cursoSelecionado, data, conteudo, objetivos,
+                professor: currentUser.nome
+            };
             const resultado = await enviarParaGAS('salvarConteudo', payload);
             if (resultado.success) {
                 if (!db.conteudos[cursoSelecionado]) db.conteudos[cursoSelecionado] = [];
@@ -1662,7 +2201,10 @@
             const tipo = document.getElementById('tipoObservacao').value;
             if (!observacao) { alert('Digite a observação.'); return; }
 
-            const payload = { curso: cursoSelecionado, data, aluno, observacao, tipo };
+            const payload = {
+                curso: cursoSelecionado, data, aluno, observacao, tipo,
+                professor: currentUser.nome
+            };
             const resultado = await enviarParaGAS('salvarObservacao', payload);
             if (resultado.success) {
                 if (!db.observacoes[cursoSelecionado]) db.observacoes[cursoSelecionado] = [];
@@ -1679,14 +2221,18 @@
             ['alunoRelatorioPreencher', 'alunoObservacao'].forEach(id => {
                 const select = document.getElementById(id);
                 if (select) {
-                    select.innerHTML = alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
+                    select.innerHTML = alunos.length
+                        ? alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('')
+                        : '<option value="">Nenhum aluno</option>';
                 }
             });
         }
 
         function renderRelatoriosEnviados() {
             const container = document.getElementById('relatoriosEnviados');
-            const relatorios = db.relatorios.filter(r => r.curso === cursoSelecionado && r.professor === currentUser.nome);
+            const relatorios = db.relatorios.filter(r =>
+                r.curso === cursoSelecionado && r.professor === currentUser.nome
+            );
             if (relatorios.length === 0) {
                 container.innerHTML = '<p style="color:#718096;">Nenhum relatório enviado.</p>';
                 return;
@@ -1704,6 +2250,7 @@
             const aluno = document.getElementById('alunoRelatorioPreencher').value;
             const bimestre = document.getElementById('bimestreRelatorioPreencher').value;
             const relatorio = document.getElementById('relatorioTexto').value.trim();
+            if (!aluno) { alert('Selecione um aluno.'); return; }
             if (!relatorio) { alert('Digite o relatório.'); return; }
 
             const payload = {
@@ -1759,7 +2306,7 @@
                         <td>${mediaGeral.toFixed(1)}</td>
                         <td>${taxaPres.toFixed(1)}%</td>
                         <td>${alunos.length}</td>
-                        <td><button onclick="alert('Detalhes do curso ${curso.id}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️ Ver</button></td>
+                        <td><button onclick="alert('Curso: ${curso.nome}\\nProfessor: ${professor ? professor.nome : '-'}\\nAlunos: ${alunos.length}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️ Ver</button></td>
                     </tr>
                 `;
             }).join('');
@@ -1784,13 +2331,13 @@
             const container = document.getElementById('professoresAtribuidos');
             if (!container) return;
             container.innerHTML = escolaData.professores.map(prof => {
-                const cursos = prof.curso ? prof.curso.split(',').map(c => labelCurso(c.trim())) : [];
+                const cursos = extrairCursosDoProfessor(prof);
                 return `
                     <div class="professor-item">
                         <strong>${prof.nome}</strong>
                         <div class="especialidade">${prof.tipo || ''}</div>
                         <div class="turmas-atribuidas">
-                            ${cursos.length > 0 ? cursos.map(c => `<span class="turma-tag">${c}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum curso</span>'}
+                            ${cursos.length > 0 ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum curso</span>'}
                         </div>
                     </div>
                 `;
@@ -1805,7 +2352,7 @@
             const prof = escolaData.professores.find(p => p.id === profId);
             if (!prof) return;
 
-            const cursosAtuais = prof.curso ? prof.curso.split(',').map(c => c.trim()) : [];
+            const cursosAtuais = extrairCursosDoProfessor(prof);
             if (cursosAtuais.includes(cursoId)) { alert('Curso já atribuído.'); return; }
             cursosAtuais.push(cursoId);
             prof.curso = cursosAtuais.join(',');
@@ -1825,7 +2372,7 @@
             const prof = escolaData.professores.find(p => p.id === profId);
             if (!prof) return;
 
-            const cursosAtuais = prof.curso ? prof.curso.split(',').map(c => c.trim()).filter(c => c !== cursoId) : [];
+            const cursosAtuais = extrairCursosDoProfessor(prof).filter(c => c !== cursoId);
             prof.curso = cursosAtuais.join(',');
 
             const payload = { id: profId, curso: prof.curso };
@@ -1845,7 +2392,7 @@
             container.innerHTML = db.relatorios.slice().reverse().map(r => `
                 <div class="registro-item">
                     <div class="data">📄 ${r.aluno} - ${labelCurso(r.curso)} - ${r.bimestre}º Bim</div>
-                    <div class="conteudo">${r.relatorio.substring(0, 150)}...</div>
+                    <div class="conteudo">${(r.relatorio || '').substring(0, 150)}...</div>
                     <div style="font-size:0.85em;color:#718096;">Professor: ${r.professor} | Data: ${r.data}</div>
                 </div>
             `).join('');
@@ -1911,8 +2458,8 @@
                     <div class="info-line"><strong>Total de Matrículas Ativas:</strong> ${matriculasAtivas.length}</div>
                     <div class="info-line"><strong>Total de Professores:</strong> ${escolaData.professores.length}</div>
                     <div style="margin-top:15px;">
-                        <table>
-                            <thead><tr><th>Curso</th><th>Alunos</th><th>Professor</th><th>Média</th></tr></thead>
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Curso</th><th style="padding:8px;border:1px solid #e2e8f0;">Alunos</th><th style="padding:8px;border:1px solid #e2e8f0;">Professor</th><th style="padding:8px;border:1px solid #e2e8f0;">Média</th></tr></thead>
                             <tbody>
                                 ${CURSOS.map(curso => {
                                     const alunos = getAlunosByCurso(curso.id);
@@ -1923,10 +2470,10 @@
                                         if (m > 0) { soma += m; c++; }
                                     });
                                     return `<tr>
-                                        <td>${curso.nome}</td>
-                                        <td>${alunos.length}</td>
-                                        <td>${professor ? professor.nome : '-'}</td>
-                                        <td>${c > 0 ? (soma / c).toFixed(1) : '0.0'}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${curso.nome}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${alunos.length}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${professor ? professor.nome : '-'}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${c > 0 ? (soma / c).toFixed(1) : '0.0'}</td>
                                     </tr>`;
                                 }).join('')}
                             </tbody>
@@ -1936,9 +2483,7 @@
             `;
         }
 
-        function gerarRelatorioPorCurso() {
-            gerarRelatorioGeral();
-        }
+        function gerarRelatorioPorCurso() { gerarRelatorioGeral(); }
 
         function gerarRelatorioPorProfessor() {
             const container = document.getElementById('relatorioConsolidado');
@@ -1947,7 +2492,7 @@
                     <h4>📊 Relatório por Professor</h4>
                     <div style="margin-top:15px;">
                         ${escolaData.professores.map(prof => {
-                            const cursos = prof.curso ? prof.curso.split(',').map(c => c.trim()) : [];
+                            const cursos = extrairCursosDoProfessor(prof);
                             return `
                                 <div style="margin-bottom:15px;padding:10px;background:#f7fafc;border-radius:8px;">
                                     <h5>${prof.nome} (${prof.tipo || '-'})</h5>
