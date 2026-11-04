@@ -33,7 +33,7 @@
             font-size: 0.85em; font-weight: 600;
         }
 
-        /* ===== LOADING ===== */
+        /* ===== LOADING GLOBAL ===== */
         .loading-overlay {
             position: fixed; inset: 0; background: rgba(255,255,255,0.95);
             display: none; justify-content: center; align-items: center;
@@ -62,6 +62,68 @@
         }
         .login-info strong { display: block; margin-bottom: 4px; }
 
+        /* ===== BARRA DE CARREGAMENTO DO LOGIN ===== */
+        .login-progress {
+            display: none;
+            margin-top: 18px;
+            padding: 14px 18px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+        }
+        .login-progress.active { display: block; }
+        .login-progress-label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .login-progress-label .pct {
+            color: #667eea;
+            font-weight: 700;
+        }
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 999px;
+            transition: width 0.25s ease;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+            animation: shimmer 1.2s linear infinite;
+        }
+        @keyframes shimmer {
+            from { transform: translateX(-100%); }
+            to   { transform: translateX(100%); }
+        }
+        .login-progress.done .progress-fill {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+        }
+        .login-progress.error .progress-fill {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+        }
+        .login-progress-msg {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #718096;
+        }
+
         /* ===== FORMS ===== */
         .form-group { margin-bottom: 15px; }
         .form-group label {
@@ -88,6 +150,7 @@
             width: 100%;
         }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
         .btn-secondary { background: linear-gradient(135deg, #4299e1, #3182ce); }
         .btn-danger { background: linear-gradient(135deg, #f56565, #e53e3e); }
         .btn-info { background: linear-gradient(135deg, #48bb78, #38a169); }
@@ -307,7 +370,7 @@
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
+    <!-- Loading Overlay Global -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
@@ -348,8 +411,21 @@
                     <label for="nome">Seu Nome</label>
                     <input type="text" id="nome" placeholder="Digite seu nome conforme cadastrado na planilha" required style="text-transform: uppercase;">
                 </div>
-                <button type="submit" class="btn">Entrar no Sistema</button>
+                <button type="submit" id="btnEntrar" class="btn">Entrar no Sistema</button>
             </form>
+
+            <!-- BARRA DE CARREGAMENTO DO LOGIN -->
+            <div id="loginProgress" class="login-progress">
+                <div class="login-progress-label">
+                    <span id="loginProgressText">Autenticando...</span>
+                    <span class="pct" id="loginProgressPct">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="loginProgressFill"></div>
+                </div>
+                <div class="login-progress-msg" id="loginProgressMsg"></div>
+            </div>
+
             <div style="margin-top: 15px; text-align: center; font-size: 0.9em; color: #718096;">
                 <span id="dataStatus">📊 Conectado à planilha: Escola de Música</span>
             </div>
@@ -687,7 +763,7 @@
                 <div id="registrosSection" class="hidden">
                     <div class="section-container">
                         <h3>📝 Registros do Curso: <span id="cursoSelecionadoNome">-</span></h3>
-                        
+
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
                             <button class="toggle-btn active" onclick="toggleSection('notas', event)">📊 Avaliações</button>
                             <button class="toggle-btn" onclick="toggleSection('presencas', event)">✅ Presenças</button>
@@ -736,7 +812,6 @@
                                     <input type="date" id="dataPresenca">
                                 </div>
                                 <div class="form-group">
-                                    <!-- Campo que vai para a coluna F da aba PRESENCAS -->
                                     <label>Conteúdo</label>
                                     <input type="text" id="obsPresenca" placeholder="Descreva o conteúdo aplicado...">
                                 </div>
@@ -1095,6 +1170,54 @@
             } catch (e) { return data; }
         }
 
+        /**
+         * Normaliza qualquer representação de data vinda do gviz
+         * para o formato DD-MM-YYYY.
+         */
+        function normalizarDataPresenca(valor) {
+            if (valor === null || valor === undefined || valor === '') return '';
+
+            // 1) Já é Date
+            if (valor instanceof Date && !isNaN(valor.getTime())) {
+                return `${String(valor.getDate()).padStart(2,'0')}-${String(valor.getMonth()+1).padStart(2,'0')}-${valor.getFullYear()}`;
+            }
+
+            // 2) Número serial do Google Sheets
+            const comoNumero = typeof valor === 'number' ? valor : Number(String(valor).trim());
+            if (!isNaN(comoNumero) && isFinite(comoNumero) && String(valor).trim() !== '') {
+                if (comoNumero > 1000 && comoNumero < 80000) {
+                    const base = new Date(1899, 11, 30);
+                    const d = new Date(base.getTime() + comoNumero * 24 * 60 * 60 * 1000);
+                    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+                }
+            }
+
+            // 3) String
+            const str = String(valor).trim();
+
+            if (/^\d{2}-\d{2}-\d{4}$/.test(str)) return str;
+
+            const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)\)/);
+            if (mGviz) {
+                const ano = parseInt(mGviz[1], 10);
+                const mes = parseInt(mGviz[2], 10) + 1;
+                const dia = parseInt(mGviz[3], 10);
+                return `${String(dia).padStart(2,'0')}-${String(mes).padStart(2,'0')}-${ano}`;
+            }
+
+            if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+                const p = str.split('T')[0].split('-');
+                return `${p[2]}-${p[1]}-${p[0]}`;
+            }
+
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+            }
+
+            return str;
+        }
+
         function getDataAtualFormatada() {
             const hoje = new Date();
             return `${String(hoje.getDate()).padStart(2, '0')}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${hoje.getFullYear()}`;
@@ -1191,6 +1314,53 @@
         }
 
         // ============================================
+        // BARRA DE PROGRESSO DO LOGIN
+        // ============================================
+        const loginProgress = {
+            el: null, fill: null, pct: null, msg: null, label: null,
+            init() {
+                this.el    = document.getElementById('loginProgress');
+                this.fill  = document.getElementById('loginProgressFill');
+                this.pct   = document.getElementById('loginProgressPct');
+                this.msg   = document.getElementById('loginProgressMsg');
+                this.label = document.getElementById('loginProgressText');
+            },
+            show() {
+                if (!this.el) this.init();
+                this.el.classList.remove('done', 'error');
+                this.el.classList.add('active');
+                this.set(0, 'Iniciando autenticação...', '');
+            },
+            set(percent, labelText, message) {
+                if (!this.el) this.init();
+                const p = Math.max(0, Math.min(100, Math.round(percent)));
+                this.fill.style.width = p + '%';
+                this.pct.textContent = p + '%';
+                if (labelText !== undefined) this.label.textContent = labelText;
+                if (message !== undefined) this.msg.textContent = message;
+            },
+            done(message) {
+                if (!this.el) this.init();
+                this.el.classList.add('done');
+                this.set(100, 'Login realizado!', message || 'Redirecionando para o painel...');
+            },
+            error(message) {
+                if (!this.el) this.init();
+                this.el.classList.add('error');
+                this.label.textContent = 'Falha no login';
+                this.msg.textContent = message || 'Verifique os dados e tente novamente.';
+            },
+            hide(delay = 800) {
+                if (!this.el) this.init();
+                setTimeout(() => {
+                    this.el.classList.remove('active', 'done', 'error');
+                    this.fill.style.width = '0%';
+                    this.pct.textContent = '0%';
+                }, delay);
+            }
+        };
+
+        // ============================================
         // CARREGAR DADOS
         // ============================================
         async function carregarDadosPlanilha() {
@@ -1285,7 +1455,7 @@
             })).filter(a => a.nome);
 
             const professoresMap = {};
-            
+
             dadosPlanilha.professores.forEach(p => {
                 const nome = texto(getColuna(p, 'Nome', 'Nome_Professor', 'NomeProfessor', 'Professor')).toUpperCase();
                 if (!nome) return;
@@ -1294,7 +1464,7 @@
                 const tipo = texto(getColuna(p, 'Tipo', 'Cargo'));
                 const valorHoraRaw = texto(getColuna(p, 'Valor_Hora', 'ValorHora', 'Valor Aula', 'Valor_Aula'));
                 const valorHora = parseFloat(String(valorHoraRaw).replace(',', '.')) || 0;
-                
+
                 if (!professoresMap[nome]) {
                     professoresMap[nome] = {
                         id: texto(getColuna(p, 'ID_Professor', 'ID')),
@@ -1335,23 +1505,26 @@
                 nota: parseFloat(getColuna(a, 'Nota')) || 0
             }));
 
-            // PRESENÇAS: coluna C = Data, coluna F = Conteudo, coluna G = Professor
+            // PRESENÇAS — normaliza data robustamente
             db.presencas = {};
             dadosPlanilha.presencas.forEach(p => {
                 const curso = normalizarCursoId(texto(getColuna(p, 'Curso')));
                 if (!curso) return;
-                
+
                 let professorNome = texto(getColuna(p, 'Professor')).toUpperCase();
                 if (!professorNome) {
                     const prof = escolaData.professores.find(pr => extrairCursosDoProfessor(pr).includes(curso));
                     if (prof) professorNome = prof.nome;
                 }
 
-                let conteudoAula = texto(getColuna(p, 'Conteudo', 'Conteúdo', 'Observacao', 'Observação', 'coluna_5'));
+                const conteudoAula = texto(getColuna(p, 'Conteudo', 'Conteúdo', 'Observacao', 'Observação', 'coluna_5'));
+                const dataBruta = getColuna(p, 'Data', 'coluna_2');
+                const dataNorm = normalizarDataPresenca(dataBruta);
 
                 if (!db.presencas[curso]) db.presencas[curso] = [];
                 db.presencas[curso].push({
-                    data: formatarDataParaExibicao(texto(getColuna(p, 'Data'))),
+                    data: dataNorm,
+                    dataOriginal: dataBruta,
                     presentes: texto(getColuna(p, 'Presentes')).split(',').map(n => n.trim().toUpperCase()).filter(Boolean),
                     professor: professorNome,
                     conteudo: conteudoAula
@@ -1449,18 +1622,20 @@
         };
 
         // ============================================
-        // LOGIN (com registro de LOG na planilha)
+        // LOGIN (com barra de progresso + registro na aba LOGS)
         // ============================================
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const cargo = document.getElementById('cargo').value;
             const nome = document.getElementById('nome').value.trim().toUpperCase();
+            const btnEntrar = document.getElementById('btnEntrar');
 
             if (!cargo || !nome) { alert('Preencha todos os campos.'); return; }
 
             currentUser.cargo = cargo;
             currentUser.nome = nome;
 
+            // Validação de professor
             if (cargo === 'professor') {
                 const prof = escolaData.professores.find(p => p.nome === nome);
                 if (!prof) {
@@ -1477,7 +1652,15 @@
                 }
             }
 
-            // === REGISTRAR LOGIN NA PLANILHA (aba LOGS) ===
+            // === BARRA DE PROGRESSO ===
+            loginProgress.init();
+            loginProgress.show();
+            btnEntrar.disabled = true;
+
+            loginProgress.set(15, 'Validando dados...', 'Verificando permissões do usuário.');
+            await sleep(180);
+
+            loginProgress.set(35, 'Registrando acesso...', 'Gravando log na planilha (aba LOGS).');
             try {
                 await enviarParaGAS('registrarLogin', {
                     nome: nome,
@@ -1488,13 +1671,36 @@
                 console.warn('Falha ao registrar login (não bloqueia):', err);
             }
 
+            loginProgress.set(60, 'Carregando dados...', 'Sincronizando informações da planilha.');
+            // Aguarda eventuais carregamentos pendentes (não bloqueia se já carregou)
+            if (!escolaData.alunos.length && !escolaData.professores.length) {
+                await carregarDadosPlanilha();
+            } else {
+                await sleep(200);
+            }
+
+            loginProgress.set(85, 'Preparando painel...', 'Quase pronto!');
+            await sleep(200);
+
+            loginProgress.done('Bem-vindo(a), ' + nome + '!');
+            await sleep(350);
+
+            // Mostra o dashboard
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('dashboard').classList.add('active');
             document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[cargo].titulo}`;
             document.getElementById('userDisplay').innerHTML = `👤 ${nome} - ${cargoConfig[cargo].titulo}`;
 
             renderDashboard(cargo);
+            btnEntrar.disabled = false;
+
+            // Esconde a barra após entrar
+            loginProgress.hide(600);
         });
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
         // ============================================
         // RENDER DASHBOARD
@@ -1560,7 +1766,7 @@
             if (target) target.classList.remove('hidden');
             document.querySelectorAll('#secretariaArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
-            
+
             if (section === 'alunos') carregarAlunosSecretaria();
             if (section === 'matriculas') carregarMatriculasSecretaria();
             if (section === 'professores') carregarProfessoresSecretaria();
@@ -1572,7 +1778,7 @@
             const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO');
             const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
             const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso));
-            
+
             document.getElementById('totalAlunosSecretaria').textContent = alunosAtivos.length;
             document.getElementById('matriculasAtivas').textContent = matriculasAtivas.length;
             document.getElementById('totalCursosSecretaria').textContent = cursosAtivos.size;
@@ -1675,7 +1881,7 @@
         function carregarMatriculasSecretaria() {
             const filtroCurso = document.getElementById('filtroCursoMatricula')?.value || '';
             const busca = document.getElementById('buscaMatriculaSecretaria')?.value.toLowerCase() || '';
-            
+
             const selectFiltro = document.getElementById('filtroCursoMatricula');
             if (selectFiltro) {
                 selectFiltro.innerHTML = '<option value="">Todos os Cursos</option>' +
@@ -1823,7 +2029,7 @@
             const id = 'PROF_' + new Date().getTime();
             document.getElementById('formCadastroProfessor').reset();
             document.getElementById('cadProfessorID').value = id;
-            
+
             const selectCurso = document.getElementById('cadProfessorCurso');
             selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
                 CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -1834,7 +2040,7 @@
                     <input type="checkbox" value="${c.id}" class="prof-curso-extra"> ${c.nome}
                 </label>
             `).join('');
-            
+
             document.getElementById('modalCadastroProfessor').classList.add('active');
         }
 
@@ -1911,7 +2117,7 @@
 
             const alunos = getAlunosByCurso(curso);
             const presencas = db.presencas[curso] || [];
-            
+
             if (alunos.length === 0) {
                 container.innerHTML = '<p style="color:#718096;">Nenhum aluno matriculado neste curso.</p>';
                 return;
@@ -2146,33 +2352,29 @@
             `).join('');
         }
 
-        // ============================================
-        // SALVAR PRESENÇA (envia "conteudo" para a coluna F)
-        // ============================================
         async function salvarPresenca() {
             if (!cursoSelecionado) return;
             const data = formatarDataParaPlanilha(document.getElementById('dataPresenca').value);
             const checkboxes = document.querySelectorAll('#alunosPresencaTabela input:checked');
             const presentes = Array.from(checkboxes).map(cb => cb.dataset.aluno);
-            
-            // Campo "Conteúdo" -> será gravado na coluna F da aba PRESENCAS pelo GAS
+
             const conteudoAula = document.getElementById('obsPresenca').value.trim();
 
             const payload = {
                 curso: cursoSelecionado,
                 data,
                 presentes,
-                conteudo: conteudoAula,   // <-- chave "conteudo" (GAS mapeia para coluna F)
+                conteudo: conteudoAula,
                 professor: currentUser.nome
             };
             const resultado = await enviarParaGAS('salvarPresenca', payload);
             if (resultado.success) {
                 if (!db.presencas[cursoSelecionado]) db.presencas[cursoSelecionado] = [];
-                db.presencas[cursoSelecionado].push({ 
-                    data, 
-                    presentes, 
-                    professor: currentUser.nome, 
-                    conteudo: conteudoAula 
+                db.presencas[cursoSelecionado].push({
+                    data,
+                    presentes,
+                    professor: currentUser.nome,
+                    conteudo: conteudoAula
                 });
                 renderRegistrosPresenca();
                 document.getElementById('obsPresenca').value = '';
@@ -2291,7 +2493,7 @@
                 const alunos = getAlunosByCurso(curso.id);
                 const professor = getProfessorByCurso(curso.id);
                 const presencas = db.presencas[curso.id] || [];
-                
+
                 let totalPres = 0, totalDias = presencas.length;
                 alunos.forEach(aluno => {
                     presencas.forEach(p => { if (p.presentes.includes(aluno.nome)) totalPres++; });
@@ -2328,7 +2530,7 @@
         function renderAcompanhamentoProf() {
             const profNome = document.getElementById('selectProfAcompanhamento').value;
             const container = document.getElementById('acompanhamentoResultados');
-            
+
             if (!profNome) {
                 container.innerHTML = '<p style="color: #718096;">Selecione um professor.</p>';
                 return;
@@ -2368,7 +2570,7 @@
             });
 
             let html = `<h4 style="margin-bottom: 15px;">Histórico de Aulas: ${profNome}</h4>`;
-            
+
             for (const cursoId in porCurso) {
                 html += `
                     <div style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
@@ -2398,7 +2600,7 @@
                     </div>
                 `;
             }
-            
+
             container.innerHTML = html;
         }
 
@@ -2494,11 +2696,11 @@
         function renderStatsGerenciais() {
             const container = document.getElementById('statsGerenciais');
             if (!container) return;
-            
+
             const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO').length;
             const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO').length;
             const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso)).size;
-            
+
             let somaMedias = 0, count = 0;
             db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => {
                 const media = getMediaAluno(m.aluno, m.curso);
@@ -2539,7 +2741,7 @@
             const container = document.getElementById('relatorioConsolidado');
             const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO');
             const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
-            
+
             container.innerHTML = `
                 <div class="relatorio-content">
                     <h4>📊 Relatório Geral da Escola de Música</h4>
@@ -2647,10 +2849,9 @@
 
             prof.valorHora = novoValor;
 
-            // Envia para o GAS (ação dedicada 'salvarValorProfessor')
             const payload = { id: profId, valorHora: novoValor };
             const resultado = await enviarParaGAS('salvarValorProfessor', payload);
-            
+
             if (resultado.success) {
                 mostrarToast(`✅ Valor de ${prof.nome} atualizado para R$ ${novoValor.toFixed(2)}!`, 'success');
             } else {
@@ -2659,8 +2860,7 @@
         }
 
         // ============================================
-        // FINANCEIRO — CÁLCULO POR SEMANA
-        // Coluna C (Data) e coluna G (Professor) da aba PRESENCAS
+        // FINANCEIRO — CÁLCULO POR SEMANA (corrigido)
         // ============================================
         function calcularPagamentos() {
             const mesRef = document.getElementById('finMesReferencia').value; // "2026-11"
@@ -2673,31 +2873,55 @@
 
             const [ano, mes] = mesRef.split('-').map(Number);
 
-            // Estruturas de agregação
-            const aulasPorProfessorSemana = {}; // { PROF: {S1..S5} }
-            const aulasPorProfessorMes = {};    // { PROF: total }
+            console.log('[Financeiro] Mês de referência:', mesRef);
+            console.log('[Financeiro] Cursos em db.presencas:', Object.keys(db.presencas));
+            console.log('[Financeiro] Professores cadastrados:', escolaData.professores.map(p => p.nome));
 
-            // Percorre todas as presenças carregadas em db.presencas
+            const aulasPorProfessorSemana = {};
+            const aulasPorProfessorMes = {};
+            let totalLinhasPresenca = 0;
+            let linhasNoMes = 0;
+            let linhasSemProfessor = 0;
+            let linhasDataInvalida = 0;
+
             for (const cursoId in db.presencas) {
                 db.presencas[cursoId].forEach(p => {
-                    if (!p.data) return;
-                    const partes = p.data.split('-'); // DD-MM-YYYY
-                    if (partes.length !== 3) return;
+                    totalLinhasPresenca++;
+
+                    const partes = String(p.data || '').split('-');
+                    if (partes.length !== 3) {
+                        linhasDataInvalida++;
+                        console.warn('[Financeiro] Data inválida descartada:', p.data, p);
+                        return;
+                    }
                     const dia = parseInt(partes[0], 10);
                     const mesAula = parseInt(partes[1], 10);
                     const anoAula = parseInt(partes[2], 10);
+                    if (isNaN(dia) || isNaN(mesAula) || isNaN(anoAula)) {
+                        linhasDataInvalida++;
+                        console.warn('[Financeiro] Data não numérica descartada:', p.data);
+                        return;
+                    }
 
                     if (mesAula !== mes || anoAula !== ano) return;
+                    linhasNoMes++;
 
-                    // Professor: coluna G (prioritário) ou fallback = prof do curso
-                    let profNome = p.professor;
+                    let profNome = (p.professor || '').toUpperCase().trim();
+
                     if (!profNome) {
                         const profDoCurso = getProfessorByCurso(cursoId);
-                        if (profDoCurso) profNome = profDoCurso.nome;
+                        if (profDoCurso) profNome = profDoCurso.nome.toUpperCase().trim();
                     }
-                    if (!profNome) return;
+                    if (!profNome) {
+                        const mat = db.matriculas.find(m => m.curso === cursoId && m.professor);
+                        if (mat) profNome = mat.professor.toUpperCase().trim();
+                    }
+                    if (!profNome) {
+                        linhasSemProfessor++;
+                        console.warn('[Financeiro] Sem professor para a aula:', p, 'curso:', cursoId);
+                        return;
+                    }
 
-                    // Semana do mês: 1-7 → S1, 8-14 → S2, 15-21 → S3, 22-28 → S4, 29-31 → S5
                     const semana = Math.min(5, Math.ceil(dia / 7));
                     const chaveSemana = 'S' + semana;
 
@@ -2710,6 +2934,12 @@
                 });
             }
 
+            console.log('[Financeiro] Linhas totais de presença:', totalLinhasPresenca);
+            console.log('[Financeiro] Linhas no mês:', linhasNoMes);
+            console.log('[Financeiro] Linhas sem professor:', linhasSemProfessor);
+            console.log('[Financeiro] Linhas com data inválida:', linhasDataInvalida);
+            console.log('[Financeiro] Aulas agregadas por professor:', aulasPorProfessorMes);
+
             if (escolaData.professores.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#718096;">Nenhum professor cadastrado.</td></tr>';
                 return;
@@ -2717,18 +2947,19 @@
 
             let totalGeralAulas = 0;
             let totalGeralPago = 0;
-            let linhas = '';
+            let linhasHtml = '';
 
             escolaData.professores.forEach(prof => {
-                const porSemana = aulasPorProfessorSemana[prof.nome] || { S1: 0, S2: 0, S3: 0, S4: 0, S5: 0 };
-                const totalAulas = aulasPorProfessorMes[prof.nome] || 0;
+                const nomeChave = (prof.nome || '').toUpperCase().trim();
+                const porSemana = aulasPorProfessorSemana[nomeChave] || { S1: 0, S2: 0, S3: 0, S4: 0, S5: 0 };
+                const totalAulas = aulasPorProfessorMes[nomeChave] || 0;
                 const valorHora = prof.valorHora || 0;
                 const total = totalAulas * valorHora;
 
                 totalGeralAulas += totalAulas;
                 totalGeralPago += total;
 
-                linhas += `
+                linhasHtml += `
                     <tr>
                         <td><strong>${prof.nome}</strong></td>
                         <td>R$ ${valorHora.toFixed(2)}</td>
@@ -2745,7 +2976,7 @@
                 `;
             });
 
-            linhas += `
+            linhasHtml += `
                 <tr style="background:#f7fafc; font-weight:bold;">
                     <td colspan="2">TOTAL GERAL</td>
                     <td colspan="5" style="text-align:center;">${totalGeralAulas} aula(s) no mês</td>
@@ -2754,7 +2985,11 @@
                 </tr>
             `;
 
-            tbody.innerHTML = linhas;
+            tbody.innerHTML = linhasHtml;
+
+            if (totalGeralAulas === 0) {
+                mostrarToast('⚠️ Nenhuma aula encontrada para o mês. Verifique o console (F12).', 'info');
+            }
         }
 
         // ============================================
@@ -2776,6 +3011,13 @@
             document.getElementById('loginForm').reset();
             currentUser = { cargo: '', nome: '', professorData: null, cursos: [] };
             cursoSelecionado = null;
+
+            // Reseta barra de progresso
+            loginProgress.init();
+            loginProgress.fill.style.width = '0%';
+            loginProgress.pct.textContent = '0%';
+            loginProgress.el.classList.remove('active', 'done', 'error');
+            document.getElementById('btnEntrar').disabled = false;
         }
 
         function imprimirRelatorioModal() {
@@ -2792,6 +3034,8 @@
         // INICIALIZAÇÃO
         // ============================================
         document.addEventListener('DOMContentLoaded', function() {
+            loginProgress.init();
+
             const hoje = new Date();
             const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
             const dataPresenca = document.getElementById('dataPresenca');
