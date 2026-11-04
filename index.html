@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistema de Gestão - Escola de Música</title>
     <style>
         /* ===== RESET & BASE ===== */
@@ -13,6 +13,8 @@
             min-height: 100vh;
             padding: 20px;
             color: #2d3748;
+            overflow-x: hidden;
+            touch-action: pan-y;
         }
         .container { max-width: 1400px; margin: 0 auto; }
 
@@ -338,9 +340,7 @@
                         <option value="direcao">👔 Direção</option>
                         <option value="secretaria">📁 Secretaria</option>
                         <option value="coordenacao">📚 Coordenação Pedagógica</option>
-                        <option value="professor-instrumento">🎹 Professor de Instrumento</option>
-                        <option value="professor-teoria">🎼 Professor de Teoria Musical</option>
-                        <option value="professor-musicalizacao">🎵 Professor de Musicalização</option>
+                        <option value="professor">🎹 Professor</option>
                         <option value="financeiro">💰 Financeiro</option>
                     </select>
                 </div>
@@ -405,12 +405,6 @@
                             <div class="stat-icon">👨‍🏫</div>
                             <div class="stat-number" id="totalProfessoresSecretaria">0</div>
                             <div class="stat-label">Professores</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 20px;">
-                        <h4>📌 Últimas Atividades</h4>
-                        <div id="ultimasAtividades" class="registros-list">
-                            <p style="color: #718096;">Nenhuma atividade registrada.</p>
                         </div>
                     </div>
                 </div>
@@ -697,7 +691,6 @@
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
                             <button class="toggle-btn active" onclick="toggleSection('notas', event)">📊 Avaliações</button>
                             <button class="toggle-btn" onclick="toggleSection('presencas', event)">✅ Presenças</button>
-                            <button class="toggle-btn" onclick="toggleSection('conteudos', event)">📚 Conteúdos</button>
                             <button class="toggle-btn" onclick="toggleSection('observacoes', event)">✏️ Observações</button>
                             <button class="toggle-btn" onclick="toggleSection('relatorios', event)">📄 Relatórios</button>
                         </div>
@@ -739,12 +732,13 @@
                         <div id="section-presencas" class="toggle-section hidden">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Data</label>
+                                    <label>Data da Aula</label>
                                     <input type="date" id="dataPresenca">
                                 </div>
                                 <div class="form-group">
-                                    <label>Observação da Aula</label>
-                                    <input type="text" id="obsPresenca" placeholder="Ex: Aula sobre escalas">
+                                    <!-- Campo que vai para a coluna F da aba PRESENCAS -->
+                                    <label>Conteúdo</label>
+                                    <input type="text" id="obsPresenca" placeholder="Descreva o conteúdo aplicado...">
                                 </div>
                             </div>
                             <div class="form-group">
@@ -764,25 +758,6 @@
                             </div>
                             <button onclick="salvarPresenca()" class="btn btn-secondary btn-small" style="margin-top: 15px;">✅ Salvar Presença</button>
                             <div id="registrosPresenca" class="registros-list" style="margin-top: 20px;"></div>
-                        </div>
-
-                        <div id="section-conteudos" class="toggle-section hidden">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Data</label>
-                                    <input type="date" id="dataConteudo">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Conteúdo</label>
-                                <textarea id="conteudoText" placeholder="Descreva o conteúdo trabalhado..."></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Objetivos</label>
-                                <textarea id="objetivosConteudo" placeholder="Descreva os objetivos da aula..."></textarea>
-                            </div>
-                            <button onclick="salvarConteudo()" class="btn btn-secondary btn-small">💾 Salvar Conteúdo</button>
-                            <div id="registrosConteudos" class="registros-list" style="margin-top: 20px;"></div>
                         </div>
 
                         <div id="section-observacoes" class="toggle-section hidden">
@@ -848,6 +823,7 @@
             <div id="coordenadorArea" class="hidden">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
                     <button class="toggle-btn active" onclick="toggleCoordenacao('visao', event)">📊 Visão por Curso</button>
+                    <button class="toggle-btn" onclick="toggleCoordenacao('acompanhamento', event)">👨‍🏫 Acompanhamento</button>
                     <button class="toggle-btn" onclick="toggleCoordenacao('atribuicao', event)">📋 Atribuição</button>
                     <button class="toggle-btn" onclick="toggleCoordenacao('receber', event)">📥 Receber Relatórios <span id="notificacaoRelatorios" class="notification-badge hidden">0</span></button>
                 </div>
@@ -868,6 +844,21 @@
                             </thead>
                             <tbody id="visaoGeralCursos"></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <div id="coordenacao-acompanhamento" class="section-container hidden">
+                    <h3>👨‍🏫 Acompanhamento Individual de Professores</h3>
+                    <div class="form-row" style="margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Selecione o Professor</label>
+                            <select id="selectProfAcompanhamento" onchange="renderAcompanhamentoProf()">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="acompanhamentoResultados">
+                        <p style="color: #718096;">Selecione um professor para visualizar o histórico de aulas e conteúdos aplicados.</p>
                     </div>
                 </div>
 
@@ -922,28 +913,60 @@
 
             <!-- ÁREA DO FINANCEIRO -->
             <div id="financeiroArea" class="hidden">
-                <div class="section-container">
-                    <h3>💰 Painel Financeiro</h3>
-                    <div class="stats-grid" id="statsFinanceiro">
-                        <div class="stat-card">
-                            <div class="stat-icon">👥</div>
-                            <div class="stat-number" id="finTotalAlunos">0</div>
-                            <div class="stat-label">Alunos Matriculados</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <button class="toggle-btn active" onclick="toggleFinanceiro('dashboard', event)">💰 Painel e Pagamentos</button>
+                    <button class="toggle-btn" onclick="toggleFinanceiro('valores', event)">⚙️ Cadastrar Valores</button>
+                </div>
+
+                <div id="financeiro-dashboard" class="section-container">
+                    <h3>💰 Cálculo de Pagamento de Professores (por Semana)</h3>
+                    <div class="form-row" style="margin-bottom: 20px; background: #f7fafc; padding: 15px; border-radius: 8px;">
+                        <div class="form-group">
+                            <label>Mês de Referência</label>
+                            <input type="month" id="finMesReferencia" onchange="calcularPagamentos()">
                         </div>
-                        <div class="stat-card" style="border-left: 4px solid #48bb78;">
-                            <div class="stat-icon">📋</div>
-                            <div class="stat-number" id="finTotalMatriculas">0</div>
-                            <div class="stat-label">Matrículas Ativas</div>
-                        </div>
-                        <div class="stat-card" style="border-left: 4px solid #4299e1;">
-                            <div class="stat-icon">🎵</div>
-                            <div class="stat-number" id="finTotalCursos">0</div>
-                            <div class="stat-label">Cursos Ativos</div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="calcularPagamentos()" class="btn btn-info btn-small">🔄 Calcular Pagamentos</button>
                         </div>
                     </div>
-                    <div style="margin-top: 20px;">
-                        <h4>📊 Matrículas por Curso</h4>
-                        <div id="finMatriculasPorCurso"></div>
+                    <div class="table-container">
+                        <table id="tabelaPagamentos">
+                            <thead>
+                                <tr>
+                                    <th>Professor</th>
+                                    <th>Valor Hora/Aula</th>
+                                    <th>Semana 1</th>
+                                    <th>Semana 2</th>
+                                    <th>Semana 3</th>
+                                    <th>Semana 4</th>
+                                    <th>Semana 5</th>
+                                    <th>Total Aulas</th>
+                                    <th>Total a Pagar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaPagamentosFinanceiro">
+                                <tr><td colspan="9" style="text-align:center;color:#718096;">Selecione o mês e clique em Calcular.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 0.85em; color: #718096;">
+                        ℹ️ As semanas são contadas por faixa de dias: <strong>Sem 1</strong> (1–7), <strong>Sem 2</strong> (8–14), <strong>Sem 3</strong> (15–21), <strong>Sem 4</strong> (22–28), <strong>Sem 5</strong> (29–31). Cada linha da aba PRESENCAS conta como 1 aula.
+                    </div>
+                </div>
+
+                <div id="financeiro-valores" class="section-container hidden">
+                    <h3>⚙️ Cadastro de Valor Hora/Aula</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Professor</th>
+                                    <th>Valor Hora/Aula (R$)</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaValoresProfessores"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1001,8 +1024,8 @@
             { id: 'flauta',                 nome: '🎶 Flauta',                 tipo: 'Instrumento' },
             { id: 'clarinete',              nome: '🎶 Clarinete',              tipo: 'Instrumento' },
             { id: 'canto',                  nome: '🎤 Canto',                  tipo: 'Instrumento' },
-            { id: 'teoria-musical1',         nome: '🎼 Teoria Musical 1',         tipo: 'Teoria Musical 1' },
-            { id: 'teoria-musical2',         nome: '🎼 Teoria Musical 2',         tipo: 'Teoria Musical 2' },
+            { id: 'teoria-musical1',        nome: '🎼 Teoria Musical 1',       tipo: 'Teoria Musical 1' },
+            { id: 'teoria-musical2',        nome: '🎼 Teoria Musical 2',       tipo: 'Teoria Musical 2' },
             { id: 'musicalizacao-infantil', nome: '🎵 Musicalização Infantil', tipo: 'Musicalização' }
         ];
 
@@ -1031,9 +1054,6 @@
             return String(valor).trim();
         }
 
-        /**
-         * Busca uma chave em um objeto ignorando caixa, acentos e espaços.
-         */
         function getColuna(obj, ...nomes) {
             if (!obj) return '';
             const chaves = Object.keys(obj);
@@ -1098,9 +1118,6 @@
             return curso ? curso.nome : cursoId;
         }
 
-        /**
-         * Normaliza um valor de curso (string) para o slug canônico.
-         */
         function normalizarCursoId(cursoRaw) {
             if (!cursoRaw) return '';
             const raw = texto(cursoRaw).toLowerCase().trim();
@@ -1113,8 +1130,10 @@
                 'contrabaixo': 'contrabaixo-acustico',
                 'contrabaixo acustico': 'contrabaixo-acustico',
                 'contrabaixo acústico': 'contrabaixo-acustico',
-                'teoria': 'teoria-musical',
-                'teoria musical': 'teoria-musical',
+                'teoria': 'teoria-musical1',
+                'teoria musical': 'teoria-musical1',
+                'teoria 1': 'teoria-musical1',
+                'teoria 2': 'teoria-musical2',
                 'musicalizacao': 'musicalizacao-infantil',
                 'musicalizacao infantil': 'musicalizacao-infantil',
                 'musicalização': 'musicalizacao-infantil',
@@ -1130,20 +1149,11 @@
             return raw;
         }
 
-        /**
-         * Extrai TODOS os cursos de um professor.
-         * Agora junta o campo 'Curso' com o campo 'Tipo' caso o professor
-         * lecione matérias como Teoria Musical em linhas diferentes.
-         */
         function extrairCursosDoProfessor(professor) {
             if (!professor) return [];
-            
-            // Concatena Curso e Tipo para não perder nada
             const textoCursos = `${professor.curso || ''},${professor.tipo || ''}`;
-
             if (!textoCursos.replace(/,/g, '').trim()) return [];
 
-            // Normaliza separadores
             let normalizado = textoCursos
                 .replace(/\r\n|\r|\n/g, ',')
                 .replace(/[;|/\\]+/g, ',')
@@ -1153,7 +1163,6 @@
                 .split(/[,]+/)
                 .map(c => normalizarCursoId(c))
                 .filter(c => {
-                    // Filtra "lixo" que pode vir da coluna Tipo (Ex: "Instrumento")
                     const lixo = ['instrumento', 'teoria musical', 'musicalização', 'musicalizacao'];
                     return c && !lixo.includes(c.toLowerCase());
                 });
@@ -1198,7 +1207,7 @@
 
                 if (currentUser.cargo === 'secretaria') {
                     inicializarSecretaria();
-                } else if (currentUser.cargo.startsWith('professor')) {
+                } else if (currentUser.cargo === 'professor') {
                     const profAtual = escolaData.professores.find(p => p.nome === currentUser.nome);
                     if (profAtual) {
                         currentUser.professorData = profAtual;
@@ -1212,7 +1221,6 @@
                                 document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoSelecionado);
                                 carregarTabelaNotas();
                                 carregarPresenca();
-                                carregarConteudos();
                                 carregarObservacoes();
                                 carregarAlunosSelects();
                                 renderRelatoriosEnviados();
@@ -1223,6 +1231,7 @@
                     renderVisaoCursos();
                     carregarProfessoresAtribuicao();
                     renderRelatoriosRecebidos();
+                    renderSelectAcompanhamento();
                 } else if (currentUser.cargo === 'direcao') {
                     renderStatsGerenciais();
                 } else if (currentUser.cargo === 'financeiro') {
@@ -1275,20 +1284,18 @@
                 status: texto(getColuna(a, 'Status') || 'ATIVO').toUpperCase()
             })).filter(a => a.nome);
 
-            // =========================================================
-            // CORREÇÃO: AGRUPAR PROFESSORES DUPLICADOS
-            // =========================================================
             const professoresMap = {};
             
             dadosPlanilha.professores.forEach(p => {
                 const nome = texto(getColuna(p, 'Nome', 'Nome_Professor', 'NomeProfessor', 'Professor')).toUpperCase();
-                if (!nome) return; // Pula se não tiver nome
+                if (!nome) return;
 
                 const curso = texto(getColuna(p, 'Curso', 'Cursos', 'Curso(s)'));
                 const tipo = texto(getColuna(p, 'Tipo', 'Cargo'));
+                const valorHoraRaw = texto(getColuna(p, 'Valor_Hora', 'ValorHora', 'Valor Aula', 'Valor_Aula'));
+                const valorHora = parseFloat(String(valorHoraRaw).replace(',', '.')) || 0;
                 
                 if (!professoresMap[nome]) {
-                    // Se é a primeira vez que vê o professor, cria o registro base
                     professoresMap[nome] = {
                         id: texto(getColuna(p, 'ID_Professor', 'ID')),
                         nome: nome,
@@ -1296,29 +1303,26 @@
                         curso: curso,
                         telefone: texto(getColuna(p, 'Telefone', 'Tel')),
                         email: texto(getColuna(p, 'Email', 'E-mail')),
-                        status: texto(getColuna(p, 'Status') || 'ATIVO').toUpperCase()
+                        status: texto(getColuna(p, 'Status') || 'ATIVO').toUpperCase(),
+                        valorHora: valorHora
                     };
                 } else {
-                    // Se o professor já existe, apenas adiciona os novos cursos na lista
                     if (curso && !professoresMap[nome].curso.includes(curso)) {
                         professoresMap[nome].curso += `,${curso}`;
                     }
-                    // Se o tipo for diferente, junta também (ex: Instrumento e Teoria Musical)
                     if (tipo && !professoresMap[nome].tipo.includes(tipo)) {
                         professoresMap[nome].tipo += `, ${tipo}`;
                     }
                 }
             });
 
-            // Transforma o Objeto de volta em Array
             escolaData.professores = Object.values(professoresMap);
-            // =========================================================
 
             db.matriculas = dadosPlanilha.matriculas.map(m => ({
                 id: texto(getColuna(m, 'ID_Matricula', 'ID')),
                 aluno: texto(getColuna(m, 'Aluno', 'Nome_Aluno')).toUpperCase(),
                 curso: normalizarCursoId(texto(getColuna(m, 'Curso'))),
-                professor: texto(getColuna(m, 'Professor')),
+                professor: texto(getColuna(m, 'Professor')).toUpperCase(),
                 dataMatricula: formatarDataParaExibicao(texto(getColuna(m, 'Data_Matricula', 'DataMatricula', 'Data'))),
                 anoLetivo: texto(getColuna(m, 'Ano_Letivo', 'AnoLetivo', 'Ano')),
                 status: texto(getColuna(m, 'Status') || 'ATIVO').toUpperCase()
@@ -1331,14 +1335,26 @@
                 nota: parseFloat(getColuna(a, 'Nota')) || 0
             }));
 
+            // PRESENÇAS: coluna C = Data, coluna F = Conteudo, coluna G = Professor
             db.presencas = {};
             dadosPlanilha.presencas.forEach(p => {
                 const curso = normalizarCursoId(texto(getColuna(p, 'Curso')));
                 if (!curso) return;
+                
+                let professorNome = texto(getColuna(p, 'Professor')).toUpperCase();
+                if (!professorNome) {
+                    const prof = escolaData.professores.find(pr => extrairCursosDoProfessor(pr).includes(curso));
+                    if (prof) professorNome = prof.nome;
+                }
+
+                let conteudoAula = texto(getColuna(p, 'Conteudo', 'Conteúdo', 'Observacao', 'Observação', 'coluna_5'));
+
                 if (!db.presencas[curso]) db.presencas[curso] = [];
                 db.presencas[curso].push({
                     data: formatarDataParaExibicao(texto(getColuna(p, 'Data'))),
-                    presentes: texto(getColuna(p, 'Presentes')).split(',').map(n => n.trim().toUpperCase()).filter(Boolean)
+                    presentes: texto(getColuna(p, 'Presentes')).split(',').map(n => n.trim().toUpperCase()).filter(Boolean),
+                    professor: professorNome,
+                    conteudo: conteudoAula
                 });
             });
 
@@ -1371,7 +1387,7 @@
                 aluno: texto(getColuna(r, 'Aluno')).toUpperCase(),
                 curso: normalizarCursoId(texto(getColuna(r, 'Curso'))),
                 bimestre: texto(getColuna(r, 'Bimestre') || '1'),
-                professor: texto(getColuna(r, 'Professor')),
+                professor: texto(getColuna(r, 'Professor')).toUpperCase(),
                 relatorio: texto(getColuna(r, 'Relatorio', 'Relatório')),
                 data: formatarDataParaExibicao(texto(getColuna(r, 'Data'))),
                 visto: texto(getColuna(r, 'Visto'))
@@ -1428,16 +1444,14 @@
             'direcao': { titulo: '👔 Direção', cores: 'direcao' },
             'secretaria': { titulo: '📁 Secretaria', cores: 'secretaria' },
             'coordenacao': { titulo: '📚 Coordenação Pedagógica', cores: 'coordenacao' },
-            'professor-instrumento': { titulo: '🎹 Professor de Instrumento', cores: 'professor' },
-            'professor-teoria': { titulo: '🎼 Professor de Teoria Musical', cores: 'professor' },
-            'professor-musicalizacao': { titulo: '🎵 Professor de Musicalização', cores: 'professor' },
+            'professor': { titulo: '🎹 Professor', cores: 'professor' },
             'financeiro': { titulo: '💰 Financeiro', cores: 'financeiro' }
         };
 
         // ============================================
-        // LOGIN
+        // LOGIN (com registro de LOG na planilha)
         // ============================================
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const cargo = document.getElementById('cargo').value;
             const nome = document.getElementById('nome').value.trim().toUpperCase();
@@ -1447,7 +1461,7 @@
             currentUser.cargo = cargo;
             currentUser.nome = nome;
 
-            if (cargo.startsWith('professor')) {
+            if (cargo === 'professor') {
                 const prof = escolaData.professores.find(p => p.nome === nome);
                 if (!prof) {
                     alert('⚠️ Professor não encontrado. Verifique seu nome.');
@@ -1461,6 +1475,17 @@
                     alert('⚠️ Nenhum curso atribuído a este professor. Entre em contato com a coordenação.');
                     return;
                 }
+            }
+
+            // === REGISTRAR LOGIN NA PLANILHA (aba LOGS) ===
+            try {
+                await enviarParaGAS('registrarLogin', {
+                    nome: nome,
+                    perfil: cargo,
+                    acao: 'LOGIN'
+                });
+            } catch (err) {
+                console.warn('Falha ao registrar login (não bloqueia):', err);
             }
 
             document.getElementById('loginContainer').style.display = 'none';
@@ -1494,7 +1519,7 @@
                 document.getElementById('secretariaArea').classList.remove('hidden');
                 inicializarSecretaria();
             }
-            if (cargo.startsWith('professor')) {
+            if (cargo === 'professor') {
                 document.getElementById('professorArea').classList.remove('hidden');
                 document.getElementById('cursosSection').classList.remove('hidden');
                 document.getElementById('registrosSection').classList.remove('hidden');
@@ -1505,6 +1530,7 @@
                 renderVisaoCursos();
                 carregarProfessoresAtribuicao();
                 renderRelatoriosRecebidos();
+                renderSelectAcompanhamento();
             }
             if (cargo === 'direcao') {
                 document.getElementById('direcaoArea').classList.remove('hidden');
@@ -2014,7 +2040,6 @@
             renderMeusCursos();
             carregarTabelaNotas();
             carregarPresenca();
-            carregarConteudos();
             carregarObservacoes();
             carregarAlunosSelects();
             renderRelatoriosEnviados();
@@ -2028,7 +2053,6 @@
             if (event && event.target) event.target.classList.add('active');
 
             if (section === 'presencas') carregarPresenca();
-            if (section === 'conteudos') carregarConteudos();
             if (section === 'observacoes') carregarObservacoes();
             if (section === 'relatorios') renderRelatoriosEnviados();
         }
@@ -2117,64 +2141,42 @@
             container.innerHTML = registros.slice(-10).reverse().map(r => `
                 <div class="registro-item">
                     <div class="data">📅 ${r.data}</div>
-                    <div class="conteudo">✅ ${r.presentes.length} presentes</div>
+                    <div class="conteudo">✅ ${r.presentes.length} presentes ${r.conteudo ? ' | 📚 ' + r.conteudo : ''}</div>
                 </div>
             `).join('');
         }
 
+        // ============================================
+        // SALVAR PRESENÇA (envia "conteudo" para a coluna F)
+        // ============================================
         async function salvarPresenca() {
             if (!cursoSelecionado) return;
             const data = formatarDataParaPlanilha(document.getElementById('dataPresenca').value);
             const checkboxes = document.querySelectorAll('#alunosPresencaTabela input:checked');
             const presentes = Array.from(checkboxes).map(cb => cb.dataset.aluno);
-            const observacao = document.getElementById('obsPresenca').value.trim();
+            
+            // Campo "Conteúdo" -> será gravado na coluna F da aba PRESENCAS pelo GAS
+            const conteudoAula = document.getElementById('obsPresenca').value.trim();
 
             const payload = {
-                curso: cursoSelecionado, data, presentes,
-                observacao, professor: currentUser.nome
+                curso: cursoSelecionado,
+                data,
+                presentes,
+                conteudo: conteudoAula,   // <-- chave "conteudo" (GAS mapeia para coluna F)
+                professor: currentUser.nome
             };
             const resultado = await enviarParaGAS('salvarPresenca', payload);
             if (resultado.success) {
                 if (!db.presencas[cursoSelecionado]) db.presencas[cursoSelecionado] = [];
-                db.presencas[cursoSelecionado].push({ data, presentes });
+                db.presencas[cursoSelecionado].push({ 
+                    data, 
+                    presentes, 
+                    professor: currentUser.nome, 
+                    conteudo: conteudoAula 
+                });
                 renderRegistrosPresenca();
-                mostrarToast('✅ Presença salva!', 'success');
-            }
-        }
-
-        function carregarConteudos() {
-            const container = document.getElementById('registrosConteudos');
-            const registros = db.conteudos[cursoSelecionado] || [];
-            if (registros.length === 0) {
-                container.innerHTML = '<p style="color:#718096;">Nenhum conteúdo registrado.</p>';
-                return;
-            }
-            container.innerHTML = registros.slice(-10).reverse().map(c => `
-                <div class="registro-item">
-                    <div class="data">📚 ${c.data}</div>
-                    <div class="conteudo">${c.conteudo}</div>
-                </div>
-            `).join('');
-        }
-
-        async function salvarConteudo() {
-            if (!cursoSelecionado) return;
-            const data = formatarDataParaPlanilha(document.getElementById('dataConteudo').value);
-            const conteudo = document.getElementById('conteudoText').value.trim();
-            const objetivos = document.getElementById('objetivosConteudo').value.trim();
-            if (!conteudo) { alert('Digite o conteúdo.'); return; }
-
-            const payload = {
-                curso: cursoSelecionado, data, conteudo, objetivos,
-                professor: currentUser.nome
-            };
-            const resultado = await enviarParaGAS('salvarConteudo', payload);
-            if (resultado.success) {
-                if (!db.conteudos[cursoSelecionado]) db.conteudos[cursoSelecionado] = [];
-                db.conteudos[cursoSelecionado].push({ data, conteudo, objetivos });
-                carregarConteudos();
-                document.getElementById('conteudoText').value = '';
-                mostrarToast('✅ Conteúdo salvo!', 'success');
+                document.getElementById('obsPresenca').value = '';
+                mostrarToast('✅ Presença e conteúdo salvos!', 'success');
             }
         }
 
@@ -2277,6 +2279,10 @@
             if (target) target.classList.remove('hidden');
             document.querySelectorAll('#coordenadorArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
+
+            if (section === 'acompanhamento') {
+                renderSelectAcompanhamento();
+            }
         }
 
         function renderVisaoCursos() {
@@ -2310,6 +2316,90 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        function renderSelectAcompanhamento() {
+            const select = document.getElementById('selectProfAcompanhamento');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Selecione --</option>' +
+                escolaData.professores.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
+        }
+
+        function renderAcompanhamentoProf() {
+            const profNome = document.getElementById('selectProfAcompanhamento').value;
+            const container = document.getElementById('acompanhamentoResultados');
+            
+            if (!profNome) {
+                container.innerHTML = '<p style="color: #718096;">Selecione um professor.</p>';
+                return;
+            }
+
+            let todasAulas = [];
+            for (const cursoId in db.presencas) {
+                const aulas = db.presencas[cursoId];
+                aulas.forEach(aula => {
+                    const profDoCurso = getProfessorByCurso(cursoId);
+                    if (aula.professor === profNome || (profDoCurso && profDoCurso.nome === profNome)) {
+                        todasAulas.push({
+                            curso: cursoId,
+                            data: aula.data,
+                            presentes: aula.presentes,
+                            conteudo: aula.conteudo || 'Sem conteúdo registrado'
+                        });
+                    }
+                });
+            }
+
+            if (todasAulas.length === 0) {
+                container.innerHTML = '<p style="color: #718096;">Nenhuma aula registrada para este professor.</p>';
+                return;
+            }
+
+            todasAulas.sort((a, b) => {
+                const [d1, m1, y1] = a.data.split('-');
+                const [d2, m2, y2] = b.data.split('-');
+                return new Date(y2, m2-1, d2) - new Date(y1, m1-1, d1);
+            });
+
+            const porCurso = {};
+            todasAulas.forEach(a => {
+                if (!porCurso[a.curso]) porCurso[a.curso] = [];
+                porCurso[a.curso].push(a);
+            });
+
+            let html = `<h4 style="margin-bottom: 15px;">Histórico de Aulas: ${profNome}</h4>`;
+            
+            for (const cursoId in porCurso) {
+                html += `
+                    <div style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+                        <div style="background: #edf2f7; padding: 10px 15px; font-weight: bold; color: #2d3748;">
+                            🎵 ${labelCurso(cursoId)}
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Alunos Presentes</th>
+                                        <th>Conteúdo Aplicado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${porCurso[cursoId].map(a => `
+                                        <tr>
+                                            <td><strong>${a.data}</strong></td>
+                                            <td style="font-size: 0.85em;">${a.presentes.length} aluno(s)</td>
+                                            <td>${a.conteudo}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
         }
 
         function carregarProfessoresAtribuicao() {
@@ -2509,25 +2599,162 @@
         // ============================================
         // FINANCEIRO
         // ============================================
-        function renderFinanceiro() {
-            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO').length;
-            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO').length;
-            const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso)).size;
-            
-            document.getElementById('finTotalAlunos').textContent = alunosAtivos;
-            document.getElementById('finTotalMatriculas').textContent = matriculasAtivas;
-            document.getElementById('finTotalCursos').textContent = cursosAtivos;
+        function toggleFinanceiro(section, event) {
+            document.querySelectorAll('#financeiroArea .section-container').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`financeiro-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#financeiroArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
 
-            const container = document.getElementById('finMatriculasPorCurso');
-            container.innerHTML = CURSOS.map(curso => {
-                const alunos = getAlunosByCurso(curso.id);
+            if (section === 'valores') renderValoresProfessores();
+        }
+
+        function renderFinanceiro() {
+            renderValoresProfessores();
+            const hoje = new Date();
+            const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('finMesReferencia').value = mesAtual;
+            calcularPagamentos();
+        }
+
+        function renderValoresProfessores() {
+            const tbody = document.getElementById('tabelaValoresProfessores');
+            if (!tbody) return;
+
+            tbody.innerHTML = escolaData.professores.map(p => {
+                const valor = p.valorHora || 0;
                 return `
-                    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e2e8f0;">
-                        <span>${curso.nome}</span>
-                        <strong>${alunos.length} aluno(s)</strong>
-                    </div>
+                    <tr>
+                        <td><strong>${p.nome}</strong></td>
+                        <td>
+                            <input type="number" step="0.01" min="0" id="valor_hora_${p.id}" value="${valor}" style="width: 120px; padding: 6px;">
+                        </td>
+                        <td>
+                            <button onclick="salvarValorHora('${p.id}')" class="btn btn-small btn-info">💾 Salvar</button>
+                        </td>
+                    </tr>
                 `;
             }).join('');
+        }
+
+        async function salvarValorHora(profId) {
+            const input = document.getElementById(`valor_hora_${profId}`);
+            if (!input) return;
+            const novoValor = parseFloat(input.value) || 0;
+
+            const prof = escolaData.professores.find(p => p.id === profId);
+            if (!prof) return;
+
+            prof.valorHora = novoValor;
+
+            // Envia para o GAS (ação dedicada 'salvarValorProfessor')
+            const payload = { id: profId, valorHora: novoValor };
+            const resultado = await enviarParaGAS('salvarValorProfessor', payload);
+            
+            if (resultado.success) {
+                mostrarToast(`✅ Valor de ${prof.nome} atualizado para R$ ${novoValor.toFixed(2)}!`, 'success');
+            } else {
+                mostrarToast('❌ Erro ao salvar valor na planilha.', 'error');
+            }
+        }
+
+        // ============================================
+        // FINANCEIRO — CÁLCULO POR SEMANA
+        // Coluna C (Data) e coluna G (Professor) da aba PRESENCAS
+        // ============================================
+        function calcularPagamentos() {
+            const mesRef = document.getElementById('finMesReferencia').value; // "2026-11"
+            const tbody = document.getElementById('tabelaPagamentosFinanceiro');
+
+            if (!mesRef) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#718096;">Selecione um mês.</td></tr>';
+                return;
+            }
+
+            const [ano, mes] = mesRef.split('-').map(Number);
+
+            // Estruturas de agregação
+            const aulasPorProfessorSemana = {}; // { PROF: {S1..S5} }
+            const aulasPorProfessorMes = {};    // { PROF: total }
+
+            // Percorre todas as presenças carregadas em db.presencas
+            for (const cursoId in db.presencas) {
+                db.presencas[cursoId].forEach(p => {
+                    if (!p.data) return;
+                    const partes = p.data.split('-'); // DD-MM-YYYY
+                    if (partes.length !== 3) return;
+                    const dia = parseInt(partes[0], 10);
+                    const mesAula = parseInt(partes[1], 10);
+                    const anoAula = parseInt(partes[2], 10);
+
+                    if (mesAula !== mes || anoAula !== ano) return;
+
+                    // Professor: coluna G (prioritário) ou fallback = prof do curso
+                    let profNome = p.professor;
+                    if (!profNome) {
+                        const profDoCurso = getProfessorByCurso(cursoId);
+                        if (profDoCurso) profNome = profDoCurso.nome;
+                    }
+                    if (!profNome) return;
+
+                    // Semana do mês: 1-7 → S1, 8-14 → S2, 15-21 → S3, 22-28 → S4, 29-31 → S5
+                    const semana = Math.min(5, Math.ceil(dia / 7));
+                    const chaveSemana = 'S' + semana;
+
+                    if (!aulasPorProfessorSemana[profNome]) {
+                        aulasPorProfessorSemana[profNome] = { S1: 0, S2: 0, S3: 0, S4: 0, S5: 0 };
+                        aulasPorProfessorMes[profNome] = 0;
+                    }
+                    aulasPorProfessorSemana[profNome][chaveSemana]++;
+                    aulasPorProfessorMes[profNome]++;
+                });
+            }
+
+            if (escolaData.professores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#718096;">Nenhum professor cadastrado.</td></tr>';
+                return;
+            }
+
+            let totalGeralAulas = 0;
+            let totalGeralPago = 0;
+            let linhas = '';
+
+            escolaData.professores.forEach(prof => {
+                const porSemana = aulasPorProfessorSemana[prof.nome] || { S1: 0, S2: 0, S3: 0, S4: 0, S5: 0 };
+                const totalAulas = aulasPorProfessorMes[prof.nome] || 0;
+                const valorHora = prof.valorHora || 0;
+                const total = totalAulas * valorHora;
+
+                totalGeralAulas += totalAulas;
+                totalGeralPago += total;
+
+                linhas += `
+                    <tr>
+                        <td><strong>${prof.nome}</strong></td>
+                        <td>R$ ${valorHora.toFixed(2)}</td>
+                        <td style="text-align:center;">${porSemana.S1}</td>
+                        <td style="text-align:center;">${porSemana.S2}</td>
+                        <td style="text-align:center;">${porSemana.S3}</td>
+                        <td style="text-align:center;">${porSemana.S4}</td>
+                        <td style="text-align:center;">${porSemana.S5}</td>
+                        <td style="text-align:center;"><strong>${totalAulas}</strong></td>
+                        <td style="font-weight:bold; color:${total > 0 ? '#2f855a' : '#718096'};">
+                            R$ ${total.toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            linhas += `
+                <tr style="background:#f7fafc; font-weight:bold;">
+                    <td colspan="2">TOTAL GERAL</td>
+                    <td colspan="5" style="text-align:center;">${totalGeralAulas} aula(s) no mês</td>
+                    <td style="text-align:center;">${totalGeralAulas}</td>
+                    <td style="color:#2f855a;">R$ ${totalGeralPago.toFixed(2)}</td>
+                </tr>
+            `;
+
+            tbody.innerHTML = linhas;
         }
 
         // ============================================
@@ -2569,10 +2796,8 @@
             const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
             const dataPresenca = document.getElementById('dataPresenca');
             const dataObs = document.getElementById('dataObservacao');
-            const dataCont = document.getElementById('dataConteudo');
             if (dataPresenca) dataPresenca.value = dataHoje;
             if (dataObs) dataObs.value = dataHoje;
-            if (dataCont) dataCont.value = dataHoje;
 
             setTimeout(() => { carregarDadosPlanilha(); }, 500);
         });
