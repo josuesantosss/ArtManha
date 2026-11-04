@@ -49,13 +49,13 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ===== LOGIN ===== */
-        .login-container {
+        /* =====  ===== */
+        .-container {
             background: white; border-radius: 15px; padding: 40px;
             max-width: 500px; margin: 0 auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
-        .login-container h2 { margin-bottom: 20px; color: #2d3748; }
+        .-container h2 { margin-bottom: 20px; color: #2d3748; }
         .login-info {
             background: #ebf8ff; border-left: 4px solid #4299e1;
             padding: 12px 15px; border-radius: 8px; margin-bottom: 20px;
@@ -1447,10 +1447,10 @@
             'financeiro': { titulo: '💰 Financeiro', cores: 'financeiro' }
         };
 
-        // ============================================
+               // ============================================
         // LOGIN
         // ============================================
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const cargo = document.getElementById('cargo').value;
             const nome = document.getElementById('nome').value.trim().toUpperCase();
@@ -1476,6 +1476,12 @@
                 }
             }
 
+            // ENVIA O LOG PARA O GAS ANTES DE ENTRAR
+            await enviarParaGAS('registrarLogin', { 
+                usuario: nome, 
+                perfil: cargoConfig[cargo].titulo 
+            });
+
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('dashboard').classList.add('active');
             document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[cargo].titulo}`;
@@ -1483,7 +1489,7 @@
 
             renderDashboard(cargo);
         });
-
+        
         // ============================================
         // RENDER DASHBOARD
         // ============================================
