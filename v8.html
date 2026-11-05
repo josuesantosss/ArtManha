@@ -1,0 +1,3593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistema de Gestão - Escola de Música</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2d3748;
+            overflow-x: hidden;
+            touch-action: pan-y;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: white; border-radius: 15px; padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .header h1 { color: #2d3748; font-size: 1.5em; }
+        .subtitle { color: #718096; font-size: 0.9em; margin-top: 5px; }
+        .badge-google {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white; padding: 8px 16px; border-radius: 20px;
+            font-size: 0.85em; font-weight: 600;
+        }
+
+        /* ===== LOADING GLOBAL ===== */
+        .loading-overlay {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column;
+        }
+        .loading-overlay.active { display: flex; }
+        .loading-content { text-align: center; }
+        .loading-spinner {
+            width: 50px; height: 50px; border: 5px solid #e2e8f0;
+            border-top-color: #667eea; border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===== OVERLAY GLOBAL DE SALVAMENTO ===== */
+        .save-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(2px);
+            display: none; justify-content: center; align-items: center;
+            z-index: 12000; padding: 20px;
+        }
+        .save-overlay.active { display: flex; }
+        .save-card {
+            background: white; border-radius: 16px; padding: 28px 32px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+            animation: modalIn 0.25s ease;
+        }
+        .save-card h3 {
+            color: #2d3748; font-size: 1.15em; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .save-card .save-sub {
+            color: #718096; font-size: 0.88em; margin-bottom: 18px;
+        }
+        .save-progress-label {
+            font-size: 0.85em; font-weight: 600; color: #4a5568;
+            margin-bottom: 8px; display: flex; justify-content: space-between;
+            align-items: center; gap: 10px;
+        }
+        .save-progress-label .pct { color: #667eea; font-weight: 700; }
+        .progress-track {
+            width: 100%; height: 12px; background: #e2e8f0;
+            border-radius: 999px; overflow: hidden; position: relative;
+        }
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 999px; transition: width 0.25s ease;
+            position: relative;
+        }
+        .progress-fill::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+            animation: shimmer 1.2s linear infinite;
+        }
+        @keyframes shimmer {
+            from { transform: translateX(-100%); }
+            to   { transform: translateX(100%); }
+        }
+        .save-overlay.done .progress-fill {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+        }
+        .save-overlay.error .progress-fill {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+        }
+        .save-progress-msg {
+            margin-top: 10px; font-size: 0.82em; color: #718096;
+            min-height: 18px;
+        }
+        .save-card .save-icon {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: #ebf8ff; color: #3182ce;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.1em;
+        }
+        .save-overlay.done .save-icon { background: #c6f6d5; color: #2f855a; }
+        .save-overlay.error .save-icon { background: #fed7d7; color: #c53030; }
+
+        /* ===== LOGIN ===== */
+        .login-container {
+            background: white; border-radius: 15px; padding: 40px;
+            max-width: 500px; margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .login-container h2 { margin-bottom: 20px; color: #2d3748; }
+        .login-info {
+            background: #ebf8ff; border-left: 4px solid #4299e1;
+            padding: 12px 15px; border-radius: 8px; margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        .login-info strong { display: block; margin-bottom: 4px; }
+
+        /* ===== BARRA DE CARREGAMENTO DO LOGIN ===== */
+        .login-progress {
+            display: none;
+            margin-top: 18px;
+            padding: 14px 18px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+        }
+        .login-progress.active { display: block; }
+        .login-progress-label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .login-progress-label .pct {
+            color: #667eea;
+            font-weight: 700;
+        }
+        .login-progress.done .progress-fill {
+            background: linear-gradient(90deg, #48bb78, #38a169);
+        }
+        .login-progress.error .progress-fill {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+        }
+        .login-progress-msg {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #718096;
+        }
+
+        /* ===== FORMS ===== */
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block; margin-bottom: 6px; font-weight: 600;
+            font-size: 0.9em; color: #4a5568;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 0.95em; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #667eea;
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; border: none; padding: 12px 24px;
+            border-radius: 8px; font-size: 1em; font-weight: 600;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: linear-gradient(135deg, #4299e1, #3182ce); }
+        .btn-danger { background: linear-gradient(135deg, #f56565, #e53e3e); }
+        .btn-info { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .btn-small { padding: 6px 14px; font-size: 0.85em; width: auto; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .btn-logout {
+            background: #fed7d7; color: #c53030; border: none;
+            padding: 10px 18px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 0.9em;
+        }
+        .btn-logout:hover { background: #feb2b2; }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard { display: none; }
+        .dashboard.active { display: block; }
+        .dashboard-header {
+            background: white; border-radius: 15px; padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 15px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .user-info { color: #718096; font-size: 0.9em; margin-top: 5px; }
+
+        .sync-status {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85em; font-weight: 600;
+        }
+        .sync-status.synced { background: #c6f6d5; color: #22543d; }
+        .sync-status.error { background: #fed7d7; color: #742a2a; }
+
+        /* ===== CARDS ===== */
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px; margin-bottom: 20px;
+        }
+        .card {
+            background: white; border-radius: 15px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-3px); }
+        .card h3 { margin-bottom: 8px; color: #2d3748; }
+        .card p { color: #718096; font-size: 0.9em; }
+        .badge {
+            display: inline-block; margin-top: 12px; padding: 4px 12px;
+            background: #c6f6d5; color: #22543d; border-radius: 12px;
+            font-size: 0.8em; font-weight: 600;
+        }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .stat-card {
+            background: white; border-radius: 12px; padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+        }
+        .stat-icon { font-size: 1.8em; margin-bottom: 8px; }
+        .stat-number { font-size: 2em; font-weight: 700; color: #2d3748; }
+        .stat-label { color: #718096; font-size: 0.85em; margin-top: 4px; }
+
+        /* ===== SECTIONS ===== */
+        .section-container {
+            background: white; border-radius: 15px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px;
+        }
+        .section-container h3 { margin-bottom: 20px; color: #2d3748; }
+        .hidden { display: none !important; }
+
+        /* ===== TOGGLE BUTTONS ===== */
+        .toggle-btn {
+            background: #edf2f7; color: #4a5568; border: none;
+            padding: 10px 18px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 0.9em; transition: all 0.2s;
+        }
+        .toggle-btn:hover { background: #e2e8f0; }
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        /* ===== TABLES ===== */
+        .table-container {
+            overflow-x: auto; border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f7fafc; }
+        th {
+            padding: 12px 15px; text-align: left; font-weight: 600;
+            color: #4a5568; font-size: 0.85em; text-transform: uppercase;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 0.9em; }
+        tbody tr:hover { background: #f7fafc; }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 4px 10px; border-radius: 12px;
+            font-size: 0.8em; font-weight: 600;
+        }
+        .status-badge.concluido { background: #c6f6d5; color: #22543d; }
+        .status-badge.pendente { background: #feebc8; color: #7b341e; }
+        .status-badge.inativo { background: #fed7d7; color: #742a2a; }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; padding: 20px; overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; border-radius: 15px; padding: 30px;
+            max-width: 700px; width: 100%; position: relative;
+            max-height: 90vh; overflow-y: auto;
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-close {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 1.8em; cursor: pointer; color: #a0aec0;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #4a5568; }
+
+        /* ===== CHECKLIST ===== */
+        .cursos-checklist {
+            max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0;
+            border-radius: 8px; padding: 10px 15px; background: #f7fafc;
+        }
+        .cursos-checklist label { cursor: pointer; }
+
+        /* ===== CURSOS GRID / TURMAS ===== */
+        .turmas-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .turma-item {
+            background: white; border: 2px solid #e2e8f0; border-radius: 12px;
+            padding: 18px; cursor: pointer; transition: all 0.2s;
+            font-weight: 600; color: #2d3748;
+        }
+        .turma-item:hover { border-color: #667eea; transform: translateY(-2px); }
+        .turma-item.selected {
+            border-color: #667eea; background: #ebf8ff;
+            box-shadow: 0 5px 15px rgba(102,126,234,0.2);
+        }
+        .turma-item .ano, .turma-item .status {
+            display: block; font-size: 0.8em; font-weight: 500;
+            color: #718096; margin-top: 4px;
+        }
+
+        /* ===== REGISTROS ===== */
+        .registros-list { display: flex; flex-direction: column; gap: 10px; }
+        .registro-item {
+            background: #f7fafc; border-left: 4px solid #4299e1;
+            border-radius: 8px; padding: 12px 15px;
+        }
+        .registro-item .data { font-weight: 600; color: #4a5568; font-size: 0.9em; }
+        .registro-item .conteudo { color: #2d3748; margin-top: 4px; font-size: 0.9em; }
+
+        /* ===== PROFESSORES LIST ===== */
+        .professores-list { display: flex; flex-direction: column; gap: 12px; }
+        .professor-item {
+            background: #f7fafc; border-radius: 10px; padding: 15px;
+            border-left: 4px solid #9f7aea;
+        }
+        .professor-item .especialidade { color: #718096; font-size: 0.85em; margin: 4px 0; }
+        .turmas-atribuidas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .turma-tag {
+            background: #e9d8fd; color: #553c9a; padding: 3px 10px;
+            border-radius: 12px; font-size: 0.8em; font-weight: 600;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #2d3748; color: white; padding: 15px 25px;
+            border-radius: 10px; font-weight: 600; z-index: 10000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: toastIn 0.3s ease;
+        }
+        .toast-success { background: #38a169; }
+        .toast-error { background: #e53e3e; }
+        .toast-info { background: #3182ce; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== NOTIFICATION BADGE ===== */
+        .notification-badge {
+            background: #f56565; color: white; padding: 2px 8px;
+            border-radius: 10px; font-size: 0.75em; font-weight: 700;
+            margin-left: 4px;
+        }
+        .notification-badge.hidden { display: none; }
+
+        /* ===== RELATÓRIO ===== */
+        .relatorio-content {
+            background: #f7fafc; border-radius: 10px; padding: 20px;
+        }
+        .relatorio-content h4 { margin-bottom: 12px; color: #2d3748; }
+        .info-line { margin-bottom: 6px; font-size: 0.9em; color: #4a5568; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .dashboard-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay Global (carregamento de dados) -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>🔄 Carregando dados da planilha...</h3>
+            <p style="color: #718096;">Aguarde enquanto sincronizamos com o Google Sheets</p>
+        </div>
+    </div>
+
+    <!-- Overlay Global de Salvamento (1% → 100%) -->
+    <div id="saveProgressOverlay" class="save-overlay">
+        <div class="save-card">
+            <h3>
+                <span class="save-icon" id="saveProgressIcon">💾</span>
+                <span id="saveProgressTitle">Salvando...</span>
+            </h3>
+            <div class="save-sub" id="saveProgressSub">Por favor, não feche esta janela.</div>
+            <div class="save-progress-label">
+                <span id="saveProgressStep">Preparando...</span>
+                <span class="pct" id="saveProgressPct">1%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="saveProgressFill"></div>
+            </div>
+            <div class="save-progress-msg" id="saveProgressMsg"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎵 Sistema de Gestão - Escola de Música</h1>
+                <p class="subtitle">Gestão de Cursos, Matrículas e Aulas</p>
+            </div>
+            <div class="badge-google">📊 Integrado com Google Sheets</div>
+        </div>
+
+        <!-- Tela de Login -->
+        <div id="loginContainer" class="login-container">
+            <h2>🔐 Acesso ao Sistema</h2>
+            <div class="login-info">
+                <strong>📌 Autenticação:</strong>
+                <span>Entre com seu nome e o cargo. Professores: nome conforme cadastrado na planilha.</span>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="cargo">Selecione seu Cargo</label>
+                    <select id="cargo" required>
+                        <option value="">-- Escolha --</option>
+                        <option value="direcao">👔 Direção</option>
+                        <option value="secretaria">📁 Secretaria</option>
+                        <option value="coordenacao">📚 Coordenação Pedagógica</option>
+                        <option value="professor">🎹 Professor</option>
+                        <option value="financeiro">💰 Financeiro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="nome">Seu Nome</label>
+                    <input type="text" id="nome" placeholder="Digite seu nome conforme cadastrado" required style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label for="senha">Senha de Acesso</label>
+                    <input type="password" id="senha" placeholder="Digite sua senha" autocomplete="current-password">
+                    <small style="color:#718096;font-size:0.8em;display:block;margin-top:4px;">
+                        ℹ️ Se o backend ainda não tiver senha configurada, o sistema valida localmente pelo nome.
+                    </small>
+                </div>
+                <button type="submit" id="btnEntrar" class="btn">Entrar no Sistema</button>
+            </form>
+
+            <!-- BARRA DE CARREGAMENTO DO LOGIN -->
+            <div id="loginProgress" class="login-progress">
+                <div class="login-progress-label">
+                    <span id="loginProgressText">Autenticando...</span>
+                    <span class="pct" id="loginProgressPct">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="loginProgressFill"></div>
+                </div>
+                <div class="login-progress-msg" id="loginProgressMsg"></div>
+            </div>
+
+            <div style="margin-top: 15px; text-align: center; font-size: 0.9em; color: #718096;">
+                <span id="dataStatus">📊 Conectado à planilha: Escola de Música</span>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <div>
+                    <h2 id="dashboardTitle">📊 Painel de Controle</h2>
+                    <p id="userDisplay" class="user-info"></p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                    <span id="syncStatus" class="sync-status synced">✅ Sincronizado</span>
+                    <button onclick="carregarDadosPlanilha()" class="btn btn-secondary btn-small">🔄 Recarregar</button>
+                    <button onclick="logout(true)" class="btn-logout">🚪 Sair</button>
+                </div>
+            </div>
+
+            <div id="cardsContainer" class="cards-grid"></div>
+
+            <!-- ÁREA DA SECRETARIA -->
+            <div id="secretariaArea" class="hidden">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <button class="toggle-btn active" onclick="toggleSecretaria('dashboard', event)">📊 Dashboard</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('alunos', event)">👥 Gestão de Alunos</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('matriculas', event)">📋 Matrículas</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('professores', event)">👨‍🏫 Gestão de Professores</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('cursos', event)">🎵 Cursos</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('frequencia', event)">✅ Frequência</button>
+                    <button class="toggle-btn" onclick="toggleSecretaria('relatorios', event)">📄 Relatórios</button>
+                </div>
+
+                <div id="secretaria-dashboard" class="section-container">
+                    <h3>📊 Painel da Secretaria</h3>
+                    <div class="stats-grid" id="secretariaStats">
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-number" id="totalAlunosSecretaria">0</div>
+                            <div class="stat-label">Total de Alunos Ativos</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #48bb78;">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-number" id="matriculasAtivas">0</div>
+                            <div class="stat-label">Matrículas Ativas</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #4299e1;">
+                            <div class="stat-icon">🎵</div>
+                            <div class="stat-number" id="totalCursosSecretaria">0</div>
+                            <div class="stat-label">Cursos Ativos</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 4px solid #9f7aea;">
+                            <div class="stat-icon">👨‍🏫</div>
+                            <div class="stat-number" id="totalProfessoresSecretaria">0</div>
+                            <div class="stat-label">Professores</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="secretaria-alunos" class="section-container hidden">
+                    <h3>👥 Gestão de Alunos</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Buscar Aluno</label>
+                            <input type="text" id="buscaAlunoSecretaria" placeholder="Digite o nome..." oninput="filtrarAlunosSecretaria()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="abrirModalCadastroAluno()" class="btn btn-secondary">➕ Novo Aluno</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Data Nascimento</th>
+                                    <th>Responsável</th>
+                                    <th>Contato</th>
+                                    <th>Cursos Matriculados</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaAlunosSecretaria">
+                                <tr><td colspan="7" style="text-align: center; color: #718096;">Carregando alunos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="secretaria-matriculas" class="section-container hidden">
+                    <h3>📋 Gestão de Matrículas</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Filtrar por Curso</label>
+                            <select id="filtroCursoMatricula" onchange="filtrarMatriculasSecretaria()">
+                                <option value="">Todos os Cursos</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Buscar Aluno</label>
+                            <input type="text" id="buscaMatriculaSecretaria" placeholder="Nome do aluno..." oninput="filtrarMatriculasSecretaria()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="abrirModalNovaMatricula()" class="btn btn-secondary">➕ Nova Matrícula</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Aluno</th>
+                                    <th>Curso</th>
+                                    <th>Professor</th>
+                                    <th>Data Matrícula</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaMatriculasSecretaria">
+                                <tr><td colspan="6" style="text-align: center; color: #718096;">Carregando matrículas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="secretaria-professores" class="section-container hidden">
+                    <h3>👨‍🏫 Gestão de Professores</h3>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Buscar Professor</label>
+                            <input type="text" id="buscaProfessorSecretaria" placeholder="Digite o nome..." oninput="filtrarProfessoresSecretaria()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="abrirModalCadastroProfessor()" class="btn btn-secondary">➕ Novo Professor</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>Curso(s)</th>
+                                    <th>Telefone</th>
+                                    <th>E-mail</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaProfessoresSecretaria">
+                                <tr><td colspan="7" style="text-align: center; color: #718096;">Carregando professores...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="secretaria-cursos" class="section-container hidden">
+                    <h3>🎵 Cursos Disponíveis</h3>
+                    <div class="cards-grid" id="cursosGrid"></div>
+                </div>
+
+                <div id="secretaria-frequencia" class="section-container hidden">
+                    <h3>✅ Relatório de Frequência</h3>
+                    <div class="form-row" style="margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Curso</label>
+                            <select id="frequenciaCursoSelect" onchange="carregarFrequenciaSecretaria()">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="carregarFrequenciaSecretaria()" class="btn btn-info btn-small">📊 Carregar</button>
+                        </div>
+                    </div>
+                    <div id="frequenciaResultados">
+                        <p style="color: #718096;">Selecione um curso para visualizar a frequência.</p>
+                    </div>
+                </div>
+
+                <div id="secretaria-relatorios" class="section-container hidden">
+                    <h3>📄 Relatórios da Secretaria</h3>
+                    <div class="btn-group" style="margin-bottom: 20px;">
+                        <button onclick="gerarRelatorioAlunosSecretaria()" class="btn btn-secondary btn-small">📋 Lista de Alunos</button>
+                        <button onclick="gerarRelatorioMatriculasSecretaria()" class="btn btn-secondary btn-small">📋 Matrículas por Curso</button>
+                        <button onclick="gerarRelatorioCompletoSecretaria()" class="btn btn-secondary btn-small">📄 Relatório Completo</button>
+                    </div>
+                    <div id="relatorioSecretariaOutput" style="margin-top: 20px;">
+                        <p style="color: #718096;">Clique em um botão acima para gerar um relatório.</p>
+                    </div>
+                </div>
+
+                <!-- Modal Cadastro Aluno -->
+                <div id="modalCadastroAluno" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="modal-close" onclick="fecharModal('modalCadastroAluno')">&times;</span>
+                        <h2>📝 Cadastro de Aluno</h2>
+                        <form id="formCadastroAluno">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nome Completo *</label>
+                                    <input type="text" id="cadAlunoNome" required style="text-transform: uppercase;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Data de Nascimento *</label>
+                                    <input type="date" id="cadAlunoNascimento" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Responsável</label>
+                                    <input type="text" id="cadAlunoResponsavel" style="text-transform: uppercase;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contato</label>
+                                    <input type="tel" id="cadAlunoContato">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cursos de Interesse (selecione um ou mais)</label>
+                                <div id="cursosChecklist" class="cursos-checklist"></div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn btn-secondary">💾 Salvar Aluno</button>
+                                <button type="button" onclick="fecharModal('modalCadastroAluno')" class="btn btn-danger">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal Cadastro Professor -->
+                <div id="modalCadastroProfessor" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="modal-close" onclick="fecharModal('modalCadastroProfessor')">&times;</span>
+                        <h2>👨‍🏫 Cadastro de Professor</h2>
+                        <form id="formCadastroProfessor">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>ID Professor</label>
+                                    <input type="text" id="cadProfessorID" readonly style="background: #f7fafc;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nome Completo *</label>
+                                    <input type="text" id="cadProfessorNome" required style="text-transform: uppercase;">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tipo *</label>
+                                    <select id="cadProfessorTipo" required>
+                                        <option value="">-- Selecione --</option>
+                                        <option value="Instrumento">🎹 Instrumento</option>
+                                        <option value="Teoria Musical">🎼 Teoria Musical</option>
+                                        <option value="Musicalização">🎵 Musicalização</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Curso Principal *</label>
+                                    <select id="cadProfessorCurso" required>
+                                        <option value="">-- Selecione --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Cursos Adicionais (opcional)</label>
+                                <div id="cadProfessorCursosExtras" class="cursos-checklist"></div>
+                                <small style="color:#718096;font-size:0.85em;">Marque outros cursos que este professor também leciona</small>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Telefone *</label>
+                                    <input type="tel" id="cadProfessorTelefone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail</label>
+                                    <input type="email" id="cadProfessorEmail">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn btn-secondary">💾 Salvar Professor</button>
+                                <button type="button" onclick="fecharModal('modalCadastroProfessor')" class="btn btn-danger">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal Nova Matrícula -->
+                <div id="modalNovaMatricula" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="modal-close" onclick="fecharModal('modalNovaMatricula')">&times;</span>
+                        <h2>📋 Nova Matrícula</h2>
+                        <form id="formNovaMatricula">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Aluno *</label>
+                                    <select id="matriculaAluno" required>
+                                        <option value="">-- Selecione --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Curso *</label>
+                                    <select id="matriculaCurso" required>
+                                        <option value="">-- Selecione --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Professor *</label>
+                                    <select id="matriculaProfessor" required>
+                                        <option value="">-- Selecione o curso primeiro --</option>
+                                    </select>
+                                    <small style="color:#718096;font-size:0.85em;">Preenchido automaticamente pelo curso</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Ano Letivo *</label>
+                                    <input type="number" id="matriculaAno" value="2026" required>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn btn-secondary">📋 Registrar Matrícula</button>
+                                <button type="button" onclick="fecharModal('modalNovaMatricula')" class="btn btn-danger">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÁREA DO PROFESSOR -->
+            <div id="professorArea" class="hidden">
+                <div id="cursosSection" class="hidden">
+                    <h3 style="margin-top: 30px; color: #2d3748;">🎵 Meus Cursos</h3>
+                    <div id="cursosContainer" class="turmas-grid"></div>
+                </div>
+                <div id="registrosSection" class="hidden">
+                    <div class="section-container">
+                        <h3>📝 Registros do Curso: <span id="cursoSelecionadoNome">-</span></h3>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                            <button class="toggle-btn active" onclick="toggleSection('notas', event)">📊 Avaliações</button>
+                            <button class="toggle-btn" onclick="toggleSection('presencas', event)">✅ Presenças</button>
+                            <button class="toggle-btn" onclick="toggleSection('observacoes', event)">✏️ Observações</button>
+                            <button class="toggle-btn" onclick="toggleSection('relatorios', event)">📄 Relatórios</button>
+                        </div>
+
+                        <div id="section-notas" class="toggle-section">
+                            <div class="form-row" style="margin-bottom: 15px;">
+                                <div class="form-group">
+                                    <label>Bimestre</label>
+                                    <select id="bimestreNota" onchange="carregarTabelaNotas()">
+                                        <option value="1">1º Bimestre</option>
+                                        <option value="2">2º Bimestre</option>
+                                        <option value="3">3º Bimestre</option>
+                                        <option value="4">4º Bimestre</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display: flex; align-items: flex-end;">
+                                    <button onclick="carregarTabelaNotas()" class="btn btn-secondary btn-small">📊 Carregar</button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table id="tabelaNotas">
+                                    <thead>
+                                        <tr>
+                                            <th>Nº</th>
+                                            <th>Aluno</th>
+                                            <th>Avaliação</th>
+                                            <th>Média</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaNotasBody"></tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <button onclick="salvarNotas()" class="btn btn-secondary btn-small">💾 Salvar Avaliações</button>
+                            </div>
+                        </div>
+
+                        <div id="section-presencas" class="toggle-section hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Data da Aula</label>
+                                    <input type="date" id="dataPresenca">
+                                </div>
+                                <div class="form-group">
+                                    <label>Conteúdo</label>
+                                    <input type="text" id="obsPresenca" placeholder="Descreva o conteúdo aplicado...">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Alunos Presentes</label>
+                                <div class="table-container" style="max-height: none !important; overflow-y: visible !important;">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 15%; text-align: center;">Nº</th>
+                                                <th style="width: 70%;">Nome do Aluno</th>
+                                                <th style="width: 15%; text-align: center;">Presença</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="alunosPresencaTabela"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <button onclick="salvarPresenca()" class="btn btn-secondary btn-small" style="margin-top: 15px;">✅ Salvar Presença</button>
+                            <div id="registrosPresenca" class="registros-list" style="margin-top: 20px;"></div>
+                        </div>
+
+                        <div id="section-observacoes" class="toggle-section hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Aluno</label>
+                                    <select id="alunoObservacao"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Data</label>
+                                    <input type="date" id="dataObservacao">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo</label>
+                                <select id="tipoObservacao">
+                                    <option value="Positiva">✅ Positiva</option>
+                                    <option value="Negativa">⚠️ Negativa</option>
+                                    <option value="Neutra">ℹ️ Neutra</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Observação</label>
+                                <textarea id="observacaoText" placeholder="Registre observações sobre o aluno..."></textarea>
+                            </div>
+                            <button onclick="salvarObservacao()" class="btn btn-secondary btn-small">💾 Salvar Observação</button>
+                            <div id="registrosObservacoes" class="registros-list" style="margin-top: 20px;"></div>
+                        </div>
+
+                        <div id="section-relatorios" class="toggle-section hidden">
+                            <div style="margin-top: 20px; padding: 20px; background: #ebf8ff; border-radius: 10px; border-left: 4px solid #4299e1;">
+                                <h4>✏️ Preencher Relatório Pedagógico</h4>
+                                <div class="form-group">
+                                    <label>Aluno</label>
+                                    <select id="alunoRelatorioPreencher"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Bimestre</label>
+                                    <select id="bimestreRelatorioPreencher">
+                                        <option value="1">1º Bimestre</option>
+                                        <option value="2">2º Bimestre</option>
+                                        <option value="3">3º Bimestre</option>
+                                        <option value="4">4º Bimestre</option>
+                                        <option value="anual">Anual</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Relatório Pedagógico</label>
+                                    <textarea id="relatorioTexto" rows="6" placeholder="Digite o relatório pedagógico do aluno..."></textarea>
+                                </div>
+                                <button onclick="enviarRelatorioCoordenacao()" class="btn btn-info btn-small">📤 Enviar Relatório para Coordenação</button>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <h4>📄 Relatórios Enviados</h4>
+                                <div id="relatoriosEnviados" class="registros-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÁREA DO COORDENADOR -->
+            <div id="coordenadorArea" class="hidden">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <button class="toggle-btn active" onclick="toggleCoordenacao('visao', event)">📊 Visão por Curso</button>
+                    <button class="toggle-btn" onclick="toggleCoordenacao('acompanhamento', event)">👨‍🏫 Acompanhamento</button>
+                    <button class="toggle-btn" onclick="toggleCoordenacao('atribuicao', event)">📋 Atribuição</button>
+                    <button class="toggle-btn" onclick="toggleCoordenacao('receber', event)">📥 Receber Relatórios <span id="notificacaoRelatorios" class="notification-badge hidden">0</span></button>
+                </div>
+
+                <div id="coordenacao-visao" class="section-container">
+                    <h3>📊 Visão Geral por Curso</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Curso</th>
+                                    <th>Professor</th>
+                                    <th>Média Geral</th>
+                                    <th>Presença</th>
+                                    <th>Alunos</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visaoGeralCursos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="coordenacao-acompanhamento" class="section-container hidden">
+                    <h3>👨‍🏫 Acompanhamento Individual de Professores</h3>
+                    <div class="form-row" style="margin-bottom: 20px;">
+                        <div class="form-group">
+                            <label>Selecione o Professor</label>
+                            <select id="selectProfAcompanhamento" onchange="renderAcompanhamentoProf()">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="acompanhamentoResultados">
+                        <p style="color: #718096;">Selecione um professor para visualizar o histórico de aulas e conteúdos aplicados.</p>
+                    </div>
+                </div>
+
+                <div id="coordenacao-atribuicao" class="section-container hidden">
+                    <h3>📋 Atribuição de Cursos</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Professor</label>
+                            <select id="professorSelect">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Curso</label>
+                            <select id="cursoSelect">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="btn-group" style="margin-top: 15px;">
+                        <button onclick="atribuirCurso()" class="btn btn-secondary btn-small">➕ Atribuir</button>
+                        <button onclick="removerCurso()" class="btn btn-danger btn-small">❌ Remover</button>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4>📌 Professores e seus Cursos</h4>
+                        <div id="professoresAtribuidos" class="professores-list"></div>
+                    </div>
+                </div>
+
+                <div id="coordenacao-receber" class="section-container hidden">
+                    <h3>📥 Relatórios Recebidos</h3>
+                    <div id="listaRelatoriosRecebidos" class="registros-list"></div>
+                </div>
+            </div>
+
+            <!-- ÁREA DA DIREÇÃO -->
+            <div id="direcaoArea" class="hidden">
+                <div class="section-container">
+                    <h3>📊 Painel Gerencial</h3>
+                    <div class="stats-grid" id="statsGerenciais"></div>
+                </div>
+                <div class="section-container">
+                    <h3>📋 Relatórios Consolidados</h3>
+                    <div class="btn-group" style="margin-bottom: 20px;">
+                        <button onclick="gerarRelatorioGeral()" class="btn btn-secondary btn-small">📊 Relatório Geral</button>
+                        <button onclick="gerarRelatorioPorCurso()" class="btn btn-secondary btn-small">📊 Por Curso</button>
+                        <button onclick="gerarRelatorioPorProfessor()" class="btn btn-secondary btn-small">📊 Por Professor</button>
+                    </div>
+                    <div id="relatorioConsolidado" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+
+            <!-- ÁREA DO FINANCEIRO -->
+            <div id="financeiroArea" class="hidden">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                    <button class="toggle-btn active" onclick="toggleFinanceiro('dashboard', event)">💰 Painel e Pagamentos</button>
+                    <button class="toggle-btn" onclick="toggleFinanceiro('valores', event)">⚙️ Cadastrar Valores</button>
+                </div>
+
+                <div id="financeiro-dashboard" class="section-container">
+                    <h3>💰 Cálculo de Pagamento de Professores (por Semana)</h3>
+                    <div class="form-row" style="margin-bottom: 20px; background: #f7fafc; padding: 15px; border-radius: 8px;">
+                        <div class="form-group">
+                            <label>Mês de Referência</label>
+                            <input type="month" id="finMesReferencia" onchange="calcularPagamentos()">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                            <button onclick="calcularPagamentos()" class="btn btn-info btn-small">🔄 Calcular Pagamentos</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="tabelaPagamentos">
+                            <thead>
+                                <tr>
+                                    <th>Professor</th>
+                                    <th>Valor Hora/Aula</th>
+                                    <th>Semana 1</th>
+                                    <th>Semana 2</th>
+                                    <th>Semana 3</th>
+                                    <th>Semana 4</th>
+                                    <th>Semana 5</th>
+                                    <th>Total Aulas</th>
+                                    <th>Total a Pagar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaPagamentosFinanceiro">
+                                <tr><td colspan="9" style="text-align:center;color:#718096;">Selecione o mês e clique em Calcular.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 12px; font-size: 0.85em; color: #718096;">
+                        ℹ️ As semanas são contadas por faixa de dias: <strong>Sem 1</strong> (1–7), <strong>Sem 2</strong> (8–14), <strong>Sem 3</strong> (15–21), <strong>Sem 4</strong> (22–28), <strong>Sem 5</strong> (29–31). Cada linha da aba PRESENCAS conta como 1 aula.
+                    </div>
+                </div>
+
+                <div id="financeiro-valores" class="section-container hidden">
+                    <h3>⚙️ Cadastro de Valor Hora/Aula</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Professor</th>
+                                    <th>Valor Hora/Aula (R$)</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaValoresProfessores"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalRelatorio" class="modal-overlay">
+        <div class="modal-content" id="modalRelatorioContentWrapper">
+            <span class="modal-close" onclick="fecharModal('modalRelatorio')">&times;</span>
+            <h2>📄 Relatório</h2>
+            <div id="modalRelatorioContent"></div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button onclick="imprimirRelatorioModal()" class="btn btn-info" style="padding: 10px 20px; font-size: 16px; width: auto;">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO
+        // ============================================
+        const SHEET_CONFIG = {
+            sheetId: '1FRtD7cbV2tvK2og4NDkyWi8V_hziyERNZoSh20gG980',
+            abas: {
+                alunos: 'ALUNOS',
+                matriculas: 'MATRICULAS',
+                professores: 'PROFESSORES',
+                avaliacoes: 'AVALIACOES',
+                presencas: 'PRESENCAS',
+                conteudos: 'CONTEUDOS',
+                observacoes: 'OBSERVACOES',
+                relatorios: 'RELATORIOS'
+            }
+        };
+
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
+
+        // ============================================
+        // CURSOS
+        // ============================================
+        const CURSOS = [
+            { id: 'piano',                  nome: '🎹 Piano',                  tipo: 'Instrumento' },
+            { id: 'teclado',                nome: '🎹 Teclado',                tipo: 'Instrumento' },
+            { id: 'orgao',                  nome: '🎹 Órgão',                  tipo: 'Instrumento' },
+            { id: 'violao',                 nome: '🎸 Violão',                 tipo: 'Instrumento' },
+            { id: 'guitarra',               nome: '🎸 Guitarra',               tipo: 'Instrumento' },
+            { id: 'violino',                nome: '🎻 Violino',                tipo: 'Instrumento' },
+            { id: 'violoncelo',             nome: '🎻 Violoncelo',             tipo: 'Instrumento' },
+            { id: 'viola-erudita',          nome: '🎻 Viola Erudita',          tipo: 'Instrumento' },
+            { id: 'contrabaixo-acustico',   nome: '🎻 Contrabaixo Acústico',   tipo: 'Instrumento' },
+            { id: 'bateria',                nome: '🥁 Bateria',                tipo: 'Instrumento' },
+            { id: 'trompete',               nome: '🎺 Trompete',               tipo: 'Instrumento' },
+            { id: 'trombone',               nome: '🎺 Trombone',               tipo: 'Instrumento' },
+            { id: 'euphonio',               nome: '🎺 Eufônio',                tipo: 'Instrumento' },
+            { id: 'tuba',                   nome: '🎺 Tuba',                   tipo: 'Instrumento' },
+            { id: 'saxofone',               nome: '🎷 Saxofone',               tipo: 'Instrumento' },
+            { id: 'flauta',                 nome: '🎶 Flauta',                 tipo: 'Instrumento' },
+            { id: 'clarinete',              nome: '🎶 Clarinete',              tipo: 'Instrumento' },
+            { id: 'canto',                  nome: '🎤 Canto',                  tipo: 'Instrumento' },
+            { id: 'teoria-musical1',        nome: '🎼 Teoria Musical 1',       tipo: 'Teoria Musical 1' },
+            { id: 'teoria-musical2',        nome: '🎼 Teoria Musical 2',       tipo: 'Teoria Musical 2' },
+            { id: 'musicalizacao-infantil', nome: '🎵 Musicalização Infantil', tipo: 'Musicalização' }
+        ];
+
+        const CURSOS_MAP = {};
+        CURSOS.forEach(c => { CURSOS_MAP[c.id] = c; });
+
+        // ============================================
+        // DADOS
+        // ============================================
+        let dadosPlanilha = {
+            alunos: [], matriculas: [], professores: [],
+            avaliacoes: [], presencas: [], conteudos: [],
+            observacoes: [], relatorios: []
+        };
+
+        let escolaData = { alunos: [], professores: [], cursos: CURSOS };
+        let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [] };
+        let currentUser = { cargo: '', nome: '', professorData: null, cursos: [], token: null, expiraEm: 0 };
+        let cursoSelecionado = null;
+
+        // ============================================
+        // HELPERS
+        // ============================================
+        function texto(valor) {
+            if (valor === null || valor === undefined) return '';
+            return String(valor).trim();
+        }
+
+        function getColuna(obj, ...nomes) {
+            if (!obj) return '';
+            const chaves = Object.keys(obj);
+            for (const nome of nomes) {
+                const alvo = String(nome)
+                    .toLowerCase()
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[\s_\-]+/g, '');
+                for (const chave of chaves) {
+                    const chaveNorm = String(chave)
+                        .toLowerCase()
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[\s_\-]+/g, '');
+                    if (chaveNorm === alvo) return obj[chave];
+                }
+            }
+            return '';
+        }
+
+        function formatarDataParaExibicao(dataISO) {
+            if (!dataISO) return '';
+            if (/^\d{2}-\d{2}-\d{4}$/.test(dataISO)) return dataISO;
+            try {
+                const partes = String(dataISO).split('T')[0].split('-');
+                if (partes.length === 3) return `${partes[2]}-${partes[1]}-${partes[0]}`;
+                return dataISO;
+            } catch (e) { return dataISO; }
+        }
+
+        function formatarDataParaPlanilha(data) {
+            if (!data) return '';
+            if (/^\d{2}-\d{2}-\d{4}$/.test(data)) return data;
+            try {
+                const d = new Date(data);
+                if (!isNaN(d.getTime())) {
+                    return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                }
+                return data;
+            } catch (e) { return data; }
+        }
+
+        function normalizarDataPresenca(valor) {
+            if (valor === null || valor === undefined || valor === '') return '';
+
+            if (valor instanceof Date && !isNaN(valor.getTime())) {
+                return `${String(valor.getDate()).padStart(2,'0')}-${String(valor.getMonth()+1).padStart(2,'0')}-${valor.getFullYear()}`;
+            }
+
+            const comoNumero = typeof valor === 'number' ? valor : Number(String(valor).trim());
+            if (!isNaN(comoNumero) && isFinite(comoNumero) && String(valor).trim() !== '') {
+                if (comoNumero > 1000 && comoNumero < 80000) {
+                    const base = new Date(1899, 11, 30);
+                    const d = new Date(base.getTime() + comoNumero * 24 * 60 * 60 * 1000);
+                    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+                }
+            }
+
+            const str = String(valor).trim();
+            if (/^\d{2}-\d{2}-\d{4}$/.test(str)) return str;
+
+            const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)\)/);
+            if (mGviz) {
+                const ano = parseInt(mGviz[1], 10);
+                const mes = parseInt(mGviz[2], 10) + 1;
+                const dia = parseInt(mGviz[3], 10);
+                return `${String(dia).padStart(2,'0')}-${String(mes).padStart(2,'0')}-${ano}`;
+            }
+
+            if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+                const p = str.split('T')[0].split('-');
+                return `${p[2]}-${p[1]}-${p[0]}`;
+            }
+
+            const d = new Date(str);
+            if (!isNaN(d.getTime())) {
+                return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+            }
+
+            return str;
+        }
+
+        function getDataAtualFormatada() {
+            const hoje = new Date();
+            return `${String(hoje.getDate()).padStart(2, '0')}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${hoje.getFullYear()}`;
+        }
+
+        function mostrarToast(mensagem, tipo = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${tipo}`;
+            toast.textContent = mensagem;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function labelCurso(cursoId) {
+            if (!cursoId) return '-';
+            const curso = CURSOS_MAP[cursoId];
+            return curso ? curso.nome : cursoId;
+        }
+
+        function normalizarCursoId(cursoRaw) {
+            if (!cursoRaw) return '';
+            const raw = texto(cursoRaw).toLowerCase().trim();
+            if (!raw) return '';
+            if (CURSOS_MAP[raw]) return raw;
+
+            const mapa = {
+                'viola': 'viola-erudita',
+                'viola erudita': 'viola-erudita',
+                'contrabaixo': 'contrabaixo-acustico',
+                'contrabaixo acustico': 'contrabaixo-acustico',
+                'contrabaixo acústico': 'contrabaixo-acustico',
+                'teoria': 'teoria-musical1',
+                'teoria musical': 'teoria-musical1',
+                'teoria 1': 'teoria-musical1',
+                'teoria 2': 'teoria-musical2',
+                'musicalizacao': 'musicalizacao-infantil',
+                'musicalizacao infantil': 'musicalizacao-infantil',
+                'musicalização': 'musicalizacao-infantil',
+                'musicalização infantil': 'musicalizacao-infantil'
+            };
+            if (mapa[raw]) return mapa[raw];
+
+            for (const c of CURSOS) {
+                const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}]/gu, '').trim().toLowerCase();
+                if (nomeLimpo === raw) return c.id;
+            }
+
+            return raw;
+        }
+
+        function extrairCursosDoProfessor(professor) {
+            if (!professor) return [];
+            const textoCursos = `${professor.curso || ''},${professor.tipo || ''}`;
+            if (!textoCursos.replace(/,/g, '').trim()) return [];
+
+            let normalizado = textoCursos
+                .replace(/\r\n|\r|\n/g, ',')
+                .replace(/[;|/\\]+/g, ',')
+                .replace(/\s+(?:e|E|\+|&)\s+/g, ',');
+
+            const cursos = normalizado
+                .split(/[,]+/)
+                .map(c => normalizarCursoId(c))
+                .filter(c => {
+                    const lixo = ['instrumento', 'teoria musical', 'musicalização', 'musicalizacao'];
+                    return c && !lixo.includes(c.toLowerCase());
+                });
+
+            return [...new Set(cursos)];
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ============================================
+        // GAS (envio) — com token automático
+        // ============================================
+        function uuid() {
+            if (window.crypto && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return 'tk_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        }
+
+        async function enviarParaGAS(acao, payload) {
+            const corpo = {
+                acao,
+                payload: {
+                    ...payload,
+                    token: currentUser.token || undefined
+                }
+            };
+            try {
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(corpo)
+                });
+                return { success: true };
+            } catch (error) {
+                console.error('Erro:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        /**
+         * Login real: tenta ler a resposta do backend.
+         * Se o backend não implementar 'login', cai no fallback local.
+         */
+        async function loginBackend(nome, perfil, senha) {
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 8000);
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        acao: 'login',
+                        payload: { nome, perfil, senha: senha || '' }
+                    }),
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const json = await response.json();
+                if (json && json.success && json.token) {
+                    return {
+                        success: true,
+                        token: json.token,
+                        expiraEm: json.expiraEm || (Date.now() + 60 * 60 * 1000),
+                        nome: json.nome || nome,
+                        perfil: json.perfil || perfil,
+                        backend: true
+                    };
+                }
+                if (json && json.success === false) {
+                    return { success: false, error: json.error || 'Credenciais inválidas.' };
+                }
+                return { success: false, error: 'Resposta inesperada do servidor.' };
+            } catch (err) {
+                console.warn('[loginBackend] falhou, usando fallback local:', err.message);
+                return { success: false, error: null, fallback: true };
+            }
+        }
+
+        // ============================================
+        // SESSÃO
+        // ============================================
+        const SESSION_KEY = 'escolaMusica.session.v2';
+
+        function salvarSessao() {
+            try {
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+                    cargo: currentUser.cargo,
+                    nome: currentUser.nome,
+                    cursos: currentUser.cursos,
+                    token: currentUser.token,
+                    expiraEm: currentUser.expiraEm,
+                    salvoEm: Date.now()
+                }));
+            } catch (e) {
+                console.warn('Não foi possível salvar sessão:', e);
+            }
+        }
+
+        function lerSessao() {
+            try {
+                const raw = sessionStorage.getItem(SESSION_KEY);
+                if (!raw) return null;
+                const s = JSON.parse(raw);
+                if (!s || !s.cargo || !s.nome || !s.token) return null;
+                if (s.expiraEm && Date.now() > s.expiraEm) {
+                    sessionStorage.removeItem(SESSION_KEY);
+                    return null;
+                }
+                return s;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function limparSessao() {
+            try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+        }
+
+        // ============================================
+        // TIMER DE INATIVIDADE — 60 MINUTOS, OCULTO
+        // ============================================
+        const INATIVIDADE_MS = 60 * 60 * 1000; // 60 minutos
+        const inactivityTimer = {
+            id: null,
+            ultimaAtividade: 0,
+            eventos: ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'wheel', 'pointerdown'],
+            iniciar() {
+                this.parar();
+                this.ultimaAtividade = Date.now();
+                this.eventos.forEach(ev => {
+                    document.addEventListener(ev, this._reset, { passive: true, capture: true });
+                });
+                // Verifica a cada 30s se expirou (mesmo se o navegador dormir)
+                this.id = setInterval(() => this._verificar(), 30 * 1000);
+            },
+            parar() {
+                if (this.id) { clearInterval(this.id); this.id = null; }
+                this.eventos.forEach(ev => {
+                    document.removeEventListener(ev, this._reset, { passive: true, capture: true });
+                });
+            },
+            _reset: () => {
+                inactivityTimer.ultimaAtividade = Date.now();
+            },
+            _verificar() {
+                if (!currentUser.token) return;
+                const inativoHa = Date.now() - this.ultimaAtividade;
+                if (inativoHa >= INATIVIDADE_MS) {
+                    console.warn('[inatividade] 60 min sem atividade — deslogando.');
+                    logout(false, '⏰ Sessão expirada por inatividade (60 minutos).');
+                }
+            },
+            reiniciar() {
+                this.iniciar();
+            }
+        };
+
+        // ============================================
+        // BARRA DE PROGRESSO GLOBAL DE SALVAMENTO
+        // ============================================
+        const saveProgress = {
+            el: null, fill: null, pct: null, msg: null, step: null,
+            title: null, sub: null, icon: null,
+            init() {
+                this.el    = document.getElementById('saveProgressOverlay');
+                this.fill  = document.getElementById('saveProgressFill');
+                this.pct   = document.getElementById('saveProgressPct');
+                this.msg   = document.getElementById('saveProgressMsg');
+                this.step  = document.getElementById('saveProgressStep');
+                this.title = document.getElementById('saveProgressTitle');
+                this.sub   = document.getElementById('saveProgressSub');
+                this.icon  = document.getElementById('saveProgressIcon');
+            },
+            show(titulo = 'Salvando...', subtitulo = 'Por favor, não feche esta janela.') {
+                if (!this.el) this.init();
+                this.el.classList.remove('done', 'error');
+                this.el.classList.add('active');
+                this.title.textContent = titulo;
+                this.sub.textContent = subtitulo;
+                this.icon.textContent = '💾';
+                this.set(1, 'Iniciando...', '');
+            },
+            set(percent, stepText, message) {
+                if (!this.el) this.init();
+                const p = Math.max(1, Math.min(100, Math.round(percent)));
+                this.fill.style.width = p + '%';
+                this.pct.textContent = p + '%';
+                if (stepText !== undefined) this.step.textContent = stepText;
+                if (message !== undefined) this.msg.textContent = message;
+            },
+            done(message) {
+                if (!this.el) this.init();
+                this.el.classList.add('done');
+                this.icon.textContent = '✅';
+                this.set(100, 'Concluído!', message || 'Operação finalizada com sucesso.');
+            },
+            error(message) {
+                if (!this.el) this.init();
+                this.el.classList.add('error');
+                this.icon.textContent = '❌';
+                this.step.textContent = 'Falha no salvamento';
+                this.msg.textContent = message || 'Verifique os dados e tente novamente.';
+                this.pct.textContent = '100%';
+                this.fill.style.width = '100%';
+            },
+            hide(delay = 700) {
+                if (!this.el) this.init();
+                setTimeout(() => {
+                    this.el.classList.remove('active', 'done', 'error');
+                    this.fill.style.width = '0%';
+                    this.pct.textContent = '1%';
+                }, delay);
+            }
+        };
+
+        async function executarComProgresso(opts) {
+            const {
+                titulo = 'Salvando...',
+                subtitulo = 'Por favor, não feche esta janela.',
+                etapas = [
+                    { pct: 10, label: 'Validando dados...' },
+                    { pct: 35, label: 'Enviando para a planilha...' },
+                    { pct: 65, label: 'Gravando registros...' },
+                    { pct: 85, label: 'Sincronizando...' },
+                    { pct: 95, label: 'Finalizando...' }
+                ],
+                executar,
+                sucesso = 'Salvo com sucesso!',
+                erro = 'Falha ao salvar.'
+            } = opts;
+
+            saveProgress.init();
+            saveProgress.show(titulo, subtitulo);
+
+            try {
+                for (let i = 0; i < etapas.length; i++) {
+                    const et = etapas[i];
+                    saveProgress.set(et.pct, et.label, et.msg || '');
+                    await sleep(120 + Math.random() * 120);
+                }
+
+                saveProgress.set(70, 'Gravando na planilha...', 'Aguarde a resposta do servidor.');
+                const resultado = await executar();
+
+                if (resultado && resultado.success === false) {
+                    throw new Error(resultado.error || erro);
+                }
+
+                saveProgress.done(sucesso);
+                await sleep(450);
+                saveProgress.hide(300);
+                return resultado;
+            } catch (e) {
+                console.error('[executarComProgresso]', e);
+                saveProgress.error(e.message || erro);
+                await sleep(1200);
+                saveProgress.hide(400);
+                throw e;
+            }
+        }
+
+        // ============================================
+        // BARRA DE PROGRESSO DO LOGIN
+        // ============================================
+        const loginProgress = {
+            el: null, fill: null, pct: null, msg: null, label: null,
+            init() {
+                this.el    = document.getElementById('loginProgress');
+                this.fill  = document.getElementById('loginProgressFill');
+                this.pct   = document.getElementById('loginProgressPct');
+                this.msg   = document.getElementById('loginProgressMsg');
+                this.label = document.getElementById('loginProgressText');
+            },
+            show() {
+                if (!this.el) this.init();
+                this.el.classList.remove('done', 'error');
+                this.el.classList.add('active');
+                this.set(0, 'Iniciando autenticação...', '');
+            },
+            set(percent, labelText, message) {
+                if (!this.el) this.init();
+                const p = Math.max(0, Math.min(100, Math.round(percent)));
+                this.fill.style.width = p + '%';
+                this.pct.textContent = p + '%';
+                if (labelText !== undefined) this.label.textContent = labelText;
+                if (message !== undefined) this.msg.textContent = message;
+            },
+            done(message) {
+                if (!this.el) this.init();
+                this.el.classList.add('done');
+                this.set(100, 'Login realizado!', message || 'Redirecionando para o painel...');
+            },
+            error(message) {
+                if (!this.el) this.init();
+                this.el.classList.add('error');
+                this.label.textContent = 'Falha no login';
+                this.msg.textContent = message || 'Verifique os dados e tente novamente.';
+            },
+            hide(delay = 800) {
+                if (!this.el) this.init();
+                setTimeout(() => {
+                    this.el.classList.remove('active', 'done', 'error');
+                    this.fill.style.width = '0%';
+                    this.pct.textContent = '0%';
+                }, delay);
+            }
+        };
+
+        // ============================================
+        // CARREGAR DADOS
+        // ============================================
+        async function carregarDadosPlanilha() {
+            const loading = document.getElementById('loadingOverlay');
+            loading.classList.add('active');
+            try {
+                for (const [key, aba] of Object.entries(SHEET_CONFIG.abas)) {
+                    await carregarAbaEspecifica(aba, key);
+                }
+                atualizarBancoDados();
+                document.getElementById('syncStatus').className = 'sync-status synced';
+                document.getElementById('syncStatus').textContent = '✅ Sincronizado';
+                mostrarToast('✅ Dados carregados com sucesso!', 'success');
+
+                if (currentUser.cargo === 'secretaria') {
+                    inicializarSecretaria();
+                } else if (currentUser.cargo === 'professor') {
+                    const profAtual = escolaData.professores.find(p => p.nome === currentUser.nome);
+                    if (profAtual) {
+                        currentUser.professorData = profAtual;
+                        currentUser.cursos = extrairCursosDoProfessor(profAtual);
+                        if (currentUser.cursos.length > 0) {
+                            if (!cursoSelecionado || !currentUser.cursos.includes(cursoSelecionado)) {
+                                cursoSelecionado = currentUser.cursos[0];
+                            }
+                            renderMeusCursos();
+                            if (cursoSelecionado) {
+                                document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoSelecionado);
+                                carregarTabelaNotas();
+                                carregarPresenca();
+                                carregarObservacoes();
+                                carregarAlunosSelects();
+                                renderRelatoriosEnviados();
+                            }
+                        }
+                    }
+                } else if (currentUser.cargo === 'coordenacao') {
+                    renderVisaoCursos();
+                    carregarProfessoresAtribuicao();
+                    renderRelatoriosRecebidos();
+                    renderSelectAcompanhamento();
+                } else if (currentUser.cargo === 'direcao') {
+                    renderStatsGerenciais();
+                } else if (currentUser.cargo === 'financeiro') {
+                    renderFinanceiro();
+                }
+
+                // Se havia uma sessão pendente de restauração, aplica agora
+                if (window.__restaurarSessaoPendente) {
+                    window.__restaurarSessaoPendente = false;
+                    aplicarSessaoRestaurada();
+                }
+            } catch (error) {
+                document.getElementById('syncStatus').className = 'sync-status error';
+                document.getElementById('syncStatus').textContent = '❌ Erro ao carregar';
+                mostrarToast('❌ Erro ao carregar dados.', 'error');
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        async function carregarAbaEspecifica(nomeAba, chave) {
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const text = await response.text();
+                const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+                const data = JSON.parse(jsonStr);
+                if (data.table && data.table.rows) {
+                    const cols = data.table.cols.map(c => texto(c.label) || c.id || '');
+                    dadosPlanilha[chave] = data.table.rows.map(row => {
+                        const obj = {};
+                        (row.c || []).forEach((cell, i) => {
+                            obj[cols[i] || `coluna_${i}`] = cell ? cell.v : '';
+                        });
+                        return obj;
+                    });
+                } else {
+                    dadosPlanilha[chave] = [];
+                }
+            } catch (error) {
+                console.warn(`Erro ao carregar aba ${nomeAba}:`, error);
+                dadosPlanilha[chave] = [];
+            }
+        }
+
+        // ============================================
+        // ATUALIZAR BANCO
+        // ============================================
+        function atualizarBancoDados() {
+            escolaData.alunos = dadosPlanilha.alunos.map(a => ({
+                nome: texto(getColuna(a, 'Nome', 'Nome_Aluno', 'NomeAluno', 'Aluno')).toUpperCase(),
+                dataNascimento: formatarDataParaExibicao(texto(getColuna(a, 'Data_Nascimento', 'DataNascimento', 'Nascimento'))),
+                responsavel: texto(getColuna(a, 'Responsavel', 'Responsável')),
+                contato: texto(getColuna(a, 'Contato', 'Telefone', 'Tel')),
+                status: texto(getColuna(a, 'Status') || 'ATIVO').toUpperCase()
+            })).filter(a => a.nome);
+
+            const professoresMap = {};
+
+            dadosPlanilha.professores.forEach(p => {
+                const nome = texto(getColuna(p, 'Nome', 'Nome_Professor', 'NomeProfessor', 'Professor')).toUpperCase();
+                if (!nome) return;
+
+                const curso = texto(getColuna(p, 'Curso', 'Cursos', 'Curso(s)'));
+                const tipo = texto(getColuna(p, 'Tipo', 'Cargo'));
+                const valorHoraRaw = texto(getColuna(p, 'Valor_Hora', 'ValorHora', 'Valor Aula', 'Valor_Aula'));
+                const valorHora = parseFloat(String(valorHoraRaw).replace(',', '.')) || 0;
+
+                if (!professoresMap[nome]) {
+                    professoresMap[nome] = {
+                        id: texto(getColuna(p, 'ID_Professor', 'ID')),
+                        nome: nome,
+                        tipo: tipo,
+                        curso: curso,
+                        telefone: texto(getColuna(p, 'Telefone', 'Tel')),
+                        email: texto(getColuna(p, 'Email', 'E-mail')),
+                        status: texto(getColuna(p, 'Status') || 'ATIVO').toUpperCase(),
+                        valorHora: valorHora
+                    };
+                } else {
+                    if (curso && !professoresMap[nome].curso.includes(curso)) {
+                        professoresMap[nome].curso += `,${curso}`;
+                    }
+                    if (tipo && !professoresMap[nome].tipo.includes(tipo)) {
+                        professoresMap[nome].tipo += `, ${tipo}`;
+                    }
+                }
+            });
+
+            escolaData.professores = Object.values(professoresMap);
+
+            db.matriculas = dadosPlanilha.matriculas.map(m => ({
+                id: texto(getColuna(m, 'ID_Matricula', 'ID')),
+                aluno: texto(getColuna(m, 'Aluno', 'Nome_Aluno')).toUpperCase(),
+                curso: normalizarCursoId(texto(getColuna(m, 'Curso'))),
+                professor: texto(getColuna(m, 'Professor')).toUpperCase(),
+                dataMatricula: formatarDataParaExibicao(texto(getColuna(m, 'Data_Matricula', 'DataMatricula', 'Data'))),
+                anoLetivo: texto(getColuna(m, 'Ano_Letivo', 'AnoLetivo', 'Ano')),
+                status: texto(getColuna(m, 'Status') || 'ATIVO').toUpperCase()
+            }));
+
+            db.avaliacoes = dadosPlanilha.avaliacoes.map(a => ({
+                aluno: texto(getColuna(a, 'Aluno')).toUpperCase(),
+                curso: normalizarCursoId(texto(getColuna(a, 'Curso'))),
+                bimestre: parseInt(getColuna(a, 'Bimestre')) || 1,
+                nota: parseFloat(getColuna(a, 'Nota')) || 0
+            }));
+
+            db.presencas = {};
+            dadosPlanilha.presencas.forEach(p => {
+                const curso = normalizarCursoId(texto(getColuna(p, 'Curso')));
+                if (!curso) return;
+
+                let professorNome = texto(getColuna(p, 'Professor')).toUpperCase();
+                if (!professorNome) {
+                    const prof = escolaData.professores.find(pr => extrairCursosDoProfessor(pr).includes(curso));
+                    if (prof) professorNome = prof.nome;
+                }
+
+                const conteudoAula = texto(getColuna(p, 'Conteudo', 'Conteúdo', 'Observacao', 'Observação', 'coluna_5'));
+                const dataBruta = getColuna(p, 'Data', 'coluna_2');
+                const dataNorm = normalizarDataPresenca(dataBruta);
+
+                if (!db.presencas[curso]) db.presencas[curso] = [];
+                db.presencas[curso].push({
+                    data: dataNorm,
+                    dataOriginal: dataBruta,
+                    presentes: texto(getColuna(p, 'Presentes')).split(',').map(n => n.trim().toUpperCase()).filter(Boolean),
+                    professor: professorNome,
+                    conteudo: conteudoAula
+                });
+            });
+
+            db.conteudos = {};
+            dadosPlanilha.conteudos.forEach(c => {
+                const curso = normalizarCursoId(texto(getColuna(c, 'Curso')));
+                if (!curso) return;
+                if (!db.conteudos[curso]) db.conteudos[curso] = [];
+                db.conteudos[curso].push({
+                    data: formatarDataParaExibicao(texto(getColuna(c, 'Data'))),
+                    conteudo: texto(getColuna(c, 'Conteudo', 'Conteúdo')),
+                    objetivos: texto(getColuna(c, 'Objetivos'))
+                });
+            });
+
+            db.observacoes = {};
+            dadosPlanilha.observacoes.forEach(o => {
+                const curso = normalizarCursoId(texto(getColuna(o, 'Curso')));
+                if (!curso) return;
+                if (!db.observacoes[curso]) db.observacoes[curso] = [];
+                db.observacoes[curso].push({
+                    data: formatarDataParaExibicao(texto(getColuna(o, 'Data'))),
+                    aluno: texto(getColuna(o, 'Aluno')).toUpperCase(),
+                    observacao: texto(getColuna(o, 'Observacao', 'Observação')),
+                    tipo: texto(getColuna(o, 'Tipo') || 'Neutra')
+                });
+            });
+
+            db.relatorios = dadosPlanilha.relatorios.map(r => ({
+                aluno: texto(getColuna(r, 'Aluno')).toUpperCase(),
+                curso: normalizarCursoId(texto(getColuna(r, 'Curso'))),
+                bimestre: texto(getColuna(r, 'Bimestre') || '1'),
+                professor: texto(getColuna(r, 'Professor')).toUpperCase(),
+                relatorio: texto(getColuna(r, 'Relatorio', 'Relatório')),
+                data: formatarDataParaExibicao(texto(getColuna(r, 'Data'))),
+                visto: texto(getColuna(r, 'Visto'))
+            }));
+        }
+
+        // ============================================
+        // FUNÇÕES AUXILIARES
+        // ============================================
+        function getAlunosByCurso(curso) {
+            if (!curso) return [];
+            const matriculas = db.matriculas.filter(m =>
+                m.curso === curso && m.status === 'ATIVO'
+            );
+            return matriculas
+                .map(m => escolaData.alunos.find(a => a.nome === m.aluno))
+                .filter(Boolean);
+        }
+
+        function getProfessorByCurso(curso) {
+            if (!curso) return null;
+            const alvo = normalizarCursoId(curso);
+            return escolaData.professores.find(p => {
+                if (!p.curso) return false;
+                const cursos = extrairCursosDoProfessor(p);
+                return cursos.includes(alvo);
+            }) || null;
+        }
+
+        function getNotaAluno(aluno, curso, bimestre) {
+            const av = db.avaliacoes.find(a => a.aluno === aluno && a.curso === curso && a.bimestre === bimestre);
+            return av ? av.nota : 0;
+        }
+
+        function getMediaAluno(aluno, curso) {
+            let soma = 0, count = 0;
+            for (let b = 1; b <= 4; b++) {
+                const n = getNotaAluno(aluno, curso, b);
+                if (n > 0) { soma += n; count++; }
+            }
+            return count > 0 ? soma / count : 0;
+        }
+
+        // ============================================
+        // CARGO CONFIG
+        // ============================================
+        const cargoConfig = {
+            'direcao': { titulo: '👔 Direção' },
+            'secretaria': { titulo: '📁 Secretaria' },
+            'coordenacao': { titulo: '📚 Coordenação Pedagógica' },
+            'professor': { titulo: '🎹 Professor' },
+            'financeiro': { titulo: '💰 Financeiro' }
+        };
+
+        // ============================================
+        // LOGIN
+        // ============================================
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const cargo = document.getElementById('cargo').value;
+            const nome = document.getElementById('nome').value.trim().toUpperCase();
+            const senha = document.getElementById('senha').value;
+            const btnEntrar = document.getElementById('btnEntrar');
+
+            if (!cargo || !nome) { alert('Preencha cargo e nome.'); return; }
+
+            // Validação local de professor (precisa existir na planilha)
+            if (cargo === 'professor') {
+                const prof = escolaData.professores.find(p => p.nome === nome);
+                if (!prof) {
+                    alert('⚠️ Professor não encontrado. Verifique seu nome.');
+                    return;
+                }
+            }
+
+            loginProgress.init();
+            loginProgress.show();
+            btnEntrar.disabled = true;
+
+            try {
+                loginProgress.set(15, 'Validando credenciais...', 'Contatando servidor de autenticação.');
+                await sleep(180);
+
+                const resultado = await loginBackend(nome, cargo, senha);
+
+                let token, expiraEm, backendUsado = false;
+                if (resultado.success) {
+                    token = resultado.token;
+                    expiraEm = resultado.expiraEm;
+                    backendUsado = true;
+                } else if (resultado.fallback) {
+                    // Backend não respondeu ou não tem 'login' — fallback local
+                    token = 'local_' + uuid();
+                    expiraEm = Date.now() + INATIVIDADE_MS;
+                    backendUsado = false;
+                    console.warn('[login] usando token local (backend sem ação login).');
+                } else {
+                    throw new Error(resultado.error || 'Credenciais inválidas.');
+                }
+
+                loginProgress.set(40, 'Registrando acesso...', backendUsado ? 'Log registrado no servidor.' : 'Registrando log localmente.');
+                try {
+                    await enviarParaGAS('registrarLogin', {
+                        nome, perfil: cargo, acao: 'LOGIN'
+                    });
+                } catch (err) { /* não bloqueia */ }
+
+                loginProgress.set(60, 'Carregando dados...', 'Sincronizando informações da planilha.');
+                if (!escolaData.alunos.length && !escolaData.professores.length) {
+                    await carregarDadosPlanilha();
+                } else {
+                    await sleep(200);
+                }
+
+                // Preenche currentUser
+                currentUser.cargo = cargo;
+                currentUser.nome = nome;
+                currentUser.token = token;
+                currentUser.expiraEm = expiraEm;
+                currentUser.cursos = [];
+
+                if (cargo === 'professor') {
+                    const prof = escolaData.professores.find(p => p.nome === nome);
+                    if (prof) {
+                        currentUser.professorData = prof;
+                        currentUser.cursos = extrairCursosDoProfessor(prof);
+                        if (currentUser.cursos.length > 0) {
+                            cursoSelecionado = currentUser.cursos[0];
+                        }
+                    }
+                }
+
+                salvarSessao();
+
+                loginProgress.set(85, 'Preparando painel...', 'Quase pronto!');
+                await sleep(200);
+
+                loginProgress.done('Bem-vindo(a), ' + nome + '!');
+                await sleep(350);
+
+                // Mostra dashboard
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('dashboard').classList.add('active');
+                document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[cargo].titulo}`;
+                document.getElementById('userDisplay').innerHTML = `👤 ${nome} - ${cargoConfig[cargo].titulo}`;
+
+                renderDashboard(cargo);
+                inactivityTimer.iniciar();
+                btnEntrar.disabled = false;
+                loginProgress.hide(600);
+
+            } catch (err) {
+                loginProgress.error(err.message || 'Falha no login.');
+                mostrarToast('❌ ' + (err.message || 'Falha no login.'), 'error');
+                btnEntrar.disabled = false;
+                await sleep(800);
+                loginProgress.hide(500);
+            }
+        });
+
+        // ============================================
+        // RESTAURAR SESSÃO (ao atualizar / F5)
+        // ============================================
+        function aplicarSessaoRestaurada() {
+            const { cargo, nome } = currentUser;
+            if (!cargo || !nome || !currentUser.token) return;
+
+            // Professor precisa reencontrar seu registro na planilha
+            if (cargo === 'professor') {
+                const prof = escolaData.professores.find(p => p.nome === nome);
+                if (!prof) {
+                    // Professor não existe mais → desloga
+                    limparSessao();
+                    currentUser = { cargo: '', nome: '', professorData: null, cursos: [], token: null, expiraEm: 0 };
+                    mostrarToast('⚠️ Cadastro de professor não encontrado. Faça login novamente.', 'error');
+                    return;
+                }
+                currentUser.professorData = prof;
+                currentUser.cursos = extrairCursosDoProfessor(prof);
+                if (currentUser.cursos.length > 0) {
+                    if (!cursoSelecionado || !currentUser.cursos.includes(cursoSelecionado)) {
+                        cursoSelecionado = currentUser.cursos[0];
+                    }
+                }
+            }
+
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[cargo].titulo}`;
+            document.getElementById('userDisplay').innerHTML = `👤 ${nome} - ${cargoConfig[cargo].titulo}`;
+
+            renderDashboard(cargo);
+            inactivityTimer.iniciar();
+            mostrarToast(`👋 Bem-vindo(a) de volta, ${nome.split(' ')[0]}!`, 'info');
+        }
+
+        // ============================================
+        // RENDER DASHBOARD
+        // ============================================
+        function renderDashboard(cargo) {
+            const config = cargoConfig[cargo];
+            document.getElementById('cardsContainer').innerHTML = `
+                <div class="card">
+                    <h3>📌 ${config.titulo}</h3>
+                    <p>Bem-vindo ao painel de controle</p>
+                    <span class="badge">Acesso Ativo</span>
+                </div>
+            `;
+
+            document.getElementById('secretariaArea').classList.add('hidden');
+            document.getElementById('professorArea').classList.add('hidden');
+            document.getElementById('coordenadorArea').classList.add('hidden');
+            document.getElementById('direcaoArea').classList.add('hidden');
+            document.getElementById('financeiroArea').classList.add('hidden');
+
+            if (cargo === 'secretaria') {
+                document.getElementById('secretariaArea').classList.remove('hidden');
+                inicializarSecretaria();
+            }
+            if (cargo === 'professor') {
+                document.getElementById('professorArea').classList.remove('hidden');
+                document.getElementById('cursosSection').classList.remove('hidden');
+                document.getElementById('registrosSection').classList.remove('hidden');
+                renderMeusCursos();
+            }
+            if (cargo === 'coordenacao') {
+                document.getElementById('coordenadorArea').classList.remove('hidden');
+                renderVisaoCursos();
+                carregarProfessoresAtribuicao();
+                renderRelatoriosRecebidos();
+                renderSelectAcompanhamento();
+            }
+            if (cargo === 'direcao') {
+                document.getElementById('direcaoArea').classList.remove('hidden');
+                renderStatsGerenciais();
+            }
+            if (cargo === 'financeiro') {
+                document.getElementById('financeiroArea').classList.remove('hidden');
+                renderFinanceiro();
+            }
+        }
+
+        // ============================================
+        // SECRETARIA
+        // ============================================
+        function inicializarSecretaria() {
+            carregarAlunosSecretaria();
+            carregarMatriculasSecretaria();
+            carregarProfessoresSecretaria();
+            atualizarDashboardSecretaria();
+            carregarCursosGrid();
+            carregarFrequenciaSelectsSecretaria();
+        }
+
+        function toggleSecretaria(section, event) {
+            document.querySelectorAll('#secretariaArea .section-container').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`secretaria-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#secretariaArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+
+            if (section === 'alunos') carregarAlunosSecretaria();
+            if (section === 'matriculas') carregarMatriculasSecretaria();
+            if (section === 'professores') carregarProfessoresSecretaria();
+            if (section === 'cursos') carregarCursosGrid();
+            if (section === 'frequencia') carregarFrequenciaSelectsSecretaria();
+        }
+
+        function atualizarDashboardSecretaria() {
+            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO');
+            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
+            const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso));
+
+            document.getElementById('totalAlunosSecretaria').textContent = alunosAtivos.length;
+            document.getElementById('matriculasAtivas').textContent = matriculasAtivas.length;
+            document.getElementById('totalCursosSecretaria').textContent = cursosAtivos.size;
+            document.getElementById('totalProfessoresSecretaria').textContent = escolaData.professores.length;
+        }
+
+        function carregarAlunosSecretaria() {
+            const busca = document.getElementById('buscaAlunoSecretaria')?.value.toLowerCase() || '';
+            let alunos = escolaData.alunos;
+            if (busca) alunos = alunos.filter(a => a.nome.toLowerCase().includes(busca));
+
+            const tbody = document.getElementById('tabelaAlunosSecretaria');
+            if (alunos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum aluno encontrado.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = alunos.map(aluno => {
+                const matriculas = db.matriculas.filter(m => m.aluno === aluno.nome && m.status === 'ATIVO');
+                const cursosNomes = matriculas.map(m => labelCurso(m.curso)).join(', ') || 'Nenhum';
+                return `
+                    <tr>
+                        <td><strong>${aluno.nome}</strong></td>
+                        <td>${aluno.dataNascimento || '-'}</td>
+                        <td>${aluno.responsavel || '-'}</td>
+                        <td>${aluno.contato || '-'}</td>
+                        <td style="font-size:0.85em;">${cursosNomes}</td>
+                        <td><span class="status-badge ${aluno.status === 'ATIVO' ? 'concluido' : 'inativo'}">${aluno.status}</span></td>
+                        <td>
+                            <button onclick="mostrarToast('Edição de aluno em breve.','info')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filtrarAlunosSecretaria() { carregarAlunosSecretaria(); }
+
+        function abrirModalCadastroAluno() {
+            document.getElementById('formCadastroAluno').reset();
+            const container = document.getElementById('cursosChecklist');
+            container.innerHTML = CURSOS.map(c => `
+                <label style="display:block; padding:4px 0;">
+                    <input type="checkbox" value="${c.id}" class="curso-checkbox"> ${c.nome}
+                </label>
+            `).join('');
+            document.getElementById('modalCadastroAluno').classList.add('active');
+        }
+
+        document.getElementById('formCadastroAluno').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const nome = document.getElementById('cadAlunoNome').value.trim().toUpperCase();
+            const dataNascimento = document.getElementById('cadAlunoNascimento').value;
+            const responsavel = document.getElementById('cadAlunoResponsavel').value.trim().toUpperCase();
+            const contato = document.getElementById('cadAlunoContato').value.trim();
+            const cursosSelecionados = Array.from(document.querySelectorAll('.curso-checkbox:checked')).map(cb => cb.value);
+
+            if (!nome) { alert('Nome é obrigatório.'); return; }
+
+            const payload = { nome, dataNascimento, responsavel, contato, status: 'ATIVO' };
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Cadastrando aluno...',
+                    subtitulo: `Salvando "${nome}" e ${cursosSelecionados.length} matrícula(s).`,
+                    etapas: [
+                        { pct: 10, label: 'Validando dados do aluno...' },
+                        { pct: 30, label: 'Salvando aluno na planilha...', msg: 'Aba ALUNOS' },
+                        { pct: 55, label: 'Registrando matrículas...', msg: `${cursosSelecionados.length} curso(s)` },
+                        { pct: 80, label: 'Atualizando painel...' },
+                        { pct: 95, label: 'Finalizando cadastro...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarAluno', payload);
+                        if (!r.success) throw new Error('Falha ao salvar aluno.');
+
+                        escolaData.alunos.push({
+                            nome,
+                            dataNascimento: formatarDataParaExibicao(dataNascimento),
+                            responsavel,
+                            contato,
+                            status: 'ATIVO'
+                        });
+
+                        for (const cursoId of cursosSelecionados) {
+                            const professor = getProfessorByCurso(cursoId);
+                            const matriculaPayload = {
+                                aluno: nome,
+                                curso: cursoId,
+                                professor: professor ? professor.nome : '',
+                                dataMatricula: getDataAtualFormatada(),
+                                anoLetivo: new Date().getFullYear().toString(),
+                                status: 'ATIVO'
+                            };
+                            await enviarParaGAS('salvarMatricula', matriculaPayload);
+                            db.matriculas.push(matriculaPayload);
+                        }
+                        return { success: true };
+                    },
+                    sucesso: `✅ Aluno ${nome} cadastrado!`
+                });
+
+                fecharModal('modalCadastroAluno');
+                carregarAlunosSecretaria();
+                atualizarDashboardSecretaria();
+                setTimeout(() => carregarDadosPlanilha(), 1000);
+            } catch (error) {
+                mostrarToast(`❌ Erro: ${error.message}`, 'error');
+            }
+        });
+
+        function carregarMatriculasSecretaria() {
+            const filtroCurso = document.getElementById('filtroCursoMatricula')?.value || '';
+            const busca = document.getElementById('buscaMatriculaSecretaria')?.value.toLowerCase() || '';
+
+            const selectFiltro = document.getElementById('filtroCursoMatricula');
+            if (selectFiltro) {
+                selectFiltro.innerHTML = '<option value="">Todos os Cursos</option>' +
+                    CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            }
+
+            let matriculas = db.matriculas;
+            if (filtroCurso) matriculas = matriculas.filter(m => m.curso === filtroCurso);
+            if (busca) matriculas = matriculas.filter(m => m.aluno.toLowerCase().includes(busca));
+
+            const tbody = document.getElementById('tabelaMatriculasSecretaria');
+            if (matriculas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhuma matrícula encontrada.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = matriculas.map(m => `
+                <tr>
+                    <td><strong>${m.aluno}</strong></td>
+                    <td>${labelCurso(m.curso)}</td>
+                    <td>${m.professor || '-'}</td>
+                    <td>${m.dataMatricula || '-'}</td>
+                    <td><span class="status-badge ${m.status === 'ATIVO' ? 'concluido' : 'inativo'}">${m.status}</span></td>
+                    <td>
+                        <button onclick="cancelarMatricula('${m.aluno.replace(/'/g, "\\'")}', '${m.curso}')" class="btn btn-small btn-danger" style="padding:2px 8px;">❌</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filtrarMatriculasSecretaria() { carregarMatriculasSecretaria(); }
+
+        async function cancelarMatricula(aluno, curso) {
+            if (!confirm(`Cancelar matrícula de ${aluno} no curso ${labelCurso(curso)}?`)) return;
+            const m = db.matriculas.find(m => m.aluno === aluno && m.curso === curso);
+            if (!m) return;
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Cancelando matrícula...',
+                    subtitulo: `${aluno} — ${labelCurso(curso)}`,
+                    etapas: [
+                        { pct: 15, label: 'Validando matrícula...' },
+                        { pct: 45, label: 'Atualizando status...', msg: 'Aba MATRICULAS' },
+                        { pct: 75, label: 'Atualizando painel...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        m.status = 'CANCELADO';
+                        const r = await enviarParaGAS('atualizarMatricula', { aluno, curso, status: 'CANCELADO' });
+                        if (!r.success) throw new Error('Falha ao cancelar matrícula.');
+                        return { success: true };
+                    },
+                    sucesso: '✅ Matrícula cancelada.'
+                });
+                carregarMatriculasSecretaria();
+                atualizarDashboardSecretaria();
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        function abrirModalNovaMatricula() {
+            const selectAluno = document.getElementById('matriculaAluno');
+            selectAluno.innerHTML = '<option value="">-- Selecione --</option>' +
+                escolaData.alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
+
+            const selectCurso = document.getElementById('matriculaCurso');
+            selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
+                CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            const profSelect = document.getElementById('matriculaProfessor');
+            profSelect.innerHTML = '<option value="">-- Selecione o curso primeiro --</option>';
+            profSelect.disabled = true;
+
+            selectCurso.onchange = function() {
+                const cursoId = this.value;
+                const professor = getProfessorByCurso(cursoId);
+                if (professor) {
+                    profSelect.innerHTML = `<option value="${professor.nome}" selected>${professor.nome}</option>`;
+                } else {
+                    profSelect.innerHTML = '<option value="">⚠️ Nenhum professor cadastrado</option>';
+                }
+                profSelect.disabled = true;
+            };
+
+            document.getElementById('modalNovaMatricula').classList.add('active');
+        }
+
+        document.getElementById('formNovaMatricula').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const aluno = document.getElementById('matriculaAluno').value;
+            const curso = document.getElementById('matriculaCurso').value;
+            const ano = document.getElementById('matriculaAno').value;
+
+            if (!aluno || !curso) { alert('Preencha aluno e curso.'); return; }
+
+            const professor = getProfessorByCurso(curso);
+            const professorNome = professor ? professor.nome : '';
+
+            if (!professorNome) {
+                if (!confirm('⚠️ Nenhum professor cadastrado. Continuar mesmo assim?')) return;
+            }
+
+            const payload = {
+                aluno, curso,
+                professor: professorNome,
+                dataMatricula: getDataAtualFormatada(),
+                anoLetivo: ano, status: 'ATIVO'
+            };
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Registrando matrícula...',
+                    subtitulo: `${aluno} em ${labelCurso(curso)}`,
+                    etapas: [
+                        { pct: 15, label: 'Validando dados...' },
+                        { pct: 50, label: 'Gravando matrícula...', msg: 'Aba MATRICULAS' },
+                        { pct: 80, label: 'Atualizando painel...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarMatricula', payload);
+                        if (!r.success) throw new Error('Falha ao salvar matrícula.');
+                        db.matriculas.push(payload);
+                        return { success: true };
+                    },
+                    sucesso: `✅ Matrícula registrada${professorNome ? ' com Prof. ' + professorNome : ''}!`
+                });
+
+                fecharModal('modalNovaMatricula');
+                carregarMatriculasSecretaria();
+                atualizarDashboardSecretaria();
+                setTimeout(() => carregarDadosPlanilha(), 1000);
+            } catch (error) {
+                mostrarToast(`❌ Erro: ${error.message}`, 'error');
+            }
+        });
+
+        function carregarProfessoresSecretaria() {
+            const busca = document.getElementById('buscaProfessorSecretaria')?.value.toLowerCase() || '';
+            let professores = escolaData.professores;
+            if (busca) professores = professores.filter(p => p.nome.toLowerCase().includes(busca));
+
+            const tbody = document.getElementById('tabelaProfessoresSecretaria');
+            if (professores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum professor encontrado.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = professores.map(p => {
+                const cursosIds = extrairCursosDoProfessor(p);
+                const cursosNomes = cursosIds.length
+                    ? cursosIds.map(c => labelCurso(c)).join(', ')
+                    : '-';
+                return `
+                    <tr>
+                        <td>${p.id || '-'}</td>
+                        <td><strong>${p.nome}</strong></td>
+                        <td>${p.tipo || '-'}</td>
+                        <td style="font-size:0.85em;">${cursosNomes}</td>
+                        <td>${p.telefone || '-'}</td>
+                        <td>${p.email || '-'}</td>
+                        <td><span class="status-badge ${p.status === 'ATIVO' ? 'concluido' : 'inativo'}">${p.status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filtrarProfessoresSecretaria() { carregarProfessoresSecretaria(); }
+
+        function abrirModalCadastroProfessor() {
+            const id = 'PROF_' + new Date().getTime();
+            document.getElementById('formCadastroProfessor').reset();
+            document.getElementById('cadProfessorID').value = id;
+
+            const selectCurso = document.getElementById('cadProfessorCurso');
+            selectCurso.innerHTML = '<option value="">-- Selecione --</option>' +
+                CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+            const container = document.getElementById('cadProfessorCursosExtras');
+            container.innerHTML = CURSOS.map(c => `
+                <label style="display:block; padding:4px 0;">
+                    <input type="checkbox" value="${c.id}" class="prof-curso-extra"> ${c.nome}
+                </label>
+            `).join('');
+
+            document.getElementById('modalCadastroProfessor').classList.add('active');
+        }
+
+        document.getElementById('formCadastroProfessor').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('cadProfessorID').value;
+            const nome = document.getElementById('cadProfessorNome').value.trim().toUpperCase();
+            const tipo = document.getElementById('cadProfessorTipo').value;
+            const cursoPrincipal = document.getElementById('cadProfessorCurso').value;
+            const cursosExtras = Array.from(document.querySelectorAll('.prof-curso-extra:checked')).map(cb => cb.value);
+            const telefone = document.getElementById('cadProfessorTelefone').value.trim();
+            const email = document.getElementById('cadProfessorEmail').value.trim();
+
+            if (!nome || !tipo || !cursoPrincipal || !telefone) {
+                alert('Preencha os campos obrigatórios.');
+                return;
+            }
+
+            const todosCursos = [...new Set([cursoPrincipal, ...cursosExtras])];
+            const cursoString = todosCursos.join(',');
+
+            const payload = { id, nome, tipo, curso: cursoString, telefone, email };
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Cadastrando professor...',
+                    subtitulo: `${nome} — ${todosCursos.length} curso(s)`,
+                    etapas: [
+                        { pct: 15, label: 'Validando dados...' },
+                        { pct: 50, label: 'Gravando professor...', msg: 'Aba PROFESSORES' },
+                        { pct: 80, label: 'Atualizando painel...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarProfessor', payload);
+                        if (!r.success) throw new Error('Falha ao salvar professor.');
+                        escolaData.professores.push({
+                            id, nome, tipo, curso: cursoString, telefone, email, status: 'ATIVO'
+                        });
+                        return { success: true };
+                    },
+                    sucesso: `✅ Professor ${nome} cadastrado!`
+                });
+
+                fecharModal('modalCadastroProfessor');
+                carregarProfessoresSecretaria();
+                atualizarDashboardSecretaria();
+                setTimeout(() => carregarDadosPlanilha(), 1000);
+            } catch (error) {
+                mostrarToast(`❌ Erro: ${error.message}`, 'error');
+            }
+        });
+
+        function carregarCursosGrid() {
+            const container = document.getElementById('cursosGrid');
+            container.innerHTML = CURSOS.map(curso => {
+                const professor = getProfessorByCurso(curso.id);
+                const alunos = getAlunosByCurso(curso.id);
+                return `
+                    <div class="stat-card" style="border-left: 4px solid #4299e1;">
+                        <div style="font-size: 1.2em; margin-bottom: 5px;">${curso.nome}</div>
+                        <div style="color: #718096; font-size: 0.85em; margin-bottom: 8px;">
+                            <strong>Professor:</strong> ${professor ? professor.nome : 'Não atribuído'}
+                        </div>
+                        <div style="color: #718096; font-size: 0.85em;">
+                            <strong>Alunos:</strong> ${alunos.length}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function carregarFrequenciaSelectsSecretaria() {
+            const select = document.getElementById('frequenciaCursoSelect');
+            if (select) {
+                select.innerHTML = '<option value="">-- Selecione --</option>' +
+                    CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            }
+        }
+
+        function carregarFrequenciaSecretaria() {
+            const curso = document.getElementById('frequenciaCursoSelect').value;
+            const container = document.getElementById('frequenciaResultados');
+            if (!curso) {
+                container.innerHTML = '<p style="color:#718096;">Selecione um curso.</p>';
+                return;
+            }
+
+            const alunos = getAlunosByCurso(curso);
+            const presencas = db.presencas[curso] || [];
+
+            if (alunos.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum aluno matriculado neste curso.</p>';
+                return;
+            }
+
+            let html = `
+                <div class="table-container">
+                    <h4>${labelCurso(curso)}</h4>
+                    <table>
+                        <thead><tr><th>Aluno</th><th>Presenças</th><th>Faltas</th><th>Frequência</th></tr></thead>
+                        <tbody>
+            `;
+            alunos.forEach(aluno => {
+                let presentes = 0;
+                presencas.forEach(p => { if (p.presentes.includes(aluno.nome)) presentes++; });
+                const total = presencas.length || 1;
+                const taxa = (presentes / total * 100);
+                html += `<tr>
+                    <td><strong>${aluno.nome}</strong></td>
+                    <td>${presentes}</td>
+                    <td>${total - presentes}</td>
+                    <td><span style="color:${taxa >= 75 ? '#48bb78' : '#f56565'};font-weight:bold;">${taxa.toFixed(1)}%</span></td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // RELATÓRIOS SECRETARIA
+        // ============================================
+        function gerarRelatorioAlunosSecretaria() {
+            const out = document.getElementById('relatorioSecretariaOutput');
+            out.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📋 Lista de Alunos</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Total:</strong> ${escolaData.alunos.length}</div>
+                    <table style="margin-top:15px;width:100%;border-collapse:collapse;">
+                        <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Nome</th><th style="padding:8px;border:1px solid #e2e8f0;">Responsável</th><th style="padding:8px;border:1px solid #e2e8f0;">Contato</th><th style="padding:8px;border:1px solid #e2e8f0;">Status</th></tr></thead>
+                        <tbody>
+                            ${escolaData.alunos.map(a => `<tr><td style="padding:8px;border:1px solid #e2e8f0;">${a.nome}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.responsavel||'-'}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.contato||'-'}</td><td style="padding:8px;border:1px solid #e2e8f0;">${a.status}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioMatriculasSecretaria() {
+            const out = document.getElementById('relatorioSecretariaOutput');
+            const ativas = db.matriculas.filter(m => m.status === 'ATIVO');
+            out.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📋 Matrículas por Curso</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Matrículas Ativas:</strong> ${ativas.length}</div>
+                    <div style="margin-top:15px;">
+                        ${CURSOS.map(c => {
+                            const ms = ativas.filter(m => m.curso === c.id);
+                            if (ms.length === 0) return '';
+                            return `<div style="margin-bottom:10px;padding:10px;background:#f7fafc;border-radius:8px;">
+                                <strong>${c.nome}</strong> — ${ms.length} aluno(s)
+                                <div style="font-size:0.85em;color:#718096;">${ms.map(m => m.aluno).join(', ')}</div>
+                            </div>`;
+                        }).join('') || '<p>Nenhuma matrícula ativa.</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioCompletoSecretaria() {
+            gerarRelatorioAlunosSecretaria();
+        }
+
+        // ============================================
+        // PROFESSOR
+        // ============================================
+        function renderMeusCursos() {
+            const container = document.getElementById('cursosContainer');
+
+            if (currentUser.professorData) {
+                currentUser.cursos = extrairCursosDoProfessor(currentUser.professorData);
+            }
+
+            if (!currentUser.cursos || currentUser.cursos.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #718096;">
+                        <p>📭 Nenhum curso atribuído.</p>
+                        <p style="font-size: 0.9em;">Entre em contato com a coordenação.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const header = `
+                <div style="grid-column: 1/-1; margin-bottom: 12px; padding: 12px 15px; background: #ebf8ff; border-radius: 8px; border-left: 4px solid #4299e1;">
+                    <strong>👨‍🏫 Você leciona em ${currentUser.cursos.length} curso(s):</strong>
+                    <div style="margin-top:6px; font-size: 0.95em;">
+                        ${currentUser.cursos.map(id => labelCurso(id)).join(' • ')}
+                    </div>
+                </div>
+            `;
+
+            const cards = currentUser.cursos.map(cursoId => {
+                const curso = CURSOS_MAP[cursoId];
+                const alunos = getAlunosByCurso(cursoId);
+                return `
+                    <div class="turma-item ${cursoSelecionado === cursoId ? 'selected' : ''}" onclick="selecionarCurso('${cursoId}')">
+                        ${labelCurso(cursoId)}
+                        <span class="ano">${curso ? curso.tipo : ''}</span>
+                        <span class="status">👥 ${alunos.length} aluno(s)</span>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = header + cards;
+
+            if (!cursoSelecionado && currentUser.cursos.length > 0) {
+                selecionarCurso(currentUser.cursos[0]);
+            }
+        }
+
+        function selecionarCurso(cursoId) {
+            cursoSelecionado = cursoId;
+            document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoId);
+            renderMeusCursos();
+            carregarTabelaNotas();
+            carregarPresenca();
+            carregarObservacoes();
+            carregarAlunosSelects();
+            renderRelatoriosEnviados();
+        }
+
+        function toggleSection(section, event) {
+            document.querySelectorAll('#professorArea .toggle-section').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`section-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#professorArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+
+            if (section === 'presencas') carregarPresenca();
+            if (section === 'observacoes') carregarObservacoes();
+            if (section === 'relatorios') renderRelatoriosEnviados();
+        }
+
+        function carregarTabelaNotas() {
+            if (!cursoSelecionado) return;
+            const bimestre = parseInt(document.getElementById('bimestreNota').value);
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            const tbody = document.getElementById('tabelaNotasBody');
+
+            if (alunos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#718096;">Nenhum aluno neste curso.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = alunos.map((aluno, idx) => {
+                const nota = getNotaAluno(aluno.nome, cursoSelecionado, bimestre);
+                const media = getMediaAluno(aluno.nome, cursoSelecionado);
+                const alunoId = aluno.nome.replace(/\s/g, '_').replace(/[^A-Za-z0-9_]/g, '');
+                return `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td><strong>${aluno.nome}</strong></td>
+                        <td><input type="number" class="nota-input" id="nota_${alunoId}" value="${nota}" min="0" max="10" step="0.5"></td>
+                        <td><strong>${media.toFixed(1)}</strong></td>
+                        <td><span class="status-badge ${media >= 7 ? 'concluido' : media >= 5 ? 'pendente' : 'inativo'}">${media >= 7 ? 'Aprovado' : media >= 5 ? 'Recuperação' : 'Reprovado'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function salvarNotas() {
+            if (!cursoSelecionado) return;
+            const bimestre = parseInt(document.getElementById('bimestreNota').value);
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            const avaliacoes = [];
+
+            alunos.forEach(aluno => {
+                const alunoId = aluno.nome.replace(/\s/g, '_').replace(/[^A-Za-z0-9_]/g, '');
+                const input = document.getElementById(`nota_${alunoId}`);
+                if (input) {
+                    const nota = parseFloat(input.value) || 0;
+                    avaliacoes.push({ aluno: aluno.nome, curso: cursoSelecionado, bimestre, nota, professor: currentUser.nome });
+                }
+            });
+
+            if (avaliacoes.length === 0) {
+                mostrarToast('⚠️ Nenhum aluno para salvar.', 'info');
+                return;
+            }
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Salvando avaliações...',
+                    subtitulo: `${avaliacoes.length} aluno(s) — ${bimestre}º Bimestre`,
+                    etapas: [
+                        { pct: 15, label: 'Coletando notas...' },
+                        { pct: 50, label: 'Gravando avaliações...', msg: 'Aba AVALIACOES' },
+                        { pct: 80, label: 'Atualizando médias...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarAvaliacoes', { avaliacoes });
+                        if (!r.success) throw new Error('Falha ao salvar avaliações.');
+                        avaliacoes.forEach(av => {
+                            const idx = db.avaliacoes.findIndex(a => a.aluno === av.aluno && a.curso === av.curso && a.bimestre === av.bimestre);
+                            if (idx > -1) db.avaliacoes[idx] = av;
+                            else db.avaliacoes.push(av);
+                        });
+                        return { success: true };
+                    },
+                    sucesso: '✅ Avaliações salvas!'
+                });
+                carregarTabelaNotas();
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        function carregarPresenca() {
+            if (!cursoSelecionado) return;
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            const container = document.getElementById('alunosPresencaTabela');
+            if (!container) return;
+
+            container.innerHTML = alunos.map((aluno, idx) => `
+                <tr>
+                    <td style="text-align:center;">${idx + 1}</td>
+                    <td>${aluno.nome}</td>
+                    <td style="text-align:center;"><input type="checkbox" class="presenca-checkbox" data-aluno="${aluno.nome}" checked></td>
+                </tr>
+            `).join('');
+
+            const inputData = document.getElementById('dataPresenca');
+            if (inputData && !inputData.value) inputData.value = new Date().toISOString().split('T')[0];
+
+            renderRegistrosPresenca();
+        }
+
+        function renderRegistrosPresenca() {
+            const container = document.getElementById('registrosPresenca');
+            const registros = db.presencas[cursoSelecionado] || [];
+            if (registros.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum registro.</p>';
+                return;
+            }
+            container.innerHTML = registros.slice(-10).reverse().map(r => `
+                <div class="registro-item">
+                    <div class="data">📅 ${r.data}</div>
+                    <div class="conteudo">✅ ${r.presentes.length} presentes ${r.conteudo ? ' | 📚 ' + r.conteudo : ''}</div>
+                </div>
+            `).join('');
+        }
+
+        async function salvarPresenca() {
+            if (!cursoSelecionado) return;
+            const data = formatarDataParaPlanilha(document.getElementById('dataPresenca').value);
+            const checkboxes = document.querySelectorAll('#alunosPresencaTabela input:checked');
+            const presentes = Array.from(checkboxes).map(cb => cb.dataset.aluno);
+
+            const conteudoAula = document.getElementById('obsPresenca').value.trim();
+
+            const payload = {
+                curso: cursoSelecionado,
+                data,
+                presentes,
+                conteudo: conteudoAula,
+                professor: currentUser.nome
+            };
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Salvando presença...',
+                    subtitulo: `${presentes.length} aluno(s) — ${data}`,
+                    etapas: [
+                        { pct: 15, label: 'Coletando presenças...' },
+                        { pct: 50, label: 'Gravando presença...', msg: 'Aba PRESENCAS' },
+                        { pct: 80, label: 'Atualizando registros...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarPresenca', payload);
+                        if (!r.success) throw new Error('Falha ao salvar presença.');
+                        if (!db.presencas[cursoSelecionado]) db.presencas[cursoSelecionado] = [];
+                        db.presencas[cursoSelecionado].push({
+                            data,
+                            presentes,
+                            professor: currentUser.nome,
+                            conteudo: conteudoAula
+                        });
+                        return { success: true };
+                    },
+                    sucesso: '✅ Presença e conteúdo salvos!'
+                });
+
+                renderRegistrosPresenca();
+                document.getElementById('obsPresenca').value = '';
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        function carregarObservacoes() {
+            const container = document.getElementById('registrosObservacoes');
+            const registros = db.observacoes[cursoSelecionado] || [];
+            if (registros.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhuma observação.</p>';
+                return;
+            }
+            container.innerHTML = registros.slice(-10).reverse().map(o => `
+                <div class="registro-item">
+                    <div class="data">✏️ ${o.data} - ${o.aluno}</div>
+                    <div class="conteudo">${o.observacao}</div>
+                </div>
+            `).join('');
+        }
+
+        async function salvarObservacao() {
+            if (!cursoSelecionado) return;
+            const data = formatarDataParaPlanilha(document.getElementById('dataObservacao').value);
+            const aluno = document.getElementById('alunoObservacao').value;
+            const observacao = document.getElementById('observacaoText').value.trim();
+            const tipo = document.getElementById('tipoObservacao').value;
+            if (!observacao) { alert('Digite a observação.'); return; }
+
+            const payload = {
+                curso: cursoSelecionado, data, aluno, observacao, tipo,
+                professor: currentUser.nome
+            };
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Salvando observação...',
+                    subtitulo: `${aluno} — ${tipo}`,
+                    etapas: [
+                        { pct: 15, label: 'Validando observação...' },
+                        { pct: 50, label: 'Gravando observação...', msg: 'Aba OBSERVACOES' },
+                        { pct: 80, label: 'Atualizando registros...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarObservacao', payload);
+                        if (!r.success) throw new Error('Falha ao salvar observação.');
+                        if (!db.observacoes[cursoSelecionado]) db.observacoes[cursoSelecionado] = [];
+                        db.observacoes[cursoSelecionado].push({ data, aluno, observacao, tipo });
+                        return { success: true };
+                    },
+                    sucesso: '✅ Observação salva!'
+                });
+
+                carregarObservacoes();
+                document.getElementById('observacaoText').value = '';
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        function carregarAlunosSelects() {
+            if (!cursoSelecionado) return;
+            const alunos = getAlunosByCurso(cursoSelecionado);
+            ['alunoRelatorioPreencher', 'alunoObservacao'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = alunos.length
+                        ? alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('')
+                        : '<option value="">Nenhum aluno</option>';
+                }
+            });
+        }
+
+        function renderRelatoriosEnviados() {
+            const container = document.getElementById('relatoriosEnviados');
+            const relatorios = db.relatorios.filter(r =>
+                r.curso === cursoSelecionado && r.professor === currentUser.nome
+            );
+            if (relatorios.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum relatório enviado.</p>';
+                return;
+            }
+            container.innerHTML = relatorios.map(r => `
+                <div class="registro-item">
+                    <div class="data">📄 ${r.aluno} - ${r.bimestre}º Bim</div>
+                    <div class="conteudo">Enviado em: ${r.data}</div>
+                </div>
+            `).join('');
+        }
+
+        async function enviarRelatorioCoordenacao() {
+            if (!cursoSelecionado) return;
+            const aluno = document.getElementById('alunoRelatorioPreencher').value;
+            const bimestre = document.getElementById('bimestreRelatorioPreencher').value;
+            const relatorio = document.getElementById('relatorioTexto').value.trim();
+            if (!aluno) { alert('Selecione um aluno.'); return; }
+            if (!relatorio) { alert('Digite o relatório.'); return; }
+
+            const payload = {
+                aluno, curso: cursoSelecionado, bimestre,
+                professor: currentUser.nome, relatorio,
+                data: getDataAtualFormatada()
+            };
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Enviando relatório...',
+                    subtitulo: `${aluno} — ${bimestre}º Bimestre`,
+                    etapas: [
+                        { pct: 15, label: 'Validando relatório...' },
+                        { pct: 50, label: 'Enviando para a coordenação...', msg: 'Aba RELATORIOS' },
+                        { pct: 80, label: 'Atualizando lista...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarRelatorio', payload);
+                        if (!r.success) throw new Error('Falha ao enviar relatório.');
+                        db.relatorios.push(payload);
+                        return { success: true };
+                    },
+                    sucesso: '✅ Relatório enviado!'
+                });
+
+                renderRelatoriosEnviados();
+                document.getElementById('relatorioTexto').value = '';
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        // ============================================
+        // COORDENAÇÃO
+        // ============================================
+        function toggleCoordenacao(section, event) {
+            document.querySelectorAll('#coordenadorArea .section-container').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`coordenacao-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#coordenadorArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+
+            if (section === 'acompanhamento') {
+                renderSelectAcompanhamento();
+            }
+        }
+
+        function renderVisaoCursos() {
+            const tbody = document.getElementById('visaoGeralCursos');
+            tbody.innerHTML = CURSOS.map(curso => {
+                const alunos = getAlunosByCurso(curso.id);
+                const professor = getProfessorByCurso(curso.id);
+                const presencas = db.presencas[curso.id] || [];
+
+                let totalPres = 0, totalDias = presencas.length;
+                alunos.forEach(aluno => {
+                    presencas.forEach(p => { if (p.presentes.includes(aluno.nome)) totalPres++; });
+                });
+                const taxaPres = totalDias > 0 && alunos.length > 0 ? (totalPres / (totalDias * alunos.length) * 100) : 0;
+
+                let somaMedias = 0, count = 0;
+                alunos.forEach(aluno => {
+                    const media = getMediaAluno(aluno.nome, curso.id);
+                    if (media > 0) { somaMedias += media; count++; }
+                });
+                const mediaGeral = count > 0 ? somaMedias / count : 0;
+
+                return `
+                    <tr>
+                        <td><strong>${curso.nome}</strong></td>
+                        <td>${professor ? professor.nome : 'Não atribuído'}</td>
+                        <td>${mediaGeral.toFixed(1)}</td>
+                        <td>${taxaPres.toFixed(1)}%</td>
+                        <td>${alunos.length}</td>
+                        <td><button onclick="alert('Curso: ${curso.nome}\\nProfessor: ${professor ? professor.nome : '-'}\\nAlunos: ${alunos.length}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️ Ver</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderSelectAcompanhamento() {
+            const select = document.getElementById('selectProfAcompanhamento');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Selecione --</option>' +
+                escolaData.professores.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
+        }
+
+        function renderAcompanhamentoProf() {
+            const profNome = document.getElementById('selectProfAcompanhamento').value;
+            const container = document.getElementById('acompanhamentoResultados');
+
+            if (!profNome) {
+                container.innerHTML = '<p style="color: #718096;">Selecione um professor.</p>';
+                return;
+            }
+
+            let todasAulas = [];
+            for (const cursoId in db.presencas) {
+                const aulas = db.presencas[cursoId];
+                aulas.forEach(aula => {
+                    const profDoCurso = getProfessorByCurso(cursoId);
+                    if (aula.professor === profNome || (profDoCurso && profDoCurso.nome === profNome)) {
+                        todasAulas.push({
+                            curso: cursoId,
+                            data: aula.data,
+                            presentes: aula.presentes,
+                            conteudo: aula.conteudo || 'Sem conteúdo registrado'
+                        });
+                    }
+                });
+            }
+
+            if (todasAulas.length === 0) {
+                container.innerHTML = '<p style="color: #718096;">Nenhuma aula registrada para este professor.</p>';
+                return;
+            }
+
+            todasAulas.sort((a, b) => {
+                const [d1, m1, y1] = a.data.split('-');
+                const [d2, m2, y2] = b.data.split('-');
+                return new Date(y2, m2-1, d2) - new Date(y1, m1-1, d1);
+            });
+
+            const porCurso = {};
+            todasAulas.forEach(a => {
+                if (!porCurso[a.curso]) porCurso[a.curso] = [];
+                porCurso[a.curso].push(a);
+            });
+
+            let html = `<h4 style="margin-bottom: 15px;">Histórico de Aulas: ${profNome}</h4>`;
+
+            for (const cursoId in porCurso) {
+                html += `
+                    <div style="margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;">
+                        <div style="background: #edf2f7; padding: 10px 15px; font-weight: bold; color: #2d3748;">
+                            🎵 ${labelCurso(cursoId)}
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Alunos Presentes</th>
+                                        <th>Conteúdo Aplicado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${porCurso[cursoId].map(a => `
+                                        <tr>
+                                            <td><strong>${a.data}</strong></td>
+                                            <td style="font-size: 0.85em;">${a.presentes.length} aluno(s)</td>
+                                            <td>${a.conteudo}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function carregarProfessoresAtribuicao() {
+            const select = document.getElementById('professorSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Selecione --</option>' +
+                escolaData.professores.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+
+            const cursoSelect = document.getElementById('cursoSelect');
+            if (cursoSelect) {
+                cursoSelect.innerHTML = '<option value="">-- Selecione --</option>' +
+                    CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            }
+
+            renderProfessoresAtribuidos();
+        }
+
+        function renderProfessoresAtribuidos() {
+            const container = document.getElementById('professoresAtribuidos');
+            if (!container) return;
+            container.innerHTML = escolaData.professores.map(prof => {
+                const cursos = extrairCursosDoProfessor(prof);
+                return `
+                    <div class="professor-item">
+                        <strong>${prof.nome}</strong>
+                        <div class="especialidade">${prof.tipo || ''}</div>
+                        <div class="turmas-atribuidas">
+                            ${cursos.length > 0 ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum curso</span>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function atribuirCurso() {
+            const profId = document.getElementById('professorSelect').value;
+            const cursoId = document.getElementById('cursoSelect').value;
+            if (!profId || !cursoId) { alert('Selecione professor e curso.'); return; }
+
+            const prof = escolaData.professores.find(p => p.id === profId);
+            if (!prof) return;
+
+            const cursosAtuais = extrairCursosDoProfessor(prof);
+            if (cursosAtuais.includes(cursoId)) { alert('Curso já atribuído.'); return; }
+            cursosAtuais.push(cursoId);
+            prof.curso = cursosAtuais.join(',');
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Atribuindo curso...',
+                    subtitulo: `${prof.nome} ← ${labelCurso(cursoId)}`,
+                    etapas: [
+                        { pct: 20, label: 'Validando atribuição...' },
+                        { pct: 55, label: 'Atualizando professor...', msg: 'Aba PROFESSORES' },
+                        { pct: 85, label: 'Atualizando painel...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('atualizarProfessor', { id: profId, curso: prof.curso });
+                        if (!r.success) throw new Error('Falha ao atribuir curso.');
+                        return { success: true };
+                    },
+                    sucesso: `✅ Curso ${labelCurso(cursoId)} atribuído a ${prof.nome}!`
+                });
+                renderProfessoresAtribuidos();
+                renderVisaoCursos();
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        async function removerCurso() {
+            const profId = document.getElementById('professorSelect').value;
+            const cursoId = document.getElementById('cursoSelect').value;
+            if (!profId || !cursoId) { alert('Selecione professor e curso.'); return; }
+
+            const prof = escolaData.professores.find(p => p.id === profId);
+            if (!prof) return;
+
+            const cursosAtuais = extrairCursosDoProfessor(prof).filter(c => c !== cursoId);
+            prof.curso = cursosAtuais.join(',');
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Removendo curso...',
+                    subtitulo: `${prof.nome} ✕ ${labelCurso(cursoId)}`,
+                    etapas: [
+                        { pct: 20, label: 'Validando remoção...' },
+                        { pct: 55, label: 'Atualizando professor...', msg: 'Aba PROFESSORES' },
+                        { pct: 85, label: 'Atualizando painel...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('atualizarProfessor', { id: profId, curso: prof.curso });
+                        if (!r.success) throw new Error('Falha ao remover curso.');
+                        return { success: true };
+                    },
+                    sucesso: `✅ Curso removido de ${prof.nome}.`
+                });
+                renderProfessoresAtribuidos();
+                renderVisaoCursos();
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        function renderRelatoriosRecebidos() {
+            const container = document.getElementById('listaRelatoriosRecebidos');
+            if (!container) return;
+            if (db.relatorios.length === 0) {
+                container.innerHTML = '<p style="color:#718096;">Nenhum relatório recebido.</p>';
+                return;
+            }
+            container.innerHTML = db.relatorios.slice().reverse().map(r => `
+                <div class="registro-item">
+                    <div class="data">📄 ${r.aluno} - ${labelCurso(r.curso)} - ${r.bimestre}º Bim</div>
+                    <div class="conteudo">${(r.relatorio || '').substring(0, 150)}...</div>
+                    <div style="font-size:0.85em;color:#718096;">Professor: ${r.professor} | Data: ${r.data}</div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // DIREÇÃO
+        // ============================================
+        function renderStatsGerenciais() {
+            const container = document.getElementById('statsGerenciais');
+            if (!container) return;
+
+            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO').length;
+            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO').length;
+            const cursosAtivos = new Set(db.matriculas.filter(m => m.status === 'ATIVO').map(m => m.curso)).size;
+
+            let somaMedias = 0, count = 0;
+            db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => {
+                const media = getMediaAluno(m.aluno, m.curso);
+                if (media > 0) { somaMedias += media; count++; }
+            });
+            const mediaGeral = count > 0 ? somaMedias / count : 0;
+
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-number">${alunosAtivos}</div>
+                    <div class="stat-label">Alunos Ativos</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #48bb78;">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-number">${matriculasAtivas}</div>
+                    <div class="stat-label">Matrículas Ativas</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #4299e1;">
+                    <div class="stat-icon">🎵</div>
+                    <div class="stat-number">${cursosAtivos}</div>
+                    <div class="stat-label">Cursos Ativos</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #9f7aea;">
+                    <div class="stat-icon">👨‍🏫</div>
+                    <div class="stat-number">${escolaData.professores.length}</div>
+                    <div class="stat-label">Professores</div>
+                </div>
+                <div class="stat-card" style="border-left:4px solid #ed8936;">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-number">${mediaGeral.toFixed(1)}</div>
+                    <div class="stat-label">Média Geral</div>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioGeral() {
+            const container = document.getElementById('relatorioConsolidado');
+            const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO');
+            const matriculasAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
+
+            container.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📊 Relatório Geral da Escola de Música</h4>
+                    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+                    <div class="info-line"><strong>Total de Alunos Ativos:</strong> ${alunosAtivos.length}</div>
+                    <div class="info-line"><strong>Total de Matrículas Ativas:</strong> ${matriculasAtivas.length}</div>
+                    <div class="info-line"><strong>Total de Professores:</strong> ${escolaData.professores.length}</div>
+                    <div style="margin-top:15px;">
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Curso</th><th style="padding:8px;border:1px solid #e2e8f0;">Alunos</th><th style="padding:8px;border:1px solid #e2e8f0;">Professor</th><th style="padding:8px;border:1px solid #e2e8f0;">Média</th></tr></thead>
+                            <tbody>
+                                ${CURSOS.map(curso => {
+                                    const alunos = getAlunosByCurso(curso.id);
+                                    const professor = getProfessorByCurso(curso.id);
+                                    let soma = 0, c = 0;
+                                    alunos.forEach(a => {
+                                        const m = getMediaAluno(a.nome, curso.id);
+                                        if (m > 0) { soma += m; c++; }
+                                    });
+                                    return `<tr>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${curso.nome}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${alunos.length}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${professor ? professor.nome : '-'}</td>
+                                        <td style="padding:8px;border:1px solid #e2e8f0;">${c > 0 ? (soma / c).toFixed(1) : '0.0'}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function gerarRelatorioPorCurso() { gerarRelatorioGeral(); }
+
+        function gerarRelatorioPorProfessor() {
+            const container = document.getElementById('relatorioConsolidado');
+            container.innerHTML = `
+                <div class="relatorio-content">
+                    <h4>📊 Relatório por Professor</h4>
+                    <div style="margin-top:15px;">
+                        ${escolaData.professores.map(prof => {
+                            const cursos = extrairCursosDoProfessor(prof);
+                            return `
+                                <div style="margin-bottom:15px;padding:10px;background:#f7fafc;border-radius:8px;">
+                                    <h5>${prof.nome} (${prof.tipo || '-'})</h5>
+                                    <p style="color:#718096;font-size:0.9em;">Cursos: ${cursos.map(c => labelCurso(c)).join(', ') || 'Nenhum'}</p>
+                                    <p style="color:#718096;font-size:0.9em;">Telefone: ${prof.telefone || '-'}</p>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // FINANCEIRO
+        // ============================================
+        function toggleFinanceiro(section, event) {
+            document.querySelectorAll('#financeiroArea .section-container').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`financeiro-${section}`);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('#financeiroArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+
+            if (section === 'valores') renderValoresProfessores();
+        }
+
+        function renderFinanceiro() {
+            renderValoresProfessores();
+            const hoje = new Date();
+            const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('finMesReferencia').value = mesAtual;
+            calcularPagamentos();
+        }
+
+        function renderValoresProfessores() {
+            const tbody = document.getElementById('tabelaValoresProfessores');
+            if (!tbody) return;
+
+            tbody.innerHTML = escolaData.professores.map(p => {
+                const valor = p.valorHora || 0;
+                return `
+                    <tr>
+                        <td><strong>${p.nome}</strong></td>
+                        <td>
+                            <input type="number" step="0.01" min="0" id="valor_hora_${p.id}" value="${valor}" style="width: 120px; padding: 6px;">
+                        </td>
+                        <td>
+                            <button onclick="salvarValorHora('${p.id}')" class="btn btn-small btn-info">💾 Salvar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function salvarValorHora(profId) {
+            const input = document.getElementById(`valor_hora_${profId}`);
+            if (!input) return;
+            const novoValor = parseFloat(input.value) || 0;
+
+            const prof = escolaData.professores.find(p => p.id === profId);
+            if (!prof) return;
+
+            try {
+                await executarComProgresso({
+                    titulo: 'Salvando valor hora/aula...',
+                    subtitulo: `${prof.nome} — R$ ${novoValor.toFixed(2)}`,
+                    etapas: [
+                        { pct: 20, label: 'Validando valor...' },
+                        { pct: 55, label: 'Atualizando professor...', msg: 'Aba PROFESSORES' },
+                        { pct: 85, label: 'Atualizando tabela...' },
+                        { pct: 95, label: 'Finalizando...' }
+                    ],
+                    executar: async () => {
+                        const r = await enviarParaGAS('salvarValorProfessor', { id: profId, valorHora: novoValor });
+                        if (!r.success) throw new Error('Falha ao salvar valor na planilha.');
+                        prof.valorHora = novoValor;
+                        return { success: true };
+                    },
+                    sucesso: `✅ Valor de ${prof.nome} atualizado para R$ ${novoValor.toFixed(2)}!`
+                });
+            } catch (err) {
+                mostrarToast(`❌ ${err.message}`, 'error');
+            }
+        }
+
+        function calcularPagamentos() {
+            const mesRef = document.getElementById('finMesReferencia').value;
+            const tbody = document.getElementById('tabelaPagamentosFinanceiro');
+
+            if (!mesRef) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#718096;">Selecione um mês.</td></tr>';
+                return;
+            }
+
+            const [ano, mes] = mesRef.split('-').map(Number);
+
+            const aulasPorProfessorSemana = {};
+            const aulasPorProfessorMes = {};
+
+            for (const cursoId in db.presencas) {
+                db.presencas[cursoId].forEach(p => {
+                    const partes = String(p.data || '').split('-');
+                    if (partes.length !== 3) return;
+                    const dia = parseInt(partes[0], 10);
+                    const mesAula = parseInt(partes[1], 10);
+                    const anoAula = parseInt(partes[2], 10);
+                    if (isNaN(dia) || isNaN(mesAula) || isNaN(anoAula)) return;
+                    if (mesAula !== mes || anoAula !== ano) return;
+
+                    let profNome = (p.professor || '').toUpperCase().trim();
+                    if (!profNome) {
+                        const profDoCurso = getProfessorByCurso(cursoId);
+                        if (profDoCurso) profNome = profDoCurso.nome.toUpperCase().trim();
+                    }
+                    if (!profNome) {
+                        const mat = db.matriculas.find(m => m.curso === cursoId && m.professor);
+                        if (mat) profNome = mat.professor.toUpperCase().trim();
+                    }
+                    if (!profNome) return;
+
+                    const semana = Math.min(5, Math.ceil(dia / 7));
+                    const chaveSemana = 'S' + semana;
+
+                    if (!aulasPorProfessorSemana[profNome]) {
+                        aulasPorProfessorSemana[profNome] = { S1: 0, S2: 0, S3: 0, S4: 0, S5: 0 };
+                        aulasPorProfessorMes[profNome] = 0;
+                    }
+                    aulasPorProfessorSemana[profNome][chaveSemana]++;
+                    aulasPorProfessorMes[profNome]++;
+                });
+            }
+
+            if (escolaData.professores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#718096;">Nenhum professor cadastrado.</td></tr>';
+                return;
+            }
+
+            let totalGeralAulas = 0;
+            let totalGeralPago = 0;
+            let linhasHtml = '';
+
+            escolaData.professores.forEach(prof => {
+                const nomeChave = (prof.nome || '').toUpperCase().trim();
+                const porSemana = aulasPorProfessorSemana[nomeChave] || { S1: 0, S2: 0, S3: 0, S4: 0, S5: 0 };
+                const totalAulas = aulasPorProfessorMes[nomeChave] || 0;
+                const valorHora = prof.valorHora || 0;
+                const total = totalAulas * valorHora;
+
+                totalGeralAulas += totalAulas;
+                totalGeralPago += total;
+
+                linhasHtml += `
+                    <tr>
+                        <td><strong>${prof.nome}</strong></td>
+                        <td>R$ ${valorHora.toFixed(2)}</td>
+                        <td style="text-align:center;">${porSemana.S1}</td>
+                        <td style="text-align:center;">${porSemana.S2}</td>
+                        <td style="text-align:center;">${porSemana.S3}</td>
+                        <td style="text-align:center;">${porSemana.S4}</td>
+                        <td style="text-align:center;">${porSemana.S5}</td>
+                        <td style="text-align:center;"><strong>${totalAulas}</strong></td>
+                        <td style="font-weight:bold; color:${total > 0 ? '#2f855a' : '#718096'};">
+                            R$ ${total.toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            linhasHtml += `
+                <tr style="background:#f7fafc; font-weight:bold;">
+                    <td colspan="2">TOTAL GERAL</td>
+                    <td colspan="5" style="text-align:center;">${totalGeralAulas} aula(s) no mês</td>
+                    <td style="text-align:center;">${totalGeralAulas}</td>
+                    <td style="color:#2f855a;">R$ ${totalGeralPago.toFixed(2)}</td>
+                </tr>
+            `;
+
+            tbody.innerHTML = linhasHtml;
+
+            if (totalGeralAulas === 0) {
+                mostrarToast('⚠️ Nenhuma aula encontrada para o mês.', 'info');
+            }
+        }
+
+        // ============================================
+        // MODAL / UTILITÁRIOS
+        // ============================================
+        function fecharModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+        async function logout(manual = true, motivo = null) {
+            const tokenParaInvalidar = currentUser.token;
+
+            inactivityTimer.parar();
+            limparSessao();
+
+            // Tenta invalidar no backend (não bloqueia)
+            if (tokenParaInvalidar) {
+                try {
+                    fetch(GAS_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            acao: 'logout',
+                            payload: { token: tokenParaInvalidar }
+                        })
+                    }).catch(() => {});
+                } catch (e) {}
+            }
+
+            // Reset UI
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('loginForm').reset();
+            currentUser = { cargo: '', nome: '', professorData: null, cursos: [], token: null, expiraEm: 0 };
+            cursoSelecionado = null;
+
+            loginProgress.init();
+            loginProgress.fill.style.width = '0%';
+            loginProgress.pct.textContent = '0%';
+            loginProgress.el.classList.remove('active', 'done', 'error');
+            document.getElementById('btnEntrar').disabled = false;
+
+            saveProgress.init();
+            saveProgress.hide(0);
+
+            if (motivo) {
+                mostrarToast(motivo, 'info');
+            } else if (manual) {
+                mostrarToast('👋 Você saiu do sistema.', 'info');
+            }
+        }
+
+        function imprimirRelatorioModal() {
+            const conteudo = document.getElementById('modalRelatorioContent');
+            if (conteudo) {
+                const janela = window.open('', '_blank');
+                janela.document.write(`<html><head><title>Relatório</title></head><body>${conteudo.innerHTML}</body></html>`);
+                janela.document.close();
+                janela.print();
+            }
+        }
+
+        // ============================================
+        // INICIALIZAÇÃO
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            loginProgress.init();
+            saveProgress.init();
+
+            const hoje = new Date();
+            const dataHoje = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+            const dataPresenca = document.getElementById('dataPresenca');
+            const dataObs = document.getElementById('dataObservacao');
+            if (dataPresenca) dataPresenca.value = dataHoje;
+            if (dataObs) dataObs.value = dataHoje;
+
+            // Verifica sessão salva
+            const sess = lerSessao();
+            if (sess) {
+                currentUser.cargo = sess.cargo;
+                currentUser.nome = sess.nome;
+                currentUser.cursos = sess.cursos || [];
+                currentUser.token = sess.token;
+                currentUser.expiraEm = sess.expiraEm || 0;
+                window.__restaurarSessaoPendente = true;
+                console.log('[sessão] restaurando sessão para', sess.nome);
+            }
+
+            // Inicia carregamento
+            setTimeout(() => { carregarDadosPlanilha(); }, 300);
+        });
+    </script>
+</body>
+</html>
