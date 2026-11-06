@@ -166,13 +166,6 @@ tbody tr:hover { background: #f7fafc; }
 .aluno-hero h2 { font-size: 1.8em; margin-bottom: 5px; }
 .aluno-hero p { opacity: 0.9; font-size: 0.95em; }
 
-.restore-banner {
-  position: fixed; top: 0; left: 0; right: 0;
-  background: #ebf8ff; border-bottom: 2px solid #4299e1;
-  padding: 10px 20px; text-align: center; font-size: 0.9em;
-  color: #2c5282; z-index: 11000; font-weight: 600;
-}
-
 @media (max-width: 768px) {
   .header { flex-direction: column; text-align: center; }
   .dashboard-header { flex-direction: column; align-items: flex-start; }
@@ -911,6 +904,7 @@ const SHEET_CONFIG = {
   }
 };
 
+// ⚠️ ATUALIZE COM A URL ATUAL DA SUA IMPLANTAÇÃO (termina em /exec)
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
 
 const CURSOS = [
@@ -965,9 +959,7 @@ function normalizarNome(v) {
     .trim();
 }
 
-function nomesIguais(a, b) {
-  return normalizarNome(a) === normalizarNome(b);
-}
+function nomesIguais(a, b) { return normalizarNome(a) === normalizarNome(b); }
 
 function getColuna(obj, ...nomes) {
   if (!obj) return '';
@@ -1056,7 +1048,6 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-/* NORMALIZAÇÃO ROBUSTA DE CURSO */
 function normalizarCursoId(raw) {
   if (!raw) return '';
   let r = texto(raw).toLowerCase().trim();
@@ -1115,20 +1106,29 @@ function extrairCursosDoProfessor(prof) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ============================================
-// GAS — JSON text/plain (SEM charset — evita preflight/CORS)
+// GAS — envio SEM preflight CORS (text/plain)
 // ============================================
 async function enviarParaGAS(acao, payload) {
   const corpo = { acao, payload: { ...payload, token: currentUser.token || undefined } };
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },   // SEM charset
+      mode: 'cors',
+      redirect: 'follow',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(corpo)
     });
-    return await res.json();
-  } catch (error) {
-    console.error('Erro GAS:', error);
-    return { success: false, error: error.message };
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    if (text.indexOf('accounts.google.com') !== -1) {
+      throw new Error('O Web App não está público. Reimplante com "Quem tem acesso: Qualquer pessoa".');
+    }
+    try { return JSON.parse(text); }
+    catch (e) { throw new Error('Resposta não-JSON do GAS: ' + text.substring(0, 200)); }
+  } catch (err) {
+    console.error('GAS fetch falhou:', err);
+    return { success: false, error: err.message };
   }
 }
 
@@ -1142,9 +1142,7 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
 
     const reader = new FileReader();
     reader.onprogress = (ev) => {
-      if (ev.lengthComputable && onProgress) {
-        onProgress(Math.min(20, Math.round((ev.loaded / ev.total) * 20)));
-      }
+      if (ev.lengthComputable && onProgress) onProgress(Math.min(20, Math.round((ev.loaded / ev.total) * 20)));
     };
     reader.onerror = () => reject(new Error('Falha ao ler o arquivo no navegador'));
     reader.onload = () => {
@@ -1153,7 +1151,7 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
         const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
         if (!base64) { reject(new Error('Não foi possível converter o arquivo')); return; }
 
-        const payload = {
+        const body = JSON.stringify({
           acao: 'uploadArquivo',
           payload: {
             token: campos.token || '',
@@ -1165,12 +1163,11 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
             mimeType: file.type || 'application/octet-stream',
             file: base64
           }
-        };
-        const body = JSON.stringify(payload);
+        });
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', GAS_URL, true);
-        xhr.setRequestHeader('Content-Type', 'text/plain');   // SEM charset
+        xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
         xhr.upload.onprogress = (ev) => {
           if (ev.lengthComputable && onProgress) {
             const pct = 20 + Math.round((ev.loaded / ev.total) * 75);
@@ -1178,15 +1175,19 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
           }
         };
         xhr.onload = () => {
+          if (xhr.status < 200 || xhr.status >= 300) { reject(new Error('HTTP ' + xhr.status)); return; }
+          const txt = xhr.responseText || '';
+          if (txt.indexOf('accounts.google.com') !== -1) {
+            reject(new Error('O Web App não está público. Reimplante como "Qualquer pessoa".'));
+            return;
+          }
           try {
-            const json = JSON.parse(xhr.responseText);
+            const json = JSON.parse(txt);
             if (json && json.success) { if (onProgress) onProgress(100); resolve(json); }
             else reject(new Error((json && json.error) || 'Falha no upload'));
-          } catch (e) {
-            reject(new Error('Resposta inválida do servidor: ' + xhr.responseText.substring(0, 200)));
-          }
+          } catch (e) { reject(new Error('Resposta inválida: ' + txt.substring(0, 200))); }
         };
-        xhr.onerror = () => reject(new Error('Erro de rede no upload'));
+        xhr.onerror = () => reject(new Error('Erro de rede no upload (CORS ou offline)'));
         xhr.ontimeout = () => reject(new Error('Timeout no upload'));
         xhr.timeout = 180000;
 
@@ -1201,8 +1202,8 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
 // ============================================
 // SESSÃO
 // ============================================
-const SESSION_KEY = 'escolaMusica.session.v5';
-const ACTIVITY_KEY = 'escolaMusica.lastActivity.v5';
+const SESSION_KEY = 'escolaMusica.session.v6';
+const ACTIVITY_KEY = 'escolaMusica.lastActivity.v6';
 const INATIVIDADE_MS = 60 * 60 * 1000;
 
 function salvarSessao() {
@@ -1860,7 +1861,6 @@ function notificacoesDoAluno() {
   if (!aluno) return [];
   const lista = [];
 
-  // Notificações registradas no backend (NOTIFICACOES)
   (db.notificacoes || []).filter(n => nomesIguais(n.aluno, aluno)).forEach(n => {
     lista.push({
       tipo: n.tipo || 'geral',
@@ -1873,7 +1873,6 @@ function notificacoesDoAluno() {
     });
   });
 
-  // Fallback: se a aba NOTIFICACOES estiver vazia, deriva das outras abas
   if (lista.length === 0) {
     db.avaliacoes.filter(a => nomesIguais(a.aluno, aluno)).forEach(a => {
       lista.push({ tipo:'nota', titulo:`Nova nota em ${labelCurso(a.curso)}`, descricao:`${a.bimestre}º Bimestre: ${a.nota.toFixed(1)} — Prof. ${a.professor || '-'}`, data: a.dataLancamento || '', lida: false, curso: a.curso, id:`nota_${a.curso}_${a.bimestre}` });
@@ -2616,7 +2615,7 @@ async function enviarRelatorioCoordenacao() {
 }
 
 // ============================================
-// COMUNICAÇÃO DO PROFESSOR (UPLOAD + MENSAGENS)
+// COMUNICAÇÃO DO PROFESSOR
 // ============================================
 function carregarDestinatariosComunicacao() {
   if (!cursoSelecionado) return;
@@ -3290,9 +3289,12 @@ async function logout(manual = true, motivo = null) {
   limparSessao();
   if (tk) {
     try {
-      fetch(GAS_URL, {
-        method:'POST',
-        headers:{'Content-Type':'text/plain'},   // SEM charset
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'cors',
+        redirect: 'follow',
+        keepalive: true,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ acao: 'logout', payload: { token: tk } })
       }).catch(() => {});
     } catch (e) {}
