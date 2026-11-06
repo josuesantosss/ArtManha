@@ -166,17 +166,71 @@ tbody tr:hover { background: #f7fafc; }
 .aluno-hero h2 { font-size: 1.8em; margin-bottom: 5px; }
 .aluno-hero p { opacity: 0.9; font-size: 0.95em; }
 
-.restore-banner {
-  position: fixed; top: 0; left: 0; right: 0;
-  background: #ebf8ff; border-bottom: 2px solid #4299e1;
-  padding: 10px 20px; text-align: center; font-size: 0.9em;
-  color: #2c5282; z-index: 11000; font-weight: 600;
-}
-
 @media (max-width: 768px) {
   .header { flex-direction: column; text-align: center; }
   .dashboard-header { flex-direction: column; align-items: flex-start; }
 }
+
+/* Notificações */
+.notif-btn { position: relative; background: #edf2f7; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.notif-btn:hover { background: #e2e8f0; }
+.notif-btn .notif-badge { position: absolute; top: -4px; right: -4px; background: #f56565; color: white; min-width: 20px; height: 20px; border-radius: 10px; font-size: 0.7em; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid white; }
+.notif-btn .notif-badge.hidden { display: none; }
+.notif-panel { position: fixed; top: 80px; right: 20px; width: 380px; max-width: calc(100vw - 40px); max-height: 70vh; background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); z-index: 11500; display: none; flex-direction: column; overflow: hidden; animation: notifIn 0.25s ease; }
+.notif-panel.active { display: flex; }
+@keyframes notifIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.notif-header { padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f7fafc; }
+.notif-header h4 { color: #2d3748; font-size: 1em; }
+.notif-header button { background: none; border: none; color: #4299e1; font-size: 0.85em; cursor: pointer; font-weight: 600; }
+.notif-list { overflow-y: auto; flex: 1; }
+.notif-item { padding: 12px 20px; border-bottom: 1px solid #edf2f7; cursor: pointer; transition: background 0.15s; display: flex; gap: 12px; }
+.notif-item:hover { background: #f7fafc; }
+.notif-item.nao-lida { background: #ebf8ff; }
+.notif-item .notif-icon { font-size: 1.3em; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #edf2f7; }
+.notif-item .notif-icon.tipo-nota { background: #feebc8; }
+.notif-item .notif-icon.tipo-arquivo { background: #bee3f8; }
+.notif-item .notif-icon.tipo-mensagem { background: #e9d8fd; }
+.notif-item .notif-icon.tipo-geral { background: #c6f6d5; }
+.notif-item .notif-body { flex: 1; min-width: 0; }
+.notif-item .notif-title { font-weight: 600; color: #2d3748; font-size: 0.9em; }
+.notif-item .notif-desc { color: #718096; font-size: 0.82em; margin-top: 2px; word-wrap: break-word; }
+.notif-item .notif-time { color: #a0aec0; font-size: 0.75em; margin-top: 4px; }
+.notif-empty { padding: 40px 20px; text-align: center; color: #a0aec0; font-size: 0.9em; }
+
+/* Comunicação do professor */
+.prof-comunicacao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 800px) { .prof-comunicacao-grid { grid-template-columns: 1fr; } }
+.comunicacao-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
+.comunicacao-card h4 { color: #2d3748; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.file-drop { border: 2px dashed #cbd5e0; border-radius: 10px; padding: 20px; text-align: center; color: #718096; cursor: pointer; transition: all 0.2s; background: white; }
+.file-drop:hover, .file-drop.dragover { border-color: #667eea; background: #ebf8ff; color: #4c51bf; }
+.file-drop .file-icon { font-size: 2em; margin-bottom: 6px; }
+.file-drop input[type="file"] { display: none; }
+.file-preview { margin-top: 10px; padding: 8px 12px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.file-preview .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-preview button { background: #fed7d7; color: #c53030; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; }
+
+.inline-progress { margin-top: 12px; display: none; }
+.inline-progress.active { display: block; }
+.inline-progress-label { font-size: 0.8em; color: #4a5568; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.inline-progress-label .pct { color: #667eea; font-weight: 700; }
+.inline-progress-track { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.inline-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.25s; border-radius: 999px; }
+.inline-progress.done .inline-progress-fill { background: linear-gradient(90deg, #48bb78, #38a169); }
+.inline-progress.error .inline-progress-fill { background: linear-gradient(90deg, #f56565, #e53e3e); }
+
+.msg-historico { margin-top: 18px; }
+.msg-historico h5 { color: #4a5568; font-size: 0.9em; margin-bottom: 10px; }
+.msg-item { background: white; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; border-left: 3px solid #9f7aea; font-size: 0.88em; }
+.msg-item .msg-meta { color: #a0aec0; font-size: 0.78em; margin-top: 4px; }
+
+.arquivo-item { display: flex; align-items: center; gap: 10px; background: white; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; border-left: 3px solid #4299e1; font-size: 0.88em; }
+.arquivo-item .arquivo-icone { font-size: 1.4em; }
+.arquivo-item .arquivo-info { flex: 1; min-width: 0; }
+.arquivo-item .arquivo-nome { font-weight: 600; color: #2d3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arquivo-item .arquivo-meta { color: #a0aec0; font-size: 0.78em; margin-top: 2px; }
+.arquivo-item a { color: #3182ce; font-weight: 600; text-decoration: none; font-size: 0.85em; }
+.arquivo-item a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -198,6 +252,14 @@ tbody tr:hover { background: #f7fafc; }
   </div>
 </div>
 
+<div id="notifPanel" class="notif-panel">
+  <div class="notif-header">
+    <h4>🔔 Notificações</h4>
+    <button onclick="marcarTodasNotificacoesLidas()">Marcar todas como lidas</button>
+  </div>
+  <div class="notif-list" id="notifList"></div>
+</div>
+
 <div class="container">
   <div class="header">
     <div>
@@ -207,7 +269,6 @@ tbody tr:hover { background: #f7fafc; }
     <div class="badge-google">📊 Integrado com Google Sheets</div>
   </div>
 
-  <!-- LOGIN -->
   <div id="loginContainer" class="login-container">
     <h2>🔐 Acesso ao Sistema</h2>
     <div class="login-info">
@@ -249,7 +310,6 @@ tbody tr:hover { background: #f7fafc; }
     </div>
   </div>
 
-  <!-- DASHBOARD -->
   <div id="dashboard" class="dashboard">
     <div class="dashboard-header">
       <div>
@@ -258,6 +318,9 @@ tbody tr:hover { background: #f7fafc; }
       </div>
       <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
         <span id="syncStatus" class="sync-status synced">✅ Sincronizado</span>
+        <button id="notifBtn" class="notif-btn" onclick="toggleNotifPanel()" title="Notificações" style="display:none;">
+          🔔<span class="notif-badge hidden" id="notifBadge">0</span>
+        </button>
         <button onclick="carregarDadosPlanilha()" class="btn btn-secondary btn-small">🔄 Recarregar</button>
         <button onclick="logout(true)" class="btn-logout">🚪 Sair</button>
       </div>
@@ -265,7 +328,6 @@ tbody tr:hover { background: #f7fafc; }
 
     <div id="cardsContainer" class="cards-grid"></div>
 
-    <!-- SECRETARIA -->
     <div id="secretariaArea" class="hidden">
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
         <button class="toggle-btn active" onclick="toggleSecretaria('dashboard', event)">📊 Dashboard</button>
@@ -373,7 +435,6 @@ tbody tr:hover { background: #f7fafc; }
         <div id="relatorioSecretariaOutput" style="margin-top: 20px;"><p style="color:#718096;">Clique em um botão acima.</p></div>
       </div>
 
-      <!-- MODAIS SECRETARIA -->
       <div id="modalCadastroAluno" class="modal-overlay">
         <div class="modal-content">
           <span class="modal-close" onclick="fecharModal('modalCadastroAluno')">&times;</span>
@@ -502,7 +563,6 @@ tbody tr:hover { background: #f7fafc; }
       </div>
     </div>
 
-    <!-- PROFESSOR -->
     <div id="professorArea" class="hidden">
       <div id="cursosSection" class="hidden">
         <h3 style="margin-top: 30px; color: #2d3748;">🎵 Meus Cursos</h3>
@@ -516,6 +576,7 @@ tbody tr:hover { background: #f7fafc; }
             <button class="toggle-btn" onclick="toggleSection('presencas', event)">✅ Presenças</button>
             <button class="toggle-btn" onclick="toggleSection('observacoes', event)">✏️ Observações</button>
             <button class="toggle-btn" onclick="toggleSection('relatorios', event)">📄 Relatórios</button>
+            <button class="toggle-btn" onclick="toggleSection('comunicacao', event)">📎 Materiais e Mensagens</button>
           </div>
 
           <div id="section-notas" class="toggle-section">
@@ -586,11 +647,67 @@ tbody tr:hover { background: #f7fafc; }
             </div>
             <div style="margin-top: 20px;"><h4>📄 Relatórios Enviados</h4><div id="relatoriosEnviados" class="registros-list"></div></div>
           </div>
+
+          <div id="section-comunicacao" class="toggle-section hidden">
+            <div class="prof-comunicacao-grid">
+              <div class="comunicacao-card">
+                <h4>📎 Enviar Arquivo para Alunos</h4>
+                <div class="form-group">
+                  <label>Aluno(s) destinatário(s)</label>
+                  <select id="uploadDestinatarios" multiple size="4" style="min-height:90px;">
+                    <option value="__TODOS__">👥 Todos os alunos do curso</option>
+                  </select>
+                  <small style="color:#718096;font-size:0.8em;">Segure Ctrl/Cmd para selecionar vários.</small>
+                </div>
+                <div class="file-drop" id="fileDropZone" onclick="document.getElementById('uploadFileInput').click()">
+                  <div class="file-icon">📁</div>
+                  <div>Clique ou arraste um arquivo aqui</div>
+                  <div style="font-size:0.8em;margin-top:4px;">PDF, imagem, áudio, partitura, etc. (máx. 20MB)</div>
+                  <input type="file" id="uploadFileInput" onchange="selecionarArquivoUpload(event)">
+                </div>
+                <div id="filePreview" style="display:none;"></div>
+                <div class="form-group" style="margin-top:12px;">
+                  <label>Mensagem (opcional)</label>
+                  <textarea id="uploadMensagem" rows="2" placeholder="Ex.: Segue a partitura da aula..."></textarea>
+                </div>
+                <button onclick="enviarArquivoUpload()" class="btn btn-secondary btn-small" id="btnEnviarArquivo" disabled>📤 Enviar Arquivo</button>
+                <div class="inline-progress" id="uploadProgress">
+                  <div class="inline-progress-label"><span id="uploadProgressLabel">Enviando...</span><span class="pct" id="uploadProgressPct">0%</span></div>
+                  <div class="inline-progress-track"><div class="inline-progress-fill" id="uploadProgressFill"></div></div>
+                </div>
+                <div class="msg-historico" id="arquivosEnviadosHistorico"></div>
+              </div>
+
+              <div class="comunicacao-card">
+                <h4>💬 Enviar Mensagem para Aluno(s)</h4>
+                <div class="form-group">
+                  <label>Destinatário(s)</label>
+                  <select id="msgDestinatarios" multiple size="4" style="min-height:90px;">
+                    <option value="__TODOS__">👥 Todos os alunos do curso</option>
+                  </select>
+                  <small style="color:#718096;font-size:0.8em;">Segure Ctrl/Cmd para selecionar vários.</small>
+                </div>
+                <div class="form-group">
+                  <label>Assunto</label>
+                  <input type="text" id="msgAssunto" placeholder="Ex.: Aviso importante sobre a aula">
+                </div>
+                <div class="form-group">
+                  <label>Mensagem *</label>
+                  <textarea id="msgTexto" rows="5" placeholder="Digite sua mensagem..."></textarea>
+                </div>
+                <button onclick="enviarMensagemAluno()" class="btn btn-info btn-small" id="btnEnviarMensagem">💬 Enviar Mensagem</button>
+                <div class="inline-progress" id="msgProgress">
+                  <div class="inline-progress-label"><span id="msgProgressLabel">Enviando...</span><span class="pct" id="msgProgressPct">0%</span></div>
+                  <div class="inline-progress-track"><div class="inline-progress-fill" id="msgProgressFill"></div></div>
+                </div>
+                <div class="msg-historico" id="mensagensEnviadasHistorico"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- COORDENAÇÃO -->
     <div id="coordenadorArea" class="hidden">
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
         <button class="toggle-btn active" onclick="toggleCoordenacao('visao', event)">📊 Visão por Curso</button>
@@ -629,7 +746,6 @@ tbody tr:hover { background: #f7fafc; }
       </div>
     </div>
 
-    <!-- DIREÇÃO -->
     <div id="direcaoArea" class="hidden">
       <div class="section-container">
         <h3>📊 Painel Gerencial</h3>
@@ -645,7 +761,6 @@ tbody tr:hover { background: #f7fafc; }
       </div>
     </div>
 
-    <!-- FINANCEIRO -->
     <div id="financeiroArea" class="hidden">
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
         <button class="toggle-btn active" onclick="toggleFinanceiro('dashboard', event)">💰 Pagamentos</button>
@@ -675,7 +790,6 @@ tbody tr:hover { background: #f7fafc; }
       </div>
     </div>
 
-    <!-- ALUNO -->
     <div id="alunoArea" class="hidden">
       <div id="alunoHero" class="aluno-hero">
         <h2 id="alunoHeroNome">🎓 Olá, Aluno!</h2>
@@ -688,6 +802,7 @@ tbody tr:hover { background: #f7fafc; }
         <button class="toggle-btn" onclick="toggleAluno('frequencia', event)">✅ Frequência</button>
         <button class="toggle-btn" onclick="toggleAluno('conteudos', event)">📚 Conteúdos</button>
         <button class="toggle-btn" onclick="toggleAluno('relatorios', event)">📄 Relatórios</button>
+        <button class="toggle-btn" onclick="toggleAluno('materiais', event)">📎 Materiais e Mensagens</button>
         <button class="toggle-btn" onclick="toggleAluno('dados', event)">👤 Meus Dados</button>
       </div>
 
@@ -731,6 +846,24 @@ tbody tr:hover { background: #f7fafc; }
         <div id="alunoListaRelatorios" class="registros-list"></div>
       </div>
 
+      <div id="aluno-materiais" class="section-container hidden">
+        <h3>📎 Materiais e Mensagens dos Professores</h3>
+        <div class="prof-comunicacao-grid">
+          <div class="comunicacao-card">
+            <h4>📁 Arquivos Recebidos</h4>
+            <div id="alunoListaArquivos" class="registros-list">
+              <p style="color:#718096;">Nenhum arquivo recebido.</p>
+            </div>
+          </div>
+          <div class="comunicacao-card">
+            <h4>💬 Mensagens Recebidas</h4>
+            <div id="alunoListaMensagens" class="registros-list">
+              <p style="color:#718096;">Nenhuma mensagem recebida.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="aluno-dados" class="section-container hidden">
         <h3>👤 Meus Dados</h3>
         <div class="relatorio-content">
@@ -757,7 +890,8 @@ const SHEET_CONFIG = {
   abas: {
     alunos: 'ALUNOS', matriculas: 'MATRICULAS', professores: 'PROFESSORES',
     avaliacoes: 'AVALIACOES', presencas: 'PRESENCAS', conteudos: 'CONTEUDOS',
-    observacoes: 'OBSERVACOES', relatorios: 'RELATORIOS'
+    observacoes: 'OBSERVACOES', relatorios: 'RELATORIOS',
+    notificacoes: 'NOTIFICACOES', arquivos: 'ARQUIVOS', mensagens: 'MENSAGENS'
   }
 };
 
@@ -793,12 +927,13 @@ CURSOS.forEach(c => { CURSOS_MAP[c.id] = c; });
 // ============================================
 // ESTADO
 // ============================================
-let dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [] };
+let dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [], notificacoes: [], arquivos: [], mensagens: [] };
 let escolaData = { alunos: [], professores: [], cursos: CURSOS };
-let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [] };
+let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [], notificacoes: [], arquivos: [], mensagens: [] };
 let currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
 let cursoSelecionado = null;
 let dadosAluno = null;
+let arquivoUploadSelecionado = null;
 
 // ============================================
 // HELPERS
@@ -814,9 +949,7 @@ function normalizarNome(v) {
     .trim();
 }
 
-function nomesIguais(a, b) {
-  return normalizarNome(a) === normalizarNome(b);
-}
+function nomesIguais(a, b) { return normalizarNome(a) === normalizarNome(b); }
 
 function getColuna(obj, ...nomes) {
   if (!obj) return '';
@@ -878,6 +1011,11 @@ function getDataAtualFormatada() {
   return `${String(h.getDate()).padStart(2,'0')}-${String(h.getMonth()+1).padStart(2,'0')}-${h.getFullYear()}`;
 }
 
+function getDataHoraAtual() {
+  const h = new Date();
+  return `${String(h.getDate()).padStart(2,'0')}-${String(h.getMonth()+1).padStart(2,'0')}-${h.getFullYear()} ${String(h.getHours()).padStart(2,'0')}:${String(h.getMinutes()).padStart(2,'0')}`;
+}
+
 function mostrarToast(msg, tipo = 'success') {
   const t = document.createElement('div');
   t.className = `toast toast-${tipo}`;
@@ -894,100 +1032,57 @@ function labelCurso(id) {
   return CURSOS_MAP[id] ? CURSOS_MAP[id].nome : id;
 }
 
-/* ============================================================
-   NORMALIZAÇÃO ROBUSTA DE CURSO
-   - Aceita: ID (violao), nome exibido (🎸 Violão), nome sem emoji
-     (violão), maiúsculas/minúsculas, acentos.
-   ============================================================ */
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function normalizarCursoId(raw) {
   if (!raw) return '';
   let r = texto(raw).toLowerCase().trim();
   if (!r) return '';
-  // remove emojis, acentos, pontuação
   r = r.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
        .replace(/[^\w\s\-]/g, ' ')
-       .replace(/\s+/g, ' ')
-       .trim();
+       .replace(/\s+/g, ' ').trim();
   if (!r) return '';
-
-  // 1) Já é um ID válido
   if (CURSOS_MAP[r]) return r;
-
-  // 2) Aliases
   const aliases = {
-    'viola': 'viola-erudita',
-    'viola erudita': 'viola-erudita',
-    'contrabaixo': 'contrabaixo-acustico',
-    'contrabaixo acustico': 'contrabaixo-acustico',
-    'teoria': 'teoria-musical1',
-    'teoria musical': 'teoria-musical1',
-    'teoria musical 1': 'teoria-musical1',
-    'teoria musical 2': 'teoria-musical2',
+    'viola': 'viola-erudita', 'viola erudita': 'viola-erudita',
+    'contrabaixo': 'contrabaixo-acustico', 'contrabaixo acustico': 'contrabaixo-acustico',
+    'teoria': 'teoria-musical1', 'teoria musical': 'teoria-musical1',
+    'teoria musical 1': 'teoria-musical1', 'teoria musical 2': 'teoria-musical2',
     'teoria-musical': 'teoria-musical1',
-    'musicalizacao': 'musicalizacao-infantil',
-    'musicalizacao infantil': 'musicalizacao-infantil',
-    'euphonio': 'euphonio',
-    'eufonio': 'euphonio',
-    'orgao': 'orgao'
+    'musicalizacao': 'musicalizacao-infantil', 'musicalizacao infantil': 'musicalizacao-infantil',
+    'euphonio': 'euphonio', 'eufonio': 'euphonio', 'orgao': 'orgao'
   };
   if (aliases[r]) return aliases[r];
-
-  // 3) Compara com nome exibido normalizado (sem emoji)
   for (const c of CURSOS) {
     const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^\w\s\-]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .toLowerCase();
+      .replace(/\s+/g, ' ').trim().toLowerCase();
     if (nomeLimpo === r) return c.id;
   }
   return r;
 }
 
-/* ============================================================
-   EXTRAÇÃO DE CURSOS DE UM PROFESSOR (coluna D da aba PROFESSORES)
-   - Suporta separadores: vírgula, ponto e vírgula, barra, pipe
-   - Suporta nomes compostos (Teoria Musical 1)
-   - Remove ruído ("Instrumento", "Teoria Musical", "Musicalização")
-     somente quando o texto for EXATAMENTE esse tipo (não quando for
-     parte de "Teoria Musical 1", por exemplo).
-   ============================================================ */
 function extrairCursosDoProfessor(prof) {
   if (!prof) return [];
-  // Junta os campos que podem conter cursos: 'curso' (coluna D) e 'tipo'
   const partes = [];
-  const bruto = [
-    prof.curso || '',
-    prof.cursos || '',
-    prof.tipo || ''
-  ].join(' | ');
-
+  const bruto = [prof.curso || '', prof.cursos || '', prof.tipo || ''].join(' | ');
   if (!bruto.trim()) return [];
-
-  // Divide por separadores comuns
   const pedacos = bruto
     .replace(/[\r\n]+/g, ',')
     .replace(/[;|/\\]+/g, ',')
     .replace(/\s+(?:e|E|\+|&)\s+/g, ',')
-    .split(/,+/)
-    .map(p => p.trim())
-    .filter(Boolean);
-
-  const ruido = new Set([
-    'instrumento', 'teoria musical', 'musicalizacao', 'musicalização'
-  ]);
-
+    .split(/,+/).map(p => p.trim()).filter(Boolean);
+  const ruido = new Set(['instrumento', 'teoria musical', 'musicalizacao', 'musicalização']);
   for (const p of pedacos) {
-    const norm = p
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s\-]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const norm = p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s\-]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!norm) continue;
-    // Só ignora se for exatamente um rótulo genérico (não "Teoria Musical 1")
     if (ruido.has(norm)) continue;
     const id = normalizarCursoId(p);
     if (id && CURSOS_MAP[id]) partes.push(id);
@@ -998,18 +1093,24 @@ function extrairCursosDoProfessor(prof) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ============================================
-// GAS
+// GAS — chamada JSON (text/plain EXATO, sem CORS)
+// ✅ CORRIGIDO: 'text/plain' SEM charset
 // ============================================
 async function enviarParaGAS(acao, payload) {
   const corpo = { acao, payload: { ...payload, token: currentUser.token || undefined } };
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(corpo)
+      headers: { 'Content-Type': 'text/plain' },   // ✅ EXATO — sem charset
+      body: JSON.stringify(corpo),
+      redirect: 'follow'
     });
-    const json = await res.json();
-    return json;
+    const text = await res.text();
+    if (text.indexOf('accounts.google.com') !== -1) {
+      throw new Error('Web App não está público. Reimplante com "Quem tem acesso: Qualquer pessoa".');
+    }
+    try { return JSON.parse(text); }
+    catch (e) { throw new Error('Resposta não-JSON do GAS: ' + text.substring(0, 200)); }
   } catch (error) {
     console.error('Erro GAS:', error);
     return { success: false, error: error.message };
@@ -1017,10 +1118,76 @@ async function enviarParaGAS(acao, payload) {
 }
 
 // ============================================
-// SESSÃO (PERSISTENTE)
+// UPLOAD sem CORS: base64 + text/plain EXATO
+// ✅ CORRIGIDO: 'text/plain' SEM charset
 // ============================================
-const SESSION_KEY = 'escolaMusica.session.v4';
-const ACTIVITY_KEY = 'escolaMusica.lastActivity.v4';
+function uploadArquivoComProgresso(file, campos, onProgress) {
+  return new Promise((resolve, reject) => {
+    const MAX = 20 * 1024 * 1024;
+    if (file.size > MAX) { reject(new Error('Arquivo maior que 20 MB')); return; }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Falha ao ler o arquivo'));
+    reader.onload = () => {
+      try {
+        const dataUrl = String(reader.result || '');
+        const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+        if (!base64) { reject(new Error('Falha na conversão base64')); return; }
+
+        const body = JSON.stringify({
+          acao: 'uploadArquivo',
+          payload: {
+            token: campos.token || '',
+            professor: campos.professor || '',
+            curso: campos.curso || '',
+            destinatarios: campos.destinatarios || '[]',
+            mensagem: campos.mensagem || '',
+            nomeArquivo: file.name,
+            mimeType: file.type || 'application/octet-stream',
+            file: base64
+          }
+        });
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', GAS_URL, true);
+        xhr.setRequestHeader('Content-Type', 'text/plain');
+        
+        // ❌ REMOVIDO: xhr.upload.onprogress — era isso que causava o preflight
+        
+        xhr.onload = () => {
+          const txt = xhr.responseText || '';
+          if (txt.indexOf('accounts.google.com') !== -1) {
+            reject(new Error('Web App não está público. Reimplante como "Qualquer pessoa".'));
+            return;
+          }
+          try {
+            const json = JSON.parse(txt);
+            if (json && json.success) { 
+              if (onProgress) onProgress(100); 
+              resolve(json); 
+            } else {
+              reject(new Error((json && json.error) || 'Falha no upload'));
+            }
+          } catch (e) {
+            reject(new Error('Resposta inválida: ' + txt.substring(0, 200)));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Erro de rede no upload'));
+        xhr.ontimeout = () => reject(new Error('Timeout no upload'));
+        xhr.timeout = 180000;
+
+        if (onProgress) onProgress(30); // progresso simbólico
+        xhr.send(body);
+      } catch (err) { reject(err); }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+// ============================================
+// SESSÃO
+// ============================================
+const SESSION_KEY = 'escolaMusica.session.v5';
+const ACTIVITY_KEY = 'escolaMusica.lastActivity.v5';
 const INATIVIDADE_MS = 60 * 60 * 1000;
 
 function salvarSessao() {
@@ -1033,35 +1200,20 @@ function salvarSessao() {
     localStorage.setItem(ACTIVITY_KEY, String(Date.now()));
   } catch (e) {}
 }
-
 function lerSessao() {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s || !s.perfil || !s.token) return null;
-    if (s.expiraEm && Date.now() > s.expiraEm) {
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(ACTIVITY_KEY);
-      return null;
-    }
+    if (s.expiraEm && Date.now() > s.expiraEm) { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(ACTIVITY_KEY); return null; }
     const ultima = Number(localStorage.getItem(ACTIVITY_KEY) || 0);
-    if (ultima > 0 && Date.now() - ultima >= INATIVIDADE_MS) {
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(ACTIVITY_KEY);
-      return null;
-    }
+    if (ultima > 0 && Date.now() - ultima >= INATIVIDADE_MS) { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(ACTIVITY_KEY); return null; }
     return s;
   } catch (e) { return null; }
 }
-
-function limparSessao() {
-  try { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(ACTIVITY_KEY); } catch (e) {}
-}
-
-function registrarAtividade() {
-  try { localStorage.setItem(ACTIVITY_KEY, String(Date.now())); } catch (e) {}
-}
+function limparSessao() { try { localStorage.removeItem(SESSION_KEY); localStorage.removeItem(ACTIVITY_KEY); } catch (e) {} }
+function registrarAtividade() { try { localStorage.setItem(ACTIVITY_KEY, String(Date.now())); } catch (e) {} }
 
 // ============================================
 // TIMER DE INATIVIDADE
@@ -1085,14 +1237,12 @@ const inactivityTimer = {
     if (!currentUser.token) return;
     const ultima = Number(localStorage.getItem(ACTIVITY_KEY) || 0);
     const inativoHa = ultima > 0 ? (Date.now() - ultima) : (Date.now() - (currentUser._loginEm || Date.now()));
-    if (inativoHa >= INATIVIDADE_MS) {
-      logout(false, '⏰ Sessão expirada por inatividade (60 minutos).');
-    }
+    if (inativoHa >= INATIVIDADE_MS) logout(false, '⏰ Sessão expirada por inatividade (60 minutos).');
   }
 };
 
 // ============================================
-// PROGRESSO
+// PROGRESSO GLOBAL
 // ============================================
 const saveProgress = {
   el: null, fill: null, pct: null, msg: null, step: null, title: null, sub: null, icon: null,
@@ -1120,18 +1270,8 @@ const saveProgress = {
     if (stepText !== undefined) this.step.textContent = stepText;
     if (message !== undefined) this.msg.textContent = message;
   },
-  done(msg) {
-    if (!this.el) this.init();
-    this.el.classList.add('done'); this.icon.textContent = '✅';
-    this.set(100, 'Concluído!', msg || 'Operação finalizada.');
-  },
-  error(msg) {
-    if (!this.el) this.init();
-    this.el.classList.add('error'); this.icon.textContent = '❌';
-    this.step.textContent = 'Falha';
-    this.msg.textContent = msg || 'Erro.';
-    this.pct.textContent = '100%'; this.fill.style.width = '100%';
-  },
+  done(msg) { if (!this.el) this.init(); this.el.classList.add('done'); this.icon.textContent = '✅'; this.set(100, 'Concluído!', msg || 'Operação finalizada.'); },
+  error(msg) { if (!this.el) this.init(); this.el.classList.add('error'); this.icon.textContent = '❌'; this.step.textContent = 'Falha'; this.msg.textContent = msg || 'Erro.'; this.pct.textContent = '100%'; this.fill.style.width = '100%'; },
   hide(delay = 700) {
     if (!this.el) this.init();
     setTimeout(() => {
@@ -1143,19 +1283,13 @@ const saveProgress = {
 
 async function executarComProgresso(opts) {
   const { titulo = 'Salvando...', subtitulo = 'Por favor, não feche.', etapas = [
-    { pct: 10, label: 'Validando...' },
-    { pct: 35, label: 'Enviando...' },
-    { pct: 65, label: 'Gravando...' },
-    { pct: 85, label: 'Sincronizando...' },
+    { pct: 10, label: 'Validando...' }, { pct: 35, label: 'Enviando...' },
+    { pct: 65, label: 'Gravando...' }, { pct: 85, label: 'Sincronizando...' },
     { pct: 95, label: 'Finalizando...' }
   ], executar, sucesso = 'Salvo!', erro = 'Falha.' } = opts;
-
   saveProgress.init(); saveProgress.show(titulo, subtitulo);
   try {
-    for (const et of etapas) {
-      saveProgress.set(et.pct, et.label, et.msg || '');
-      await sleep(120 + Math.random() * 120);
-    }
+    for (const et of etapas) { saveProgress.set(et.pct, et.label, et.msg || ''); await sleep(120 + Math.random() * 120); }
     saveProgress.set(70, 'Gravando na planilha...', 'Aguarde...');
     const r = await executar();
     if (r && r.success === false) throw new Error(r.error || erro);
@@ -1177,12 +1311,7 @@ const loginProgress = {
     this.msg = document.getElementById('loginProgressMsg');
     this.label = document.getElementById('loginProgressText');
   },
-  show() {
-    if (!this.el) this.init();
-    this.el.classList.remove('done','error');
-    this.el.classList.add('active');
-    this.set(0, 'Iniciando...', '');
-  },
+  show() { if (!this.el) this.init(); this.el.classList.remove('done','error'); this.el.classList.add('active'); this.set(0, 'Iniciando...', ''); },
   set(p, labelText, message) {
     if (!this.el) this.init();
     const v = Math.max(0, Math.min(100, Math.round(p)));
@@ -1223,9 +1352,7 @@ async function carregarDadosPlanilha() {
     document.getElementById('syncStatus').className = 'sync-status error';
     document.getElementById('syncStatus').textContent = '❌ Erro';
     mostrarToast('❌ Erro ao carregar.', 'error');
-  } finally {
-    loading.classList.remove('active');
-  }
+  } finally { loading.classList.remove('active'); }
 }
 
 async function carregarAbaEspecifica(nomeAba, chave) {
@@ -1244,10 +1371,7 @@ async function carregarAbaEspecifica(nomeAba, chave) {
         return obj;
       });
     } else dadosPlanilha[chave] = [];
-  } catch (e) {
-    console.warn(`Erro em ${nomeAba}:`, e);
-    dadosPlanilha[chave] = [];
-  }
+  } catch (e) { console.warn(`Erro em ${nomeAba}:`, e); dadosPlanilha[chave] = []; }
 }
 
 async function renderAposCarregamento() {
@@ -1264,10 +1388,9 @@ async function renderAposCarregamento() {
         if (cursoSelecionado) {
           document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cursoSelecionado);
           carregarTabelaNotas(); carregarPresenca(); carregarObservacoes(); carregarAlunosSelects(); renderRelatoriosEnviados();
+          carregarDestinatariosComunicacao(); renderHistoricoComunicacao();
         }
-      } else {
-        mostrarToast('⚠️ Professor não encontrado na planilha. Verifique o cadastro.', 'error');
-      }
+      } else mostrarToast('⚠️ Professor não encontrado na planilha.', 'error');
       break;
     }
     case 'coordenacao': renderVisaoCursos(); carregarProfessoresAtribuicao(); renderRelatoriosRecebidos(); renderSelectAcompanhamento(); break;
@@ -1278,10 +1401,9 @@ async function renderAposCarregamento() {
 }
 
 // ============================================
-// BANCO DE DADOS LOCAL (A PARTIR DA PLANILHA)
+// BANCO DE DADOS LOCAL
 // ============================================
 function atualizarBancoDados() {
-  // ALUNOS
   escolaData.alunos = dadosPlanilha.alunos.map(a => ({
     nome: texto(getColuna(a, 'Nome', 'Nome_Aluno', 'Aluno')).toUpperCase(),
     dataNascimento: formatarDataParaExibicao(texto(getColuna(a, 'Data_Nascimento', 'Nascimento'))),
@@ -1290,7 +1412,6 @@ function atualizarBancoDados() {
     status: texto(getColuna(a, 'Status') || 'ATIVO').toUpperCase()
   })).filter(a => a.nome);
 
-  // PROFESSORES — agrupa por nome, preservando cursos da coluna D
   const profMap = {};
   dadosPlanilha.professores.forEach(p => {
     const nome = texto(getColuna(p, 'Nome', 'Professor')).toUpperCase();
@@ -1302,13 +1423,8 @@ function atualizarBancoDados() {
     const telefone = texto(getColuna(p,'Telefone','Tel'));
     const email = texto(getColuna(p,'Email','E-mail'));
     const status = texto(getColuna(p,'Status') || 'ATIVO').toUpperCase();
-
-    if (!profMap[nome]) {
-      profMap[nome] = {
-        id, nome, tipo, curso: cursoBruto, telefone, email, status, valorHora
-      };
-    } else {
-      // concatena cursos adicionais (evita duplicar texto idêntico)
+    if (!profMap[nome]) profMap[nome] = { id, nome, tipo, curso: cursoBruto, telefone, email, status, valorHora };
+    else {
       if (cursoBruto && !profMap[nome].curso.split(',').map(c => c.trim()).includes(cursoBruto.trim())) {
         profMap[nome].curso = (profMap[nome].curso ? profMap[nome].curso + ',' : '') + cursoBruto;
       }
@@ -1317,7 +1433,6 @@ function atualizarBancoDados() {
   });
   escolaData.professores = Object.values(profMap);
 
-  // MATRICULAS
   db.matriculas = dadosPlanilha.matriculas.map(m => ({
     id: texto(getColuna(m, 'ID_Matricula','ID')),
     aluno: texto(getColuna(m,'Aluno')).toUpperCase(),
@@ -1328,7 +1443,6 @@ function atualizarBancoDados() {
     status: texto(getColuna(m,'Status') || 'ATIVO').toUpperCase()
   }));
 
-  // AVALIACOES
   db.avaliacoes = dadosPlanilha.avaliacoes.map(a => ({
     aluno: texto(getColuna(a,'Aluno')).toUpperCase(),
     curso: normalizarCursoId(texto(getColuna(a,'Curso'))),
@@ -1338,7 +1452,6 @@ function atualizarBancoDados() {
     dataLancamento: formatarDataParaExibicao(texto(getColuna(a,'Data_Lancamento')))
   }));
 
-  // PRESENCAS
   db.presencas = {};
   dadosPlanilha.presencas.forEach(p => {
     const curso = normalizarCursoId(texto(getColuna(p,'Curso')));
@@ -1359,7 +1472,6 @@ function atualizarBancoDados() {
     });
   });
 
-  // CONTEUDOS
   db.conteudos = {};
   dadosPlanilha.conteudos.forEach(c => {
     const curso = normalizarCursoId(texto(getColuna(c,'Curso')));
@@ -1373,7 +1485,6 @@ function atualizarBancoDados() {
     });
   });
 
-  // OBSERVACOES
   db.observacoes = {};
   dadosPlanilha.observacoes.forEach(o => {
     const curso = normalizarCursoId(texto(getColuna(o,'Curso')));
@@ -1387,7 +1498,6 @@ function atualizarBancoDados() {
     });
   });
 
-  // RELATORIOS
   db.relatorios = dadosPlanilha.relatorios.map(r => ({
     aluno: texto(getColuna(r,'Aluno')).toUpperCase(),
     curso: normalizarCursoId(texto(getColuna(r,'Curso'))),
@@ -1396,6 +1506,41 @@ function atualizarBancoDados() {
     relatorio: texto(getColuna(r,'Relatorio')),
     data: formatarDataParaExibicao(texto(getColuna(r,'Data'))),
     visto: texto(getColuna(r,'Visto'))
+  }));
+
+  db.notificacoes = (dadosPlanilha.notificacoes || []).map(n => ({
+    id: texto(getColuna(n,'ID')),
+    aluno: texto(getColuna(n,'Aluno')).toUpperCase(),
+    tipo: texto(getColuna(n,'Tipo') || 'geral').toLowerCase(),
+    titulo: texto(getColuna(n,'Titulo','Título')),
+    descricao: texto(getColuna(n,'Descricao','Descrição','Mensagem')),
+    curso: normalizarCursoId(texto(getColuna(n,'Curso'))),
+    professor: texto(getColuna(n,'Professor')).toUpperCase(),
+    lida: texto(getColuna(n,'Lida')).toUpperCase() === 'SIM' || texto(getColuna(n,'Lida')) === 'TRUE',
+    data: texto(getColuna(n,'Data')) || formatarDataParaExibicao(texto(getColuna(n,'Data_ISO')))
+  }));
+
+  db.arquivos = (dadosPlanilha.arquivos || []).map(a => ({
+    id: texto(getColuna(a,'ID')),
+    aluno: texto(getColuna(a,'Aluno')).toUpperCase(),
+    curso: normalizarCursoId(texto(getColuna(a,'Curso'))),
+    professor: texto(getColuna(a,'Professor')).toUpperCase(),
+    nome: texto(getColuna(a,'Nome_Arquivo','Nome')),
+    url: texto(getColuna(a,'URL','Link','Drive_URL')),
+    fileId: texto(getColuna(a,'File_ID','Drive_ID')),
+    mensagem: texto(getColuna(a,'Mensagem')),
+    data: texto(getColuna(a,'Data')) || formatarDataParaExibicao(texto(getColuna(a,'Data_ISO')))
+  }));
+
+  db.mensagens = (dadosPlanilha.mensagens || []).map(m => ({
+    id: texto(getColuna(m,'ID')),
+    aluno: texto(getColuna(m,'Aluno')).toUpperCase(),
+    curso: normalizarCursoId(texto(getColuna(m,'Curso'))),
+    professor: texto(getColuna(m,'Professor')).toUpperCase(),
+    assunto: texto(getColuna(m,'Assunto')),
+    mensagem: texto(getColuna(m,'Mensagem','Texto')),
+    lida: texto(getColuna(m,'Lida')).toUpperCase() === 'SIM' || texto(getColuna(m,'Lida')) === 'TRUE',
+    data: texto(getColuna(m,'Data')) || formatarDataParaExibicao(texto(getColuna(m,'Data_ISO')))
   }));
 }
 
@@ -1429,15 +1574,9 @@ function encontrarAlunoPorNome(nome) {
 function getCursosDoAluno(nomeAluno) {
   if (!nomeAluno) return [];
   const alvo = normalizarNome(nomeAluno);
-  return db.matriculas
-    .filter(m => m.status === 'ATIVO' && normalizarNome(m.aluno) === alvo)
-    .map(m => m.curso)
-    .filter(Boolean);
+  return db.matriculas.filter(m => m.status === 'ATIVO' && normalizarNome(m.aluno) === alvo).map(m => m.curso).filter(Boolean);
 }
 
-/* ============================================================
-   AUXILIARES DE CURSO
-   ============================================================ */
 function getAlunosByCurso(curso) {
   if (!curso) return [];
   return db.matriculas
@@ -1446,36 +1585,23 @@ function getAlunosByCurso(curso) {
     .filter(Boolean);
 }
 
-/* Procura o professor responsável por um curso:
-   1) pelo vínculo explícito (coluna D da aba PROFESSORES)
-   2) pela coluna "Professor" da MATRICULAS (para o curso em questão)
-   3) pela coluna "Professor" de PRESENCAS (para o curso em questão)
-*/
 function getProfessorByCurso(curso) {
   if (!curso) return null;
   const alvo = normalizarCursoId(curso);
-
-  // 1) professoress cadastrados que declaram o curso na coluna D
   let prof = escolaData.professores.find(p => extrairCursosDoProfessor(p).includes(alvo));
   if (prof) return prof;
-
-  // 2) fallback pela aba MATRICULAS (procura um professor vinculado ao curso)
   const mat = db.matriculas.find(m => m.curso === alvo && m.professor);
   if (mat && mat.professor) {
     prof = escolaData.professores.find(p => nomesIguais(p.nome, mat.professor));
     if (prof) return prof;
-    // professor referenciado na matrícula mas não cadastrado na aba PROFESSORES
     return { id: '', nome: mat.professor, tipo: '', curso: alvo, telefone: '', email: '', status: 'ATIVO', valorHora: 0 };
   }
-
-  // 3) fallback pela aba PRESENCAS
   const pres = (db.presencas[alvo] || []).find(x => x.professor);
   if (pres && pres.professor) {
     prof = escolaData.professores.find(p => nomesIguais(p.nome, pres.professor));
     if (prof) return prof;
     return { id: '', nome: pres.professor, tipo: '', curso: alvo, telefone: '', email: '', status: 'ATIVO', valorHora: 0 };
   }
-
   return null;
 }
 
@@ -1511,68 +1637,42 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
   const senha = document.getElementById('loginSenha').value;
   const btn = document.getElementById('btnEntrar');
-
   if (!perfil || !usuario || !senha) { alert('Preencha todos os campos.'); return; }
-
   loginProgress.init(); loginProgress.show(); btn.disabled = true;
-
   try {
     loginProgress.set(15, 'Validando credenciais...', 'Consultando planilha de usuários.');
     await sleep(200);
-
     const res = await enviarParaGAS('login', { usuario, senha, perfil });
-
-    if (!res || !res.success) {
-      throw new Error((res && res.error) || 'Usuário ou senha inválidos.');
-    }
-
+    if (!res || !res.success) throw new Error((res && res.error) || 'Usuário ou senha inválidos.');
     loginProgress.set(45, 'Registrando acesso...', 'Log registrado.');
     try { await enviarParaGAS('registrarLogin', { nome: res.nome, perfil: res.perfil, acao: 'LOGIN' }); } catch (err) {}
-
     loginProgress.set(65, 'Carregando dados...', 'Sincronizando planilha.');
-    if (!escolaData.alunos.length && !escolaData.professores.length) {
-      await carregarDadosPlanilha();
-    } else await sleep(200);
-
+    if (!escolaData.alunos.length && !escolaData.professores.length) await carregarDadosPlanilha();
+    else await sleep(200);
     currentUser = {
-      perfil: res.perfil,
-      nome: res.nome,
-      usuario: res.usuario,
-      token: res.token,
-      expiraEm: Date.now() + INATIVIDADE_MS,
-      _loginEm: Date.now(),
-      professorData: null,
-      cursos: [],
-      alunoVinculado: res.alunoVinculado || ''
+      perfil: res.perfil, nome: res.nome, usuario: res.usuario, token: res.token,
+      expiraEm: Date.now() + INATIVIDADE_MS, _loginEm: Date.now(),
+      professorData: null, cursos: [], alunoVinculado: res.alunoVinculado || ''
     };
-
     if (res.perfil === 'professor') {
       const prof = encontrarProfessorPorNome(res.nome);
       if (prof) {
         currentUser.professorData = prof;
         currentUser.cursos = extrairCursosDoProfessor(prof);
         if (currentUser.cursos.length) cursoSelecionado = currentUser.cursos[0];
-      } else {
-        mostrarToast('⚠️ Professor "' + res.nome + '" não localizado em PROFESSORES.', 'error');
-      }
+      } else mostrarToast('⚠️ Professor "' + res.nome + '" não localizado.', 'error');
     }
-
-    if (res.perfil === 'aluno') {
-      if (!currentUser.alunoVinculado) currentUser.alunoVinculado = res.nome;
-    }
-
-    registrarAtividade();
-    salvarSessao();
+    if (res.perfil === 'aluno' && !currentUser.alunoVinculado) currentUser.alunoVinculado = res.nome;
+    registrarAtividade(); salvarSessao();
     loginProgress.set(85, 'Preparando painel...', 'Quase pronto!');
     await sleep(200);
     loginProgress.done('Bem-vindo(a), ' + currentUser.nome + '!');
     await sleep(350);
-
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('dashboard').classList.add('active');
     document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[res.perfil].titulo}`;
     document.getElementById('userDisplay').innerHTML = `👤 ${currentUser.nome} - ${cargoConfig[res.perfil].titulo}`;
-
+    configurarNotificacoesPerfil();
     await renderDashboard(res.perfil);
     inactivityTimer.iniciar();
     btn.disabled = false;
@@ -1591,7 +1691,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 async function aplicarSessaoRestaurada() {
   const { perfil, nome } = currentUser;
   if (!perfil || !nome || !currentUser.token) return;
-
   if (perfil === 'professor') {
     const prof = encontrarProfessorPorNome(nome);
     if (!prof) {
@@ -1602,23 +1701,16 @@ async function aplicarSessaoRestaurada() {
     }
     currentUser.professorData = prof;
     currentUser.cursos = extrairCursosDoProfessor(prof);
-    if (currentUser.cursos.length && (!cursoSelecionado || !currentUser.cursos.includes(cursoSelecionado))) {
-      cursoSelecionado = currentUser.cursos[0];
-    }
+    if (currentUser.cursos.length && (!cursoSelecionado || !currentUser.cursos.includes(cursoSelecionado))) cursoSelecionado = currentUser.cursos[0];
   }
-
-  if (perfil === 'aluno' && !currentUser.alunoVinculado) {
-    currentUser.alunoVinculado = nome;
-  }
-
+  if (perfil === 'aluno' && !currentUser.alunoVinculado) currentUser.alunoVinculado = nome;
   document.getElementById('loginContainer').style.display = 'none';
   document.getElementById('dashboard').classList.add('active');
   document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[perfil].titulo}`;
   document.getElementById('userDisplay').innerHTML = `👤 ${nome} - ${cargoConfig[perfil].titulo}`;
-
+  configurarNotificacoesPerfil();
   await renderDashboard(perfil);
-  inactivityTimer.iniciar();
-  registrarAtividade();
+  inactivityTimer.iniciar(); registrarAtividade();
   mostrarToast(`👋 Bem-vindo(a) de volta, ${nome.split(' ')[0]}!`, 'info');
 }
 
@@ -1628,18 +1720,125 @@ async function aplicarSessaoRestaurada() {
 async function renderDashboard(perfil) {
   document.getElementById('cardsContainer').innerHTML = `<div class="card"><h3>📌 ${cargoConfig[perfil].titulo}</h3><p>Bem-vindo ao painel</p><span class="badge">Ativo</span></div>`;
   ['secretariaArea','professorArea','coordenadorArea','direcaoArea','financeiroArea','alunoArea'].forEach(id => document.getElementById(id).classList.add('hidden'));
-
   if (perfil === 'secretaria') { document.getElementById('secretariaArea').classList.remove('hidden'); inicializarSecretaria(); }
   if (perfil === 'professor') {
     document.getElementById('professorArea').classList.remove('hidden');
     document.getElementById('cursosSection').classList.remove('hidden');
     document.getElementById('registrosSection').classList.remove('hidden');
     renderMeusCursos();
+    carregarDestinatariosComunicacao();
+    renderHistoricoComunicacao();
   }
   if (perfil === 'coordenacao') { document.getElementById('coordenadorArea').classList.remove('hidden'); renderVisaoCursos(); carregarProfessoresAtribuicao(); renderRelatoriosRecebidos(); renderSelectAcompanhamento(); }
   if (perfil === 'direcao') { document.getElementById('direcaoArea').classList.remove('hidden'); renderStatsGerenciais(); }
   if (perfil === 'financeiro') { document.getElementById('financeiroArea').classList.remove('hidden'); renderFinanceiro(); }
   if (perfil === 'aluno') { document.getElementById('alunoArea').classList.remove('hidden'); await carregarDadosAluno(); }
+}
+
+// ============================================
+// NOTIFICAÇÕES
+// ============================================
+function configurarNotificacoesPerfil() {
+  const btn = document.getElementById('notifBtn');
+  if (!btn) return;
+  if (currentUser.perfil === 'aluno') {
+    btn.style.display = 'flex';
+    renderNotificacoesAluno();
+    if (window.__notifInterval) clearInterval(window.__notifInterval);
+    window.__notifInterval = setInterval(() => { if (currentUser.perfil === 'aluno') renderNotificacoesAluno(); }, 60000);
+  } else btn.style.display = 'none';
+}
+
+function notificacoesDoAluno() {
+  const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
+  if (!aluno) return [];
+  const lista = [];
+  db.avaliacoes.filter(a => nomesIguais(a.aluno, aluno)).forEach(a => {
+    lista.push({ tipo:'nota', titulo:`Nova nota em ${labelCurso(a.curso)}`, descricao:`${a.bimestre}º Bimestre: ${a.nota.toFixed(1)} — Prof. ${a.professor || '-'}`, data: a.dataLancamento || '', lida: false, curso: a.curso, id:`nota_${a.curso}_${a.bimestre}` });
+  });
+  db.arquivos.filter(ar => nomesIguais(ar.aluno, aluno)).forEach(ar => {
+    lista.push({ tipo:'arquivo', titulo:`Arquivo recebido: ${ar.nome}`, descricao:`Prof. ${ar.professor || '-'} — ${ar.mensagem || 'Sem mensagem'}`, data: ar.data || '', lida: false, curso: ar.curso, id:`arq_${ar.id || ar.nome}` });
+  });
+  db.mensagens.filter(m => nomesIguais(m.aluno, aluno)).forEach(m => {
+    lista.push({ tipo:'mensagem', titulo:`Mensagem: ${m.assunto || '(sem assunto)'}`, descricao:(m.mensagem || '').substring(0, 120) + ((m.mensagem || '').length > 120 ? '...' : ''), data: m.data || '', lida: !!m.lida, curso: m.curso, id:`msg_${m.id || m.assunto}` });
+  });
+  lista.sort((a, b) => parseDataNotif(b.data) - parseDataNotif(a.data));
+  return lista;
+}
+
+function parseDataNotif(s) {
+  if (!s) return 0;
+  const m = String(s).match(/(\d{2})-(\d{2})-(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1], +(m[4]||0), +(m[5]||0)).getTime();
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
+function renderNotificacoesAluno() {
+  const lista = notificacoesDoAluno();
+  const naoLidas = lista.filter(n => !n.lida).length;
+  const badge = document.getElementById('notifBadge');
+  if (badge) {
+    if (naoLidas > 0) { badge.textContent = naoLidas > 99 ? '99+' : naoLidas; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+  }
+  const cont = document.getElementById('notifList');
+  if (!cont) return;
+  if (lista.length === 0) { cont.innerHTML = '<div class="notif-empty">🔔 Nenhuma notificação por enquanto.</div>'; return; }
+  const icones = { nota: '📝', arquivo: '📎', mensagem: '💬', geral: '🔔' };
+  cont.innerHTML = lista.map(n => `
+    <div class="notif-item ${n.lida ? '' : 'nao-lida'}" onclick="abrirNotificacao('${n.tipo}','${n.id.replace(/'/g,"\\'")}')">
+      <div class="notif-icon tipo-${n.tipo}">${icones[n.tipo] || '🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-title">${escapeHtml(n.titulo)}</div>
+        <div class="notif-desc">${escapeHtml(n.descricao)}</div>
+        <div class="notif-time">${escapeHtml(n.data || '')}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleNotifPanel() {
+  const p = document.getElementById('notifPanel');
+  if (!p) return;
+  p.classList.toggle('active');
+  if (p.classList.contains('active')) renderNotificacoesAluno();
+}
+
+document.addEventListener('click', (e) => {
+  const p = document.getElementById('notifPanel');
+  const btn = document.getElementById('notifBtn');
+  if (!p || !p.classList.contains('active')) return;
+  if (p.contains(e.target) || (btn && btn.contains(e.target))) return;
+  p.classList.remove('active');
+});
+
+function abrirNotificacao(tipo, id) {
+  const p = document.getElementById('notifPanel'); if (p) p.classList.remove('active');
+  if (tipo === 'arquivo' || tipo === 'mensagem') {
+    const target = document.getElementById('aluno-materiais');
+    if (target) {
+      document.querySelectorAll('#alunoArea .section-container').forEach(el => el.classList.add('hidden'));
+      target.classList.remove('hidden');
+    }
+  } else if (tipo === 'nota') {
+    const target = document.getElementById('aluno-notas');
+    if (target) {
+      document.querySelectorAll('#alunoArea .section-container').forEach(el => el.classList.add('hidden'));
+      target.classList.remove('hidden');
+    }
+  }
+}
+
+async function marcarTodasNotificacoesLidas() {
+  const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
+  if (aluno) {
+    db.mensagens.forEach(m => { if (nomesIguais(m.aluno, aluno)) m.lida = true; });
+    try { await enviarParaGAS('marcarNotificacoesLidas', { aluno }); } catch (e) {}
+  }
+  const badge = document.getElementById('notifBadge');
+  if (badge) badge.classList.add('hidden');
+  mostrarToast('✅ Notificações marcadas como lidas.', 'info');
+  renderNotificacoesAluno();
 }
 
 // ============================================
@@ -1656,7 +1855,6 @@ function toggleSecretaria(section, event) {
   if (target) target.classList.remove('hidden');
   document.querySelectorAll('#secretariaArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
   if (event && event.target) event.target.classList.add('active');
-
   if (section === 'alunos') carregarAlunosSecretaria();
   if (section === 'matriculas') carregarMatriculasSecretaria();
   if (section === 'professores') carregarProfessoresSecretaria();
@@ -1679,12 +1877,10 @@ function carregarAlunosSecretaria() {
   const busca = (document.getElementById('buscaAlunoSecretaria')?.value || '').toLowerCase();
   let alunos = escolaData.alunos;
   if (busca) alunos = alunos.filter(a => a.nome.toLowerCase().includes(busca));
-
   const tbody = document.getElementById('tabelaAlunosSecretaria');
   if (alunos.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum aluno.</td></tr>'; return; }
   tbody.innerHTML = alunos.map(aluno => {
     const mat = db.matriculas.filter(m => nomesIguais(m.aluno, aluno.nome) && m.status === 'ATIVO');
-    // Para cada matrícula, mostra o curso e o professor (da matrícula ou do cadastro de professores)
     const cursos = mat.map(m => {
       const prof = m.professor || (getProfessorByCurso(m.curso)?.nome || '');
       return labelCurso(m.curso) + (prof ? ` (${prof})` : '');
@@ -1717,16 +1913,11 @@ document.getElementById('formCadastroAluno').addEventListener('submit', async fu
   const contato = document.getElementById('cadAlunoContato').value.trim();
   const cursosSelecionados = Array.from(document.querySelectorAll('.curso-checkbox:checked')).map(cb => cb.value);
   if (!nome) { alert('Nome obrigatório.'); return; }
-
   try {
     await executarComProgresso({
       titulo: 'Cadastrando aluno...',
       subtitulo: `${nome} (${cursosSelecionados.length} matrícula(s))`,
-      etapas: [
-        { pct: 10, label: 'Validando...' }, { pct: 30, label: 'Salvando aluno...' },
-        { pct: 55, label: 'Matriculando...' }, { pct: 80, label: 'Atualizando...' },
-        { pct: 95, label: 'Finalizando...' }
-      ],
+      etapas: [{pct:10,label:'Validando...'},{pct:30,label:'Salvando aluno...'},{pct:55,label:'Matriculando...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Finalizando...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarAluno', { nome, dataNascimento, responsavel, contato, status: 'ATIVO' });
         if (!r.success) throw new Error(r.error || 'Falha.');
@@ -1751,11 +1942,9 @@ function carregarMatriculasSecretaria() {
   const busca = (document.getElementById('buscaMatriculaSecretaria')?.value || '').toLowerCase();
   const sel = document.getElementById('filtroCursoMatricula');
   if (sel) sel.innerHTML = '<option value="">Todos os Cursos</option>' + CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-
   let mat = db.matriculas;
   if (filtro) mat = mat.filter(m => m.curso === filtro);
   if (busca) mat = mat.filter(m => m.aluno.toLowerCase().includes(busca));
-
   const tbody = document.getElementById('tabelaMatriculasSecretaria');
   if (mat.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhuma.</td></tr>'; return; }
   tbody.innerHTML = mat.map(m => {
@@ -1779,8 +1968,7 @@ async function cancelarMatricula(aluno, curso) {
   if (!m) return;
   try {
     await executarComProgresso({
-      titulo: 'Cancelando...',
-      subtitulo: `${aluno} — ${labelCurso(curso)}`,
+      titulo: 'Cancelando...', subtitulo: `${aluno} — ${labelCurso(curso)}`,
       etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Atualizando...'},{pct:80,label:'Painel...'},{pct:95,label:'Final...'}],
       executar: async () => {
         m.status = 'CANCELADO';
@@ -1821,8 +2009,7 @@ document.getElementById('formNovaMatricula').addEventListener('submit', async fu
   const payload = { aluno, curso, professor: profNome, dataMatricula: getDataAtualFormatada(), anoLetivo: ano, status: 'ATIVO' };
   try {
     await executarComProgresso({
-      titulo: 'Matriculando...',
-      subtitulo: `${aluno} em ${labelCurso(curso)}`,
+      titulo: 'Matriculando...', subtitulo: `${aluno} em ${labelCurso(curso)}`,
       etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Gravando...'},{pct:80,label:'Painel...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarMatricula', payload);
@@ -1878,8 +2065,7 @@ document.getElementById('formCadastroProfessor').addEventListener('submit', asyn
   const payload = { id, nome, tipo, curso: todosCursos.join(','), telefone, email };
   try {
     await executarComProgresso({
-      titulo: 'Cadastrando professor...',
-      subtitulo: `${nome} (${todosCursos.length} curso(s))`,
+      titulo: 'Cadastrando professor...', subtitulo: `${nome} (${todosCursos.length} curso(s))`,
       etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Gravando...'},{pct:80,label:'Painel...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarProfessor', payload);
@@ -1921,9 +2107,7 @@ function carregarFrequenciaSecretaria() {
   let html = `<h4>${labelCurso(curso)}</h4><div class="table-container"><table><thead><tr><th>Aluno</th><th>Presenças</th><th>Faltas</th><th>Freq.</th></tr></thead><tbody>`;
   alunos.forEach(a => {
     let p = 0;
-    pres.forEach(x => {
-      if (x.presentes.some(n => nomesIguais(n, a.nome))) p++;
-    });
+    pres.forEach(x => { if (x.presentes.some(n => nomesIguais(n, a.nome))) p++; });
     const total = pres.length || 1;
     const taxa = p / total * 100;
     html += `<tr><td><strong>${a.nome}</strong></td><td>${p}</td><td>${total - p}</td><td><span style="color:${taxa >= 75 ? '#48bb78' : '#f56565'};font-weight:bold;">${taxa.toFixed(1)}%</span></td></tr>`;
@@ -1955,9 +2139,7 @@ async function carregarUsuariosSecretaria() {
         <td><button onclick="resetarSenha('${u.usuario}')" class="btn btn-small btn-warning" style="padding:2px 8px;">🔑 Senha</button></td>
       </tr>
     `).join('');
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e53e3e;">Erro: ${e.message}</td></tr>`;
-  }
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e53e3e;">Erro: ${e.message}</td></tr>`; }
 }
 
 function abrirModalCriarUsuario() {
@@ -1973,11 +2155,9 @@ document.getElementById('formCriarUsuario').addEventListener('submit', async fun
   const senha = document.getElementById('userSenha').value;
   if (!nome || !perfil || !usuario || !senha) { alert('Preencha tudo.'); return; }
   if (senha.length < 4) { alert('Senha min 4 caracteres.'); return; }
-
   try {
     await executarComProgresso({
-      titulo: 'Criando usuário...',
-      subtitulo: `${nome} (${perfil})`,
+      titulo: 'Criando usuário...', subtitulo: `${nome} (${perfil})`,
       etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Gravando usuário...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('criarUsuario', { nome, perfil, usuario, senha });
@@ -1992,8 +2172,7 @@ document.getElementById('formCriarUsuario').addEventListener('submit', async fun
 
 function abrirModalCriarUsuarioAluno() {
   const sel = document.getElementById('userAlunoNome');
-  sel.innerHTML = '<option value="">-- Selecione o aluno --</option>' +
-    escolaData.alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
+  sel.innerHTML = '<option value="">-- Selecione o aluno --</option>' + escolaData.alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
   document.getElementById('formCriarUsuarioAluno').reset();
   document.getElementById('modalCriarUsuarioAluno').classList.add('active');
 }
@@ -2005,11 +2184,9 @@ document.getElementById('formCriarUsuarioAluno').addEventListener('submit', asyn
   const senha = document.getElementById('userAlunoSenha').value;
   if (!nome || !usuario || !senha) { alert('Preencha tudo.'); return; }
   if (senha.length < 4) { alert('Senha min 4 caracteres.'); return; }
-
   try {
     await executarComProgresso({
-      titulo: 'Criando usuário do aluno...',
-      subtitulo: `${nome} — criando aba individual`,
+      titulo: 'Criando usuário do aluno...', subtitulo: `${nome} — criando aba individual`,
       etapas: [{pct:15,label:'Validando...'},{pct:40,label:'Criando usuário...'},{pct:70,label:'Criando aba do aluno...'},{pct:90,label:'Sincronizando...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('criarUsuarioAluno', { nome, usuario, senha });
@@ -2028,8 +2205,7 @@ async function resetarSenha(usuario) {
   if (nova.length < 4) { alert('Senha muito curta.'); return; }
   try {
     await executarComProgresso({
-      titulo: 'Redefinindo senha...',
-      subtitulo: usuario,
+      titulo: 'Redefinindo senha...', subtitulo: usuario,
       etapas: [{pct:20,label:'Validando...'},{pct:60,label:'Atualizando...'},{pct:90,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('atualizarSenha', { usuario, senhaNova: nova });
@@ -2116,6 +2292,7 @@ function selecionarCurso(cid) {
   document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cid);
   renderMeusCursos();
   carregarTabelaNotas(); carregarPresenca(); carregarObservacoes(); carregarAlunosSelects(); renderRelatoriosEnviados();
+  carregarDestinatariosComunicacao(); renderHistoricoComunicacao();
 }
 
 function toggleSection(section, event) {
@@ -2127,6 +2304,7 @@ function toggleSection(section, event) {
   if (section === 'presencas') carregarPresenca();
   if (section === 'observacoes') carregarObservacoes();
   if (section === 'relatorios') renderRelatoriosEnviados();
+  if (section === 'comunicacao') { carregarDestinatariosComunicacao(); renderHistoricoComunicacao(); }
 }
 
 function carregarTabelaNotas() {
@@ -2156,8 +2334,7 @@ async function salvarNotas() {
   if (avals.length === 0) { mostrarToast('⚠️ Sem alunos.', 'info'); return; }
   try {
     await executarComProgresso({
-      titulo: 'Salvando notas...',
-      subtitulo: `${avals.length} aluno(s) — ${bim}º Bim`,
+      titulo: 'Salvando notas...', subtitulo: `${avals.length} aluno(s) — ${bim}º Bim`,
       etapas: [{pct:15,label:'Coletando...'},{pct:50,label:'Gravando...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarAvaliacoes', { avaliacoes: avals });
@@ -2200,8 +2377,7 @@ async function salvarPresenca() {
   const payload = { curso: cursoSelecionado, data, presentes, conteudo, professor: currentUser.nome };
   try {
     await executarComProgresso({
-      titulo: 'Salvando presença...',
-      subtitulo: `${presentes.length} aluno(s) — ${data}`,
+      titulo: 'Salvando presença...', subtitulo: `${presentes.length} aluno(s) — ${data}`,
       etapas: [{pct:15,label:'Coletando...'},{pct:50,label:'Gravando...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarPresenca', payload);
@@ -2233,8 +2409,7 @@ async function salvarObservacao() {
   const payload = { curso: cursoSelecionado, data, aluno, observacao, tipo, professor: currentUser.nome };
   try {
     await executarComProgresso({
-      titulo: 'Salvando observação...',
-      subtitulo: `${aluno} — ${tipo}`,
+      titulo: 'Salvando observação...', subtitulo: `${aluno} — ${tipo}`,
       etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Gravando...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarObservacao', payload);
@@ -2275,8 +2450,7 @@ async function enviarRelatorioCoordenacao() {
   const payload = { aluno, curso: cursoSelecionado, bimestre, professor: currentUser.nome, relatorio, data: getDataAtualFormatada() };
   try {
     await executarComProgresso({
-      titulo: 'Enviando relatório...',
-      subtitulo: `${aluno} — ${bimestre}º Bim`,
+      titulo: 'Enviando relatório...', subtitulo: `${aluno} — ${bimestre}º Bim`,
       etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Enviando...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarRelatorio', payload);
@@ -2288,6 +2462,196 @@ async function enviarRelatorioCoordenacao() {
     });
     renderRelatoriosEnviados(); document.getElementById('relatorioTexto').value = '';
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
+}
+
+// ============================================
+// COMUNICAÇÃO DO PROFESSOR
+// ============================================
+function carregarDestinatariosComunicacao() {
+  if (!cursoSelecionado) return;
+  const alunos = getAlunosByCurso(cursoSelecionado);
+  const optsAlunos = alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
+  const selUpload = document.getElementById('uploadDestinatarios');
+  const selMsg = document.getElementById('msgDestinatarios');
+  if (selUpload) selUpload.innerHTML = '<option value="__TODOS__">👥 Todos os alunos do curso</option>' + optsAlunos;
+  if (selMsg) selMsg.innerHTML = '<option value="__TODOS__">👥 Todos os alunos do curso</option>' + optsAlunos;
+}
+
+function selecionarArquivoUpload(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  arquivoUploadSelecionado = file;
+  const prev = document.getElementById('filePreview');
+  prev.style.display = 'block';
+  prev.innerHTML = `<div class="file-preview">
+    <span class="file-name">📄 ${escapeHtml(file.name)} <span style="color:#a0aec0;">(${(file.size/1024).toFixed(1)} KB)</span></span>
+    <button onclick="limparArquivoUpload()">✕</button>
+  </div>`;
+  document.getElementById('btnEnviarArquivo').disabled = false;
+}
+
+function limparArquivoUpload() {
+  arquivoUploadSelecionado = null;
+  const input = document.getElementById('uploadFileInput');
+  if (input) input.value = '';
+  const prev = document.getElementById('filePreview');
+  if (prev) { prev.style.display = 'none'; prev.innerHTML = ''; }
+  const btn = document.getElementById('btnEnviarArquivo');
+  if (btn) btn.disabled = true;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const dz = document.getElementById('fileDropZone');
+  if (dz) {
+    ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+    ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+    dz.addEventListener('drop', e => {
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) {
+        const dt = new DataTransfer(); dt.items.add(f);
+        const inp = document.getElementById('uploadFileInput');
+        inp.files = dt.files;
+        selecionarArquivoUpload({ target: inp });
+      }
+    });
+  }
+});
+
+function getDestinatariosSelecionados(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return [];
+  const vals = Array.from(sel.selectedOptions).map(o => o.value).filter(Boolean);
+  if (vals.length === 0) return [];
+  if (vals.includes('__TODOS__')) return getAlunosByCurso(cursoSelecionado).map(a => a.nome);
+  return vals;
+}
+
+function setInlineProgress(prefix, pct, label, done, error) {
+  const cont = document.getElementById(prefix + 'Progress');
+  const fill = document.getElementById(prefix + 'ProgressFill');
+  const pctEl = document.getElementById(prefix + 'ProgressPct');
+  const lbl = document.getElementById(prefix + 'ProgressLabel');
+  if (!cont) return;
+  cont.classList.add('active');
+  cont.classList.toggle('done', !!done);
+  cont.classList.toggle('error', !!error);
+  if (pct !== undefined) fill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  if (pctEl) pctEl.textContent = Math.max(0, Math.min(100, Math.round(pct || 0))) + '%';
+  if (label && lbl) lbl.textContent = label;
+}
+
+async function enviarArquivoUpload() {
+  if (!cursoSelecionado) { mostrarToast('⚠️ Selecione um curso.', 'error'); return; }
+  if (!arquivoUploadSelecionado) { mostrarToast('⚠️ Selecione um arquivo.', 'error'); return; }
+  const destinatarios = getDestinatariosSelecionados('uploadDestinatarios');
+  if (destinatarios.length === 0) { mostrarToast('⚠️ Selecione pelo menos um aluno.', 'error'); return; }
+  const mensagem = document.getElementById('uploadMensagem').value.trim();
+  const btn = document.getElementById('btnEnviarArquivo');
+  btn.disabled = true;
+  setInlineProgress('upload', 0, 'Iniciando upload...');
+  try {
+    const campos = {
+      token: currentUser.token || '',
+      professor: currentUser.nome,
+      curso: cursoSelecionado,
+      destinatarios: JSON.stringify(destinatarios),
+      mensagem
+    };
+    const resUpload = await uploadArquivoComProgresso(arquivoUploadSelecionado, campos, (pct) => {
+      let label = 'Lendo arquivo...';
+      if (pct >= 20 && pct < 95) label = 'Enviando arquivo...';
+      else if (pct >= 95) label = 'Finalizando upload...';
+      setInlineProgress('upload', pct, label);
+    });
+    if (!resUpload || !resUpload.success) throw new Error(resUpload && resUpload.error || 'Falha no upload');
+    setInlineProgress('upload', 100, 'Concluído!', true, false);
+    mostrarToast(`✅ Arquivo "${arquivoUploadSelecionado.name}" enviado para ${destinatarios.length} aluno(s).`, 'success');
+    destinatarios.forEach(aluno => {
+      db.arquivos.push({
+        id: 'local_' + Date.now() + '_' + aluno,
+        aluno: aluno.toUpperCase(), curso: cursoSelecionado, professor: currentUser.nome.toUpperCase(),
+        nome: arquivoUploadSelecionado.name, url: resUpload.url || '', fileId: resUpload.fileId || '',
+        mensagem, data: getDataHoraAtual()
+      });
+    });
+    limparArquivoUpload();
+    document.getElementById('uploadMensagem').value = '';
+    renderHistoricoComunicacao();
+    setTimeout(() => setInlineProgress('upload', 0, '', false, false), 3000);
+  } catch (e) {
+    setInlineProgress('upload', 100, 'Falha no upload', false, true);
+    mostrarToast('❌ ' + e.message, 'error');
+    btn.disabled = false;
+    setTimeout(() => setInlineProgress('upload', 0, '', false, false), 3000);
+  }
+}
+
+async function enviarMensagemAluno() {
+  if (!cursoSelecionado) { mostrarToast('⚠️ Selecione um curso.', 'error'); return; }
+  const destinatarios = getDestinatariosSelecionados('msgDestinatarios');
+  if (destinatarios.length === 0) { mostrarToast('⚠️ Selecione pelo menos um aluno.', 'error'); return; }
+  const assunto = document.getElementById('msgAssunto').value.trim();
+  const mensagem = document.getElementById('msgTexto').value.trim();
+  if (!mensagem) { mostrarToast('⚠️ Digite a mensagem.', 'error'); return; }
+  const btn = document.getElementById('btnEnviarMensagem');
+  btn.disabled = true;
+  setInlineProgress('msg', 5, 'Preparando...');
+  try {
+    setInlineProgress('msg', 30, 'Enviando mensagem...');
+    const payload = { curso: cursoSelecionado, professor: currentUser.nome, destinatarios, assunto, mensagem };
+    const r = await enviarParaGAS('enviarMensagemAluno', payload);
+    if (!r || !r.success) throw new Error((r && r.error) || 'Falha ao enviar mensagem');
+    setInlineProgress('msg', 100, 'Mensagem enviada!', true, false);
+    destinatarios.forEach(aluno => {
+      db.mensagens.push({
+        id: 'localmsg_' + Date.now() + '_' + aluno,
+        aluno: aluno.toUpperCase(), curso: cursoSelecionado, professor: currentUser.nome.toUpperCase(),
+        assunto, mensagem, lida: false, data: getDataHoraAtual()
+      });
+    });
+    document.getElementById('msgAssunto').value = '';
+    document.getElementById('msgTexto').value = '';
+    renderHistoricoComunicacao();
+    mostrarToast(`✅ Mensagem enviada para ${destinatarios.length} aluno(s).`, 'success');
+    setTimeout(() => setInlineProgress('msg', 0, '', false, false), 3000);
+    btn.disabled = false;
+  } catch (e) {
+    setInlineProgress('msg', 100, 'Falha', false, true);
+    mostrarToast('❌ ' + e.message, 'error');
+    btn.disabled = false;
+    setTimeout(() => setInlineProgress('msg', 0, '', false, false), 3000);
+  }
+}
+
+function renderHistoricoComunicacao() {
+  if (!cursoSelecionado) return;
+  const arquivos = db.arquivos.filter(a => a.curso === cursoSelecionado && nomesIguais(a.professor, currentUser.nome));
+  const mensagens = db.mensagens.filter(m => m.curso === cursoSelecionado && nomesIguais(m.professor, currentUser.nome));
+  const contArq = document.getElementById('arquivosEnviadosHistorico');
+  if (contArq) {
+    if (arquivos.length === 0) contArq.innerHTML = '<p style="color:#a0aec0;font-size:0.85em;">Nenhum arquivo enviado ainda.</p>';
+    else contArq.innerHTML = '<h5 style="margin:14px 0 8px;color:#4a5568;font-size:0.9em;">📁 Enviados recentemente</h5>' +
+      arquivos.slice(-10).reverse().map(a => `
+        <div class="arquivo-item">
+          <div class="arquivo-icone">📄</div>
+          <div class="arquivo-info">
+            <div class="arquivo-nome">${escapeHtml(a.nome)}</div>
+            <div class="arquivo-meta">${escapeHtml(a.aluno)} • ${escapeHtml(a.data || '')}</div>
+          </div>
+          ${a.url ? `<a href="${escapeHtml(a.url)}" target="_blank" rel="noopener">Abrir</a>` : ''}
+        </div>`).join('');
+  }
+  const contMsg = document.getElementById('mensagensEnviadasHistorico');
+  if (contMsg) {
+    if (mensagens.length === 0) contMsg.innerHTML = '<p style="color:#a0aec0;font-size:0.85em;">Nenhuma mensagem enviada ainda.</p>';
+    else contMsg.innerHTML = '<h5 style="margin:14px 0 8px;color:#4a5568;font-size:0.9em;">💬 Enviadas recentemente</h5>' +
+      mensagens.slice(-10).reverse().map(m => `
+        <div class="msg-item">
+          <div><strong>${escapeHtml(m.assunto || '(sem assunto)')}</strong></div>
+          <div>${escapeHtml(m.mensagem).substring(0, 140)}${m.mensagem.length > 140 ? '...' : ''}</div>
+          <div class="msg-meta">Para: ${escapeHtml(m.aluno)} • ${escapeHtml(m.data || '')}</div>
+        </div>`).join('');
+  }
 }
 
 // ============================================
@@ -2309,11 +2673,7 @@ function renderVisaoCursos() {
     const prof = getProfessorByCurso(c.id);
     const pres = db.presencas[c.id] || [];
     let totalP = 0, totalD = pres.length;
-    alunos.forEach(a => {
-      pres.forEach(p => {
-        if (p.presentes.some(n => nomesIguais(n, a.nome))) totalP++;
-      });
-    });
+    alunos.forEach(a => { pres.forEach(p => { if (p.presentes.some(n => nomesIguais(n, a.nome))) totalP++; }); });
     const taxa = totalD > 0 && alunos.length > 0 ? (totalP / (totalD * alunos.length) * 100) : 0;
     let soma = 0, cnt = 0;
     alunos.forEach(a => { const m = getMediaAluno(a.nome, c.id); if (m > 0) { soma += m; cnt++; } });
@@ -2386,8 +2746,7 @@ async function atribuirCurso() {
   atuais.push(cid); prof.curso = atuais.join(',');
   try {
     await executarComProgresso({
-      titulo: 'Atribuindo...',
-      subtitulo: `${prof.nome} ← ${labelCurso(cid)}`,
+      titulo: 'Atribuindo...', subtitulo: `${prof.nome} ← ${labelCurso(cid)}`,
       etapas: [{pct:20,label:'Validando...'},{pct:55,label:'Atualizando...'},{pct:85,label:'Painel...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('atualizarProfessor', { id: pid, curso: prof.curso });
@@ -2409,8 +2768,7 @@ async function removerCurso() {
   prof.curso = extrairCursosDoProfessor(prof).filter(c => c !== cid).join(',');
   try {
     await executarComProgresso({
-      titulo: 'Removendo...',
-      subtitulo: `${prof.nome} ✕ ${labelCurso(cid)}`,
+      titulo: 'Removendo...', subtitulo: `${prof.nome} ✕ ${labelCurso(cid)}`,
       etapas: [{pct:20,label:'Validando...'},{pct:55,label:'Atualizando...'},{pct:85,label:'Painel...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('atualizarProfessor', { id: pid, curso: prof.curso });
@@ -2514,8 +2872,7 @@ async function salvarValorHora(pid) {
   if (!prof) return;
   try {
     await executarComProgresso({
-      titulo: 'Salvando...',
-      subtitulo: `${prof.nome} — R$ ${val.toFixed(2)}`,
+      titulo: 'Salvando...', subtitulo: `${prof.nome} — R$ ${val.toFixed(2)}`,
       etapas: [{pct:20,label:'Validando...'},{pct:55,label:'Atualizando...'},{pct:85,label:'Painel...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarValorProfessor', { id: pid, valorHora: val });
@@ -2572,13 +2929,10 @@ function calcularPagamentos() {
 async function carregarDadosAluno() {
   const nomeAluno = currentUser.alunoVinculado || currentUser.nome;
   if (!nomeAluno) { mostrarToast('⚠️ Aluno não identificado.', 'error'); return; }
-
   const alunoLocal = encontrarAlunoPorNome(nomeAluno);
   const nomeReal = alunoLocal ? alunoLocal.nome : nomeAluno;
-
   document.getElementById('alunoHeroNome').textContent = `🎓 Olá, ${nomeReal.split(' ')[0]}!`;
   document.getElementById('alunoHeroInfo').textContent = 'Bem-vindo(a) à sua área pessoal';
-
   try {
     const res = await enviarParaGAS('dadosAlunoCompleto', { nome: nomeReal });
     if (!res.success) {
@@ -2594,33 +2948,30 @@ async function carregarDadosAluno() {
         });
       });
       const conteudos = [];
-      cursosIds.forEach(cid => {
-        (db.conteudos[cid] || []).forEach(c => conteudos.push({ curso: cid, ...c }));
-      });
+      cursosIds.forEach(cid => { (db.conteudos[cid] || []).forEach(c => conteudos.push({ curso: cid, ...c })); });
       const relatorios = db.relatorios.filter(r => nomesIguais(r.aluno, nomeReal)).map(r => ({ curso: r.curso, bimestre: r.bimestre, professor: r.professor, relatorio: r.relatorio, data: r.data, visto: r.visto }));
-
+      const arquivos = db.arquivos.filter(a => nomesIguais(a.aluno, nomeReal)).map(a => ({ id:a.id, curso:a.curso, professor:a.professor, nome:a.nome, url:a.url, fileId:a.fileId, mensagem:a.mensagem, data:a.data }));
+      const mensagens = db.mensagens.filter(m => nomesIguais(m.aluno, nomeReal)).map(m => ({ id:m.id, curso:m.curso, professor:m.professor, assunto:m.assunto, mensagem:m.mensagem, data:m.data, lida:m.lida }));
       dadosAluno = {
         success: true,
         aluno: alunoLocal || { nome: nomeReal, status: 'ATIVO' },
         matriculas: matriculas.map(m => ({ curso: m.curso, professor: m.professor, status: m.status, dataMatricula: m.dataMatricula, anoLetivo: m.anoLetivo })),
         avaliacoes: avals.map(a => ({ curso: a.curso, bimestre: a.bimestre, nota: a.nota, professor: a.professor, dataLancamento: a.dataLancamento })),
-        presencas: aulas,
-        conteudos: conteudos,
-        relatorios: relatorios
+        presencas: aulas, conteudos, relatorios, arquivos, mensagens
       };
     } else {
       dadosAluno = res;
+      if (!dadosAluno.arquivos) dadosAluno.arquivos = db.arquivos.filter(a => nomesIguais(a.aluno, nomeReal));
+      if (!dadosAluno.mensagens) dadosAluno.mensagens = db.mensagens.filter(m => nomesIguais(m.aluno, nomeReal));
     }
     renderAluno();
-  } catch (e) {
-    mostrarToast('❌ ' + e.message, 'error');
-  }
+    renderNotificacoesAluno();
+  } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 }
 
 function renderAluno() {
   if (!dadosAluno) return;
-  const { aluno, matriculas, avaliacoes, presencas, conteudos, relatorios } = dadosAluno;
-
+  const { aluno, matriculas, avaliacoes, presencas, conteudos, relatorios, arquivos, mensagens } = dadosAluno;
   document.getElementById('alunoDadoNome').textContent = aluno.nome || '-';
   document.getElementById('alunoDadoNascimento').textContent = aluno.dataNascimento || '-';
   document.getElementById('alunoDadoResponsavel').textContent = aluno.responsavel || '-';
@@ -2656,10 +3007,7 @@ function renderAluno() {
   const tabNotas = document.getElementById('alunoTabelaNotas');
   if (matriculas.length === 0) tabNotas.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Sem matrículas.</td></tr>';
   else tabNotas.innerHTML = matriculas.map(m => {
-    const notas = [1,2,3,4].map(b => {
-      const av = avaliacoes.find(a => a.curso === m.curso && a.bimestre === b);
-      return av ? av.nota.toFixed(1) : '-';
-    });
+    const notas = [1,2,3,4].map(b => { const av = avaliacoes.find(a => a.curso === m.curso && a.bimestre === b); return av ? av.nota.toFixed(1) : '-'; });
     const medias = avaliacoes.filter(a => a.curso === m.curso && a.nota > 0);
     const md = medias.length > 0 ? (medias.reduce((s,x) => s + x.nota, 0) / medias.length) : 0;
     return `<tr>
@@ -2673,11 +3021,9 @@ function renderAluno() {
   const tabFreq = document.getElementById('alunoTabelaFrequencia');
   if (presencas.length === 0) tabFreq.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#718096;">Sem registros.</td></tr>';
   else tabFreq.innerHTML = presencas.slice().reverse().map(p => `<tr>
-    <td>${labelCurso(p.curso)}</td>
-    <td>${p.data}</td>
+    <td>${labelCurso(p.curso)}</td><td>${p.data}</td>
     <td><span class="status-badge ${p.status === 'PRESENTE' ? 'concluido' : 'inativo'}">${p.status}</span></td>
-    <td>${p.conteudo || '-'}</td>
-    <td>${p.professor || '-'}</td>
+    <td>${p.conteudo || '-'}</td><td>${p.professor || '-'}</td>
   </tr>`).join('');
 
   const freqResumo = document.getElementById('alunoFrequenciaResumo');
@@ -2711,6 +3057,28 @@ function renderAluno() {
     <div class="conteudo">${r.relatorio}</div>
     <div style="font-size:0.85em;color:#718096;">Professor: ${r.professor} | Data: ${r.data} | Visto: ${r.visto}</div>
   </div>`).join('');
+
+  const contArquivos = document.getElementById('alunoListaArquivos');
+  if (!arquivos || arquivos.length === 0) contArquivos.innerHTML = '<p style="color:#718096;">Nenhum arquivo recebido.</p>';
+  else contArquivos.innerHTML = arquivos.slice().reverse().map(a => `
+    <div class="arquivo-item">
+      <div class="arquivo-icone">📄</div>
+      <div class="arquivo-info">
+        <div class="arquivo-nome">${escapeHtml(a.nome)}</div>
+        <div class="arquivo-meta">${labelCurso(a.curso)} • Prof. ${escapeHtml(a.professor)} • ${escapeHtml(a.data || '')}</div>
+        ${a.mensagem ? `<div class="arquivo-meta" style="color:#4a5568;margin-top:2px;">💬 ${escapeHtml(a.mensagem)}</div>` : ''}
+      </div>
+      ${a.url ? `<a href="${escapeHtml(a.url)}" target="_blank" rel="noopener">⬇️ Abrir</a>` : ''}
+    </div>`).join('');
+
+  const contMsgs = document.getElementById('alunoListaMensagens');
+  if (!mensagens || mensagens.length === 0) contMsgs.innerHTML = '<p style="color:#718096;">Nenhuma mensagem recebida.</p>';
+  else contMsgs.innerHTML = mensagens.slice().reverse().map(m => `
+    <div class="msg-item">
+      <div><strong>${escapeHtml(m.assunto || '(sem assunto)')}</strong></div>
+      <div>${escapeHtml(m.mensagem)}</div>
+      <div class="msg-meta">${labelCurso(m.curso)} • Prof. ${escapeHtml(m.professor)} • ${escapeHtml(m.data || '')}</div>
+    </div>`).join('');
 }
 
 function toggleAluno(section, event) {
@@ -2727,18 +3095,28 @@ function toggleAluno(section, event) {
 function fecharModal(id) { document.getElementById(id).classList.remove('active'); }
 document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('active'); });
 
+// ✅ CORRIGIDO: logout com Content-Type 'text/plain' EXATO
 async function logout(manual = true, motivo = null) {
   const tk = currentUser.token;
   inactivityTimer.parar();
+  if (window.__notifInterval) { clearInterval(window.__notifInterval); window.__notifInterval = null; }
   limparSessao();
   if (tk) {
-    try { fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify({ acao: 'logout', payload: { token: tk } }) }).catch(() => {}); } catch (e) {}
+    try {
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },   // ✅ EXATO — sem charset
+        body: JSON.stringify({ acao: 'logout', payload: { token: tk } })
+      }).catch(() => {});
+    } catch (e) {}
   }
   document.getElementById('dashboard').classList.remove('active');
   document.getElementById('loginContainer').style.display = 'block';
   document.getElementById('loginForm').reset();
+  document.getElementById('notifBtn').style.display = 'none';
+  const p = document.getElementById('notifPanel'); if (p) p.classList.remove('active');
   currentUser = { perfil:'', nome:'', usuario:'', professorData:null, cursos:[], token:null, expiraEm:0, alunoVinculado:'' };
-  cursoSelecionado = null; dadosAluno = null;
+  cursoSelecionado = null; dadosAluno = null; arquivoUploadSelecionado = null;
   loginProgress.init(); loginProgress.fill.style.width = '0%'; loginProgress.pct.textContent = '0%';
   loginProgress.el.classList.remove('active','done','error');
   document.getElementById('btnEntrar').disabled = false;
