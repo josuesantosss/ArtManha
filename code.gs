@@ -1,8 +1,20 @@
 /**
  * ============================================================
- * ESCOLA DE MÚSICA - WEB APP (API) - v2.4
+ * ESCOLA DE MÚSICA - WEB APP (API) - v2.6
  * ============================================================
- * CORREÇÕES CORS:
+ * NOVIDADES v2.6:
+ *  - salvarMatricula agora grava Mensalidade na matrícula
+ *  - atualizarAluno aceita Mensalidade e Vencimento
+ *  - dadosAlunoCompleto retorna matriculas com mensalidade
+ *    e pagamento com fallback (ALUNOS.mensalidade)
+ *  - salvarPagamento permite MÚLTIPLAS linhas por aluno
+ *    (histórico mensal via Referencia YYYY-MM)
+ *  - listarPagamentos com filtros aluno/status/referencia
+ *  - notificarAtraso (NOVA AÇÃO) — cria notificação de atraso
+ *  - garantirColuna() helper para criar colunas
+ *  - sincronizarAbaAluno inclui histórico de pagamentos
+ *
+ * CORREÇÕES CORS (mantidas):
  *  - doPost aceita text/plain (não dispara preflight)
  *  - doGet também processa ?data=<json> como fallback
  *  - doOptions presente (fallback p/ proxies)
@@ -20,8 +32,6 @@ const SHEET_ID = '1FRtD7cbV2tvK2og4NDkyWi8V_hziyERNZoSh20gG980';
 
 /**
  * ID opcional da pasta do Google Drive onde os arquivos serão salvos.
- * - Vazio ('') → cria/usa "Escola de Música - Arquivos" na raiz do Drive.
- * - Para pasta específica, cole o ID dela aqui.
  */
 const PASTA_DRIVE_ID = '';
 
@@ -38,35 +48,30 @@ const ABAS = {
   usuarios: 'USUARIOS',
   arquivos: 'ARQUIVOS',
   mensagens: 'MENSAGENS',
-  notificacoes: 'NOTIFICACOES'
+  notificacoes: 'NOTIFICACOES',
+  pagamentos: 'PAGAMENTOS',
+  bugs: 'BUGS'
 };
 
 // ============================================================
 // ENTRY POINTS (CORS-safe)
 // ============================================================
 function doOptions(e) {
-  // O GAS não consegue configurar Access-Control-Allow-Origin.
-  // Retornar 200 vazio evita erro 405 em alguns proxies.
   return ContentService.createTextOutput('').setMimeType(ContentService.MimeType.TEXT);
 }
 
 function doPost(e) {
   try {
-    // ✅ Log de debug (útil para diagnosticar CORS)
     try {
       Logger.log('📥 doPost — contentType: ' + (e && e.postData ? e.postData.type : '?'));
-      Logger.log('📥 doPost — contents (primeiros 200 chars): ' +
-        (e && e.postData && e.postData.contents ? e.postData.contents.substring(0, 200) : '(vazio)'));
     } catch (logErr) { /* ignora */ }
 
     let dados = null;
 
-    // 1) Body JSON direto (text/plain ou application/json)
     if (e && e.postData && e.postData.contents) {
       const raw = e.postData.contents;
       try { dados = JSON.parse(raw); }
       catch (p) {
-        // 2) Form-urlencoded com campo data
         if (e.parameter && e.parameter.data) {
           try { dados = JSON.parse(e.parameter.data); }
           catch (e2) { return respostaJSON({ success: false, error: 'JSON inválido no campo data' }); }
@@ -75,7 +80,6 @@ function doPost(e) {
         }
       }
     }
-    // 3) Sem postData, mas com ?data=
     else if (e && e.parameter && e.parameter.data) {
       try { dados = JSON.parse(e.parameter.data); }
       catch (p) { return respostaJSON({ success: false, error: 'JSON inválido: ' + p.message }); }
@@ -96,7 +100,7 @@ function doGet(e) {
     if (!e || !e.parameter || !e.parameter.data) {
       return respostaJSON({
         success: true,
-        message: '🎵 API Escola de Música online (v2.4)',
+        message: '🎵 API Escola de Música online (v2.6)',
         timestamp: new Date().toISOString()
       });
     }
@@ -115,8 +119,8 @@ function doGet(e) {
 // ============================================================
 function processarAcao(acao, payload) {
   try {
-    Logger.log('📥 Ação: ' + acao + ' | Payload: ' + JSON.stringify(payload).substring(0, 500));
-  } catch (e) { /* ignora se payload for grande */ }
+    Logger.log('📥 Ação: ' + acao);
+  } catch (e) { /* ignora */ }
 
   const acoes = {
     // LOGIN / USUÁRIOS
@@ -192,19 +196,35 @@ function processarAcao(acao, payload) {
     'listarNotificacoes': listarNotificacoes,
     'marcarNotificacoesLidas': marcarNotificacoesLidas,
 
+    // PAGAMENTOS / MENSALIDADES
+    'salvarPagamento': salvarPagamento,
+    'listarPagamentos': listarPagamentos,
+    'atualizarPagamento': salvarPagamento,
+    'notificarPagamento': notificarPagamento,
+    'notificarAtraso': notificarAtraso,
+    'calcularPagamentos': calcularPagamentosAPI,
+
+    // ADMINISTRADOR
+    'adminVerSenha': adminVerSenha,
+    'adminListarLogs': adminListarLogs,
+    'adminListarBugs': adminListarBugs,
+    'adminRegistrarBug': adminRegistrarBug,
+    'adminEstatisticas': adminEstatisticas,
+    'adminForcarSync': adminForcarSync,
+
     // Utilitários
     'ping': function() { return respostaJSON({ success: true, message: 'pong' }); },
     'listarCursos': listarCursosAPI,
     'sincronizar': sincronizarTudo,
     'limparAba': limparAba,
-    'criarAbasComunicacao': criarAbasComunicacaoAPI
+    'criarAbasComunicacao': criarAbasComunicacaoAPI,
+    'criarAbasSistema': criarAbasSistemaAPI
   };
 
   const fn = acoes[acao];
   if (!fn) {
     return respostaJSON({ success: false, error: 'Ação desconhecida: ' + acao, acoes: Object.keys(acoes) });
   }
-  // ✅ Cada ação tem seu próprio try/catch — uma falha não derruba as outras
   try { return fn(payload); }
   catch (err) {
     logErro('processarAcao:' + acao, err);
@@ -230,16 +250,6 @@ function getSheet(chave) {
   const sheet = getSS().getSheetByName(ABAS[chave]);
   if (!sheet) throw new Error('Aba não encontrada: ' + ABAS[chave]);
   return sheet;
-}
-
-function listarAcoes() {
-  return Object.keys({
-    login:1, logout:1, criarUsuario:1, criarUsuarioAluno:1, listarUsuarios:1, atualizarSenha:1,
-    salvarAluno:1, salvarProfessor:1, salvarMatricula:1, salvarAvaliacoes:1,
-    salvarPresenca:1, salvarObservacao:1, salvarRelatorio:1, registrarLogin:1,
-    dadosAlunoCompleto:1, enviarMensagemAluno:1, uploadArquivo:1,
-    listarNotificacoes:1, marcarNotificacoesLidas:1, ping:1
-  });
 }
 
 function gerarID(prefixo) {
@@ -270,6 +280,11 @@ function dataHoje() { return formatarData(new Date()); }
 
 function dataHoraAgora() {
   return Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm');
+}
+
+function mesRefAtual() {
+  const h = new Date();
+  return h.getFullYear() + '-' + String(h.getMonth()+1).padStart(2,'0');
 }
 
 function getHeaders(sheet) {
@@ -317,6 +332,18 @@ function removerLinha(sheet, linha) { sheet.deleteRow(linha); }
 
 function s(v) { return (v === null || v === undefined) ? '' : String(v).trim(); }
 
+/**
+ * ✅ NOVA v2.6: garante que a coluna exista no cabeçalho
+ */
+function garantirColuna(sheet, nome) {
+  const headers = getHeaders(sheet);
+  if (headers.indexOf(nome) < 0) {
+    sheet.getRange(1, sheet.getLastColumn() + 1).setValue(nome);
+    return true;
+  }
+  return false;
+}
+
 // ============================================================
 // HASH DE SENHA
 // ============================================================
@@ -341,14 +368,14 @@ function garantirAbaLogs() {
   let sheet = ss.getSheetByName(ABAS.logs);
   if (!sheet) {
     sheet = ss.insertSheet(ABAS.logs);
-    sheet.appendRow(['ID_Log', 'Nome', 'Perfil', 'Data_Hora', 'Acao']);
-    sheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    sheet.appendRow(['ID_Log', 'Nome', 'Perfil', 'Data_Hora', 'Acao', 'Detalhe', 'IP']);
+    sheet.getRange(1, 1, 1, 7).setFontWeight('bold');
     sheet.setFrozenRows(1);
     return sheet;
   }
   if (sheet.getLastRow() === 0 || sheet.getLastColumn() === 0) {
-    sheet.getRange(1, 1, 1, 5).setValues([['ID_Log', 'Nome', 'Perfil', 'Data_Hora', 'Acao']]);
-    sheet.getRange(1, 1, 1, 5).setFontWeight('bold');
+    sheet.getRange(1, 1, 1, 7).setValues([['ID_Log', 'Nome', 'Perfil', 'Data_Hora', 'Acao', 'Detalhe', 'IP']]);
+    sheet.getRange(1, 1, 1, 7).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
   return sheet;
@@ -434,6 +461,62 @@ function garantirAbaNotificacoes() {
   return sheet;
 }
 
+/**
+ * ✅ v2.6: Aba PAGAMENTOS
+ * Colunas: Aluno | Valor | Vencimento | Status | Data_Pagamento | Referencia
+ * Cada aluno pode ter MÚLTIPLAS linhas (uma por mês/ano).
+ */
+function garantirAbaPagamentos() {
+  const ss = getSS();
+  let sheet = ss.getSheetByName(ABAS.pagamentos);
+  const headersDesejados = ['Aluno', 'Valor', 'Vencimento', 'Status', 'Data_Pagamento', 'Referencia'];
+  if (!sheet) {
+    sheet = ss.insertSheet(ABAS.pagamentos);
+    sheet.appendRow(headersDesejados);
+    sheet.getRange(1, 1, 1, headersDesejados.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    sheet.setColumnWidth(1, 240);
+    sheet.setColumnWidth(2, 100);
+    sheet.setColumnWidth(3, 110);
+    sheet.setColumnWidth(4, 120);
+    sheet.setColumnWidth(5, 130);
+    sheet.setColumnWidth(6, 120);
+    return sheet;
+  }
+  const headers = getHeaders(sheet);
+  if (headers.length === 0) {
+    sheet.getRange(1, 1, 1, headersDesejados.length).setValues([headersDesejados]);
+    sheet.getRange(1, 1, 1, headersDesejados.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  // Garante coluna Referencia (compatibilidade com versões antigas)
+  garantirColuna(sheet, 'Referencia');
+  return sheet;
+}
+
+/**
+ * ✅ v2.6: Aba BUGS
+ */
+function garantirAbaBugs() {
+  const ss = getSS();
+  let sheet = ss.getSheetByName(ABAS.bugs);
+  const headersDesejados = ['ID_Bug', 'Titulo', 'Descricao', 'Contexto', 'Usuario', 'Data', 'Status'];
+  if (!sheet) {
+    sheet = ss.insertSheet(ABAS.bugs);
+    sheet.appendRow(headersDesejados);
+    sheet.getRange(1, 1, 1, headersDesejados.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+  const headers = getHeaders(sheet);
+  if (headers.length === 0) {
+    sheet.getRange(1, 1, 1, headersDesejados.length).setValues([headersDesejados]);
+    sheet.getRange(1, 1, 1, headersDesejados.length).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
 function garantirAbaAluno(nomeAluno) {
   const nome = s(nomeAluno).toUpperCase();
   if (!nome) throw new Error('Nome do aluno é obrigatório');
@@ -463,14 +546,16 @@ function sincronizarAbaAluno(nomeAluno) {
   const lastRow = sheet.getLastRow();
   if (lastRow >= 6) sheet.getRange(6, 1, lastRow - 5, 8).clearContent();
 
-  sheet.getRange(6, 1, 1, 4).setValues([['Curso', 'Professor', 'Status', 'Data_Matrícula']]).setFontWeight('bold');
+  // Matrículas
+  sheet.getRange(6, 1, 1, 5).setValues([['Curso', 'Professor', 'Status', 'Data_Matrícula', 'Mensalidade']]).setFontWeight('bold');
   const matriculas = getRegistros(getSheet('matriculas')).filter(function(m) { return s(m.Aluno).toUpperCase() === nome; });
   let row = 7;
   matriculas.forEach(function(m) {
-    sheet.getRange(row, 1, 1, 4).setValues([[s(m.Curso), s(m.Professor), s(m.Status), s(m.Data_Matricula)]]);
+    sheet.getRange(row, 1, 1, 5).setValues([[s(m.Curso), s(m.Professor), s(m.Status), s(m.Data_Matricula), Number(m.Mensalidade) || 0]]);
     row++;
   });
 
+  // Avaliações
   row += 1;
   sheet.getRange(row, 1, 1, 5).setValues([['Curso','Bimestre','Nota','Professor','Data_Lançamento']]).setFontWeight('bold');
   row++;
@@ -480,6 +565,7 @@ function sincronizarAbaAluno(nomeAluno) {
     row++;
   });
 
+  // Presenças
   row += 1;
   sheet.getRange(row, 1, 1, 4).setValues([['Curso','Data','Presente','Professor']]).setFontWeight('bold');
   row++;
@@ -491,6 +577,7 @@ function sincronizarAbaAluno(nomeAluno) {
     }
   });
 
+  // Relatórios
   row += 1;
   sheet.getRange(row, 1, 1, 4).setValues([['Curso','Bimestre','Data','Relatório']]).setFontWeight('bold');
   row++;
@@ -498,6 +585,28 @@ function sincronizarAbaAluno(nomeAluno) {
     sheet.getRange(row, 1, 1, 4).setValues([[s(r.Curso), s(r.Bimestre), s(r.Data), s(r.Relatorio).substring(0, 500)]]);
     row++;
   });
+
+  // ✅ v2.6: histórico COMPLETO de pagamentos
+  try {
+    const pgs = getRegistros(garantirAbaPagamentos())
+      .filter(function(p) { return s(p.Aluno).toUpperCase() === nome; })
+      .sort(function(a, b) { return s(b.Referencia).localeCompare(s(a.Referencia)); });
+    if (pgs.length > 0) {
+      row += 1;
+      sheet.getRange(row, 1, 1, 6).setValues([['Referência', 'Valor', 'Vencimento', 'Status', 'Data Pagamento', '']]).setFontWeight('bold');
+      row++;
+      pgs.forEach(function(p) {
+        sheet.getRange(row, 1, 1, 5).setValues([[
+          s(p.Referencia),
+          Number(p.Valor) || 0,
+          s(p.Vencimento),
+          s(p.Status),
+          s(p.Data_Pagamento)
+        ]]);
+        row++;
+      });
+    }
+  } catch (e) { Logger.log('⚠️ Erro ao incluir pagamentos na ficha: ' + e.message); }
 
   return { success: true, aba: sheet.getName(), matriculas: matriculas.length };
 }
@@ -694,27 +803,37 @@ function logoutUsuario(payload) {
     const nome = payload && payload.nome ? s(payload.nome).toUpperCase() : '';
     const perfil = payload && payload.perfil ? s(payload.perfil) : '';
     if (nome && perfil) {
-      try {
-        const sheet = garantirAbaLogs();
-        const headers = getHeaders(sheet);
-        const id = gerarID('LOG');
-        const dataHora = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
-        const valores = headers.map(function(h) {
-          switch (h) {
-            case 'ID_Log': return id;
-            case 'Nome': return nome;
-            case 'Perfil': return perfil;
-            case 'Data_Hora': return dataHora;
-            case 'Acao': return 'LOGOUT';
-            default: return '';
-          }
-        });
-        appendRegistro(sheet, valores);
-      } catch (e) { Logger.log('⚠️ Falha ao registrar logout: ' + e.message); }
+      try { registrarLog(nome, perfil, 'LOGOUT', ''); } catch (e) { /* ignora */ }
     }
     return respostaJSON({ success: true, message: 'Sessão encerrada' });
   } catch (e) {
     return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+function registrarLog(nome, perfil, acao, detalhe) {
+  try {
+    const sheet = garantirAbaLogs();
+    const headers = getHeaders(sheet);
+    const id = gerarID('LOG');
+    const dataHora = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
+    const valores = headers.map(function(h) {
+      switch (h) {
+        case 'ID_Log': return id;
+        case 'Nome': return s(nome).toUpperCase();
+        case 'Perfil': return s(perfil);
+        case 'Data_Hora': return dataHora;
+        case 'Acao': return s(acao || 'ACAO');
+        case 'Detalhe': return s(detalhe || '');
+        case 'IP': return '';
+        default: return '';
+      }
+    });
+    appendRegistro(sheet, valores);
+    return { success: true, id: id };
+  } catch (e) {
+    Logger.log('⚠️ registrarLog falhou: ' + e.message);
+    return { success: false, error: e.message };
   }
 }
 
@@ -740,7 +859,6 @@ function uploadArquivoGAS(payload) {
     const base64 = s(p.file);
     if (!base64) return respostaJSON({ success: false, error: 'Conteúdo do arquivo vazio.' });
 
-    // ✅ Limite de 25 MB em base64 (~18.75 MB binário) — evita timeout
     const TAMANHO_MAX_B64 = 25 * 1024 * 1024;
     if (base64.length > TAMANHO_MAX_B64) {
       return respostaJSON({ success: false, error: 'Arquivo muito grande (máx 20MB binário).' });
@@ -759,7 +877,6 @@ function uploadArquivoGAS(payload) {
     }
     if (!destinatarios.length) return respostaJSON({ success: false, error: 'Nenhum destinatário informado.' });
 
-    // ✅ Decodifica base64 com try/catch específico
     let blob;
     try {
       blob = Utilities.newBlob(Utilities.base64Decode(base64), mimeType, nomeArquivo);
@@ -968,6 +1085,255 @@ function marcarNotificacoesLidas(payload) {
 }
 
 // ============================================================
+// ✅ v2.6: PAGAMENTOS / MENSALIDADES (histórico mensal)
+// ============================================================
+
+/**
+ * Salva/atualiza a mensalidade de um aluno para uma REFERÊNCIA (YYYY-MM).
+ * Cada (Aluno + Referencia) é um registro único (permite histórico).
+ *
+ * Payload: { aluno, valor, vencimento, status, dataPagamento, referencia }
+ * - status: PAGO | PENDENTE | ATRASADO | ISENTO
+ * - dataPagamento: DD-MM-YYYY (opcional; se status=PAGO e vazio, usa hoje)
+ * - referencia: ex.: "2026-03" (se vazio, usa mês atual)
+ */
+function salvarPagamento(payload) {
+  try {
+    const aluno = s(payload.aluno).toUpperCase();
+    if (!aluno) return respostaJSON({ success: false, error: 'Aluno é obrigatório' });
+
+    const valor = Number(payload.valor) || 0;
+    const vencimento = parseInt(payload.vencimento, 10) || 10;
+    let status = s(payload.status).toUpperCase();
+    if (!['PAGO', 'PENDENTE', 'ATRASADO', 'ISENTO'].includes(status)) status = 'PENDENTE';
+    let dataPagamento = s(payload.dataPagamento);
+    if (status === 'PAGO' && !dataPagamento) dataPagamento = dataHoje();
+    if (status !== 'PAGO') dataPagamento = dataPagamento || '';
+    const referencia = s(payload.referencia) || mesRefAtual();
+
+    const sheet = garantirAbaPagamentos();
+    const headers = getHeaders(sheet);
+
+    // ✅ v2.6: chave única = (Aluno + Referencia)
+    const linha = encontrarLinha(sheet, { 'Aluno': aluno, 'Referencia': referencia });
+
+    if (linha > -1) {
+      // Atualiza registro existente do mesmo mês
+      const antigos = sheet.getRange(linha, 1, 1, headers.length).getValues()[0];
+      const novos = headers.map(function(h, i) {
+        switch (h) {
+          case 'Aluno': return aluno;
+          case 'Valor': return valor;
+          case 'Vencimento': return vencimento;
+          case 'Status': return status;
+          case 'Data_Pagamento': return dataPagamento;
+          case 'Referencia': return referencia;
+          default: return antigos[i];
+        }
+      });
+      atualizarLinha(sheet, linha, novos);
+    } else {
+      // Cria novo registro (novo mês para o aluno)
+      const novos = headers.map(function(h) {
+        switch (h) {
+          case 'Aluno': return aluno;
+          case 'Valor': return valor;
+          case 'Vencimento': return vencimento;
+          case 'Status': return status;
+          case 'Data_Pagamento': return dataPagamento;
+          case 'Referencia': return referencia;
+          default: return '';
+        }
+      });
+      appendRegistro(sheet, novos);
+    }
+
+    try {
+      registrarLog('SISTEMA', 'financeiro', 'SALVAR_PAGAMENTO',
+        aluno + ' — R$ ' + valor.toFixed(2) + ' — ' + status + ' — ' + referencia);
+    } catch (e) { /* ignora */ }
+
+    return respostaJSON({
+      success: true,
+      message: 'Pagamento salvo',
+      aluno: aluno, valor: valor, vencimento: vencimento, status: status,
+      dataPagamento: dataPagamento, referencia: referencia
+    });
+  } catch (e) {
+    logErro('salvarPagamento', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+/**
+ * Lista pagamentos com filtros opcionais: aluno, status, referencia.
+ */
+function listarPagamentos(payload) {
+  try {
+    const sheet = garantirAbaPagamentos();
+    let regs = getRegistros(sheet);
+    if (payload) {
+      if (payload.aluno) {
+        const alvo = s(payload.aluno).toUpperCase();
+        regs = regs.filter(function(r) { return s(r.Aluno).toUpperCase() === alvo; });
+      }
+      if (payload.status) {
+        const st = s(payload.status).toUpperCase();
+        regs = regs.filter(function(r) { return s(r.Status).toUpperCase() === st; });
+      }
+      if (payload.referencia) {
+        const ref = s(payload.referencia);
+        regs = regs.filter(function(r) { return s(r.Referencia) === ref; });
+      }
+    }
+    const pagamentos = regs.map(function(r) {
+      return {
+        aluno: s(r.Aluno),
+        valor: Number(r.Valor) || 0,
+        vencimento: parseInt(r.Vencimento, 10) || 10,
+        status: s(r.Status).toUpperCase() || 'PENDENTE',
+        dataPagamento: s(r.Data_Pagamento),
+        referencia: s(r.Referencia)
+      };
+    });
+    return respostaJSON({ success: true, total: pagamentos.length, pagamentos: pagamentos });
+  } catch (e) {
+    logErro('listarPagamentos', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+/**
+ * Envia notificação ao aluno sobre pagamento.
+ */
+function notificarPagamento(payload) {
+  try {
+    const aluno = s(payload.aluno).toUpperCase();
+    if (!aluno) return respostaJSON({ success: false, error: 'Aluno é obrigatório' });
+    const valor = Number(payload.valor) || 0;
+    const status = s(payload.status).toUpperCase() || 'PENDENTE';
+    const vencimento = parseInt(payload.vencimento, 10) || 10;
+    const referencia = s(payload.referencia) || mesRefAtual();
+
+    const descricao = 'Referência: ' + referencia + ' — Valor: R$ ' + valor.toFixed(2) +
+                      ' — Vencimento dia ' + vencimento + ' — Status: ' + status;
+    const titulo = 'Mensalidade atualizada: ' + status;
+
+    const sheet = garantirAbaNotificacoes();
+    const headers = getHeaders(sheet);
+    const idNotif = gerarID('NTF');
+    const valores = headers.map(function(h) {
+      switch (h) {
+        case 'ID': return idNotif;
+        case 'Aluno': return aluno;
+        case 'Tipo': return 'pagamento';
+        case 'Titulo': return titulo;
+        case 'Descricao': return descricao;
+        case 'Curso': return '';
+        case 'Professor': return '';
+        case 'Lida': return 'NAO';
+        case 'Data': return dataHoraAgora();
+        default: return '';
+      }
+    });
+    appendRegistro(sheet, valores);
+    return respostaJSON({ success: true, message: 'Notificação de pagamento enviada', id: idNotif });
+  } catch (e) {
+    logErro('notificarPagamento', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+/**
+ * ✅ NOVA v2.6: notifica o aluno que a mensalidade está em atraso.
+ * Payload: { aluno, referencia, valor, vencimento }
+ * Cria notificação tipo 'atraso' (evita duplicar no mesmo mês).
+ */
+function notificarAtraso(payload) {
+  try {
+    const aluno = s(payload.aluno).toUpperCase();
+    if (!aluno) return respostaJSON({ success: false, error: 'Aluno é obrigatório' });
+    const valor = Number(payload.valor) || 0;
+    const vencimento = parseInt(payload.vencimento, 10) || 10;
+    const referencia = s(payload.referencia) || mesRefAtual();
+    const [ano, mes] = referencia.split('-');
+    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const nomeMes = MESES[parseInt(mes, 10) - 1] || referencia;
+
+    const sheet = garantirAbaNotificacoes();
+    const headers = getHeaders(sheet);
+
+    // Evita duplicar no mesmo mês
+    const existentes = getRegistros(sheet);
+    const jaExiste = existentes.some(function(n) {
+      return s(n.Aluno).toUpperCase() === aluno
+          && s(n.Tipo).toLowerCase() === 'atraso'
+          && (s(n.Titulo) + ' ' + s(n.Descricao)).indexOf(nomeMes) !== -1
+          && (s(n.Titulo) + ' ' + s(n.Descricao)).indexOf(ano) !== -1;
+    });
+    if (jaExiste) {
+      return respostaJSON({ success: true, message: 'Notificação de atraso já existente', duplicada: true });
+    }
+
+    const idNotif = gerarID('NTF');
+    const valores = headers.map(function(h) {
+      switch (h) {
+        case 'ID': return idNotif;
+        case 'Aluno': return aluno;
+        case 'Tipo': return 'atraso';
+        case 'Titulo': return '⚠️ Mensalidade em atraso — ' + nomeMes + '/' + ano;
+        case 'Descricao': return 'Sua mensalidade de ' + nomeMes + '/' + ano +
+          ' (vencimento dia ' + vencimento + ', valor R$ ' + valor.toFixed(2) +
+          ') está em atraso. Regularize com o setor Financeiro.';
+        case 'Curso': return '';
+        case 'Professor': return 'SISTEMA';
+        case 'Lida': return 'NAO';
+        case 'Data': return dataHoraAgora();
+        default: return '';
+      }
+    });
+    appendRegistro(sheet, valores);
+    return respostaJSON({ success: true, message: 'Notificação de atraso enviada', id: idNotif });
+  } catch (e) {
+    logErro('notificarAtraso', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+/**
+ * Calcula totais de pagamentos (para o financeiro).
+ * Filtro opcional: referencia (YYYY-MM)
+ */
+function calcularPagamentosAPI(payload) {
+  try {
+    let regs = getRegistros(garantirAbaPagamentos());
+    if (payload && payload.referencia) {
+      const ref = s(payload.referencia);
+      regs = regs.filter(function(r) { return s(r.Referencia) === ref; });
+    }
+    let pagos = 0, pendentes = 0, atrasados = 0, isentos = 0;
+    let totalPago = 0, totalPend = 0, totalAtras = 0;
+    regs.forEach(function(r) {
+      const v = Number(r.Valor) || 0;
+      const st = s(r.Status).toUpperCase();
+      if (st === 'PAGO') { pagos++; totalPago += v; }
+      else if (st === 'ATRASADO') { atrasados++; totalAtras += v; }
+      else if (st === 'ISENTO') { isentos++; }
+      else { pendentes++; totalPend += v; }
+    });
+    return respostaJSON({
+      success: true,
+      pagos: pagos, pendentes: pendentes, atrasados: atrasados, isentos: isentos,
+      totalPago: totalPago, totalPendente: totalPend, totalAtrasado: totalAtras,
+      totalGeral: totalPago + totalPend + totalAtras
+    });
+  } catch (e) {
+    logErro('calcularPagamentosAPI', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+// ============================================================
 // DADOS DO ALUNO
 // ============================================================
 function dadosAlunoCompleto(payload) {
@@ -1013,6 +1379,9 @@ function dadosAlunoCompleto(payload) {
 
   let arquivos = [];
   let mensagens = [];
+  let pagamento = null;
+  let pagamentos = [];
+
   try {
     arquivos = getRegistros(garantirAbaArquivos())
       .filter(function(a) { return s(a.Aluno).toUpperCase() === nomeUp; })
@@ -1037,6 +1406,40 @@ function dadosAlunoCompleto(payload) {
       });
   } catch (e) { Logger.log('⚠️ Erro ao ler mensagens: ' + e.message); }
 
+  // ✅ v2.6: TODOS os pagamentos do aluno (histórico) + o do mês atual
+  try {
+    const pgRegs = getRegistros(garantirAbaPagamentos())
+      .filter(function(p) { return s(p.Aluno).toUpperCase() === nomeUp; });
+    pagamentos = pgRegs.map(function(p) {
+      return {
+        aluno: s(p.Aluno),
+        valor: Number(p.Valor) || 0,
+        vencimento: parseInt(p.Vencimento, 10) || 10,
+        status: s(p.Status).toUpperCase() || 'PENDENTE',
+        dataPagamento: s(p.Data_Pagamento),
+        referencia: s(p.Referencia)
+      };
+    });
+    const refAtual = mesRefAtual();
+    pagamento = pagamentos.find(function(p) { return p.referencia === refAtual; }) || null;
+
+    // Fallback: se não há registro no mês, mas o aluno tem mensalidade cadastrada,
+    // sintetiza um registro "virtual" (o HTML também faz isso, mas reforça aqui)
+    if (!pagamento) {
+      const mensalidadeAluno = Number(aluno.Mensalidade) || 0;
+      if (mensalidadeAluno > 0) {
+        pagamento = {
+          aluno: nomeUp,
+          valor: mensalidadeAluno,
+          vencimento: parseInt(aluno.Vencimento, 10) || 10,
+          status: 'PENDENTE',
+          dataPagamento: '',
+          referencia: refAtual
+        };
+      }
+    }
+  } catch (e) { Logger.log('⚠️ Erro ao ler pagamentos: ' + e.message); }
+
   return respostaJSON({
     success: true,
     aluno: {
@@ -1044,12 +1447,15 @@ function dadosAlunoCompleto(payload) {
       dataNascimento: s(aluno.Data_Nascimento),
       responsavel: s(aluno.Responsavel),
       contato: s(aluno.Contato),
-      status: s(aluno.Status)
+      status: s(aluno.Status),
+      mensalidade: Number(aluno.Mensalidade) || 0,
+      vencimento: parseInt(aluno.Vencimento, 10) || 10
     },
     matriculas: matriculas.map(function(m) {
       return {
         curso: s(m.Curso), professor: s(m.Professor),
-        status: s(m.Status), dataMatricula: s(m.Data_Matricula), anoLetivo: s(m.Ano_Letivo)
+        status: s(m.Status), dataMatricula: s(m.Data_Matricula), anoLetivo: s(m.Ano_Letivo),
+        mensalidade: Number(m.Mensalidade) || 0
       };
     }),
     avaliacoes: avaliacoes.map(function(a) {
@@ -1062,7 +1468,9 @@ function dadosAlunoCompleto(payload) {
     conteudos: conteudos,
     relatorios: relatorios,
     arquivos: arquivos,
-    mensagens: mensagens
+    mensagens: mensagens,
+    pagamento: pagamento,
+    pagamentos: pagamentos
   });
 }
 
@@ -1082,9 +1490,11 @@ function garantirAbaAlunoAPI(payload) {
 // ============================================================
 function salvarAluno(payload) {
   const nome = payload.nome, dataNascimento = payload.dataNascimento, responsavel = payload.responsavel,
-        contato = payload.contato, status = payload.status;
+        contato = payload.contato, status = payload.status, mensalidade = payload.mensalidade, vencimento = payload.vencimento;
   if (!nome) return respostaJSON({ success: false, error: 'Nome é obrigatório' });
   const sheet = getSheet('alunos');
+  garantirColuna(sheet, 'Mensalidade');
+  garantirColuna(sheet, 'Vencimento');
   const headers = getHeaders(sheet);
   if (encontrarLinha(sheet, { 'Nome': s(nome).toUpperCase() }) > -1) {
     return respostaJSON({ success: false, error: 'Aluno já cadastrado: ' + nome });
@@ -1097,18 +1507,37 @@ function salvarAluno(payload) {
       case 'Contato': return s(contato);
       case 'Status': return s(status || 'ATIVO').toUpperCase();
       case 'Data_Cadastro': return dataHoje();
+      case 'Mensalidade': return Number(mensalidade) || 0;
+      case 'Vencimento': return parseInt(vencimento, 10) || 10;
       default: return '';
     }
   });
   const linha = appendRegistro(sheet, valores);
+
+  // ✅ v2.6: se mensalidade > 0, cria registro em PAGAMENTOS do mês atual
+  if (Number(mensalidade) > 0) {
+    try {
+      salvarPagamento({
+        aluno: s(nome).toUpperCase(),
+        valor: Number(mensalidade),
+        vencimento: parseInt(vencimento, 10) || 10,
+        status: 'PENDENTE',
+        referencia: mesRefAtual()
+      });
+    } catch (e) { Logger.log('⚠️ Falha ao criar pagamento inicial: ' + e.message); }
+  }
+
   return respostaJSON({ success: true, message: 'Aluno salvo', id: linha });
 }
 
 function atualizarAluno(payload) {
   const nome = payload.nome, nomeOriginal = payload.nomeOriginal, dataNascimento = payload.dataNascimento,
-        responsavel = payload.responsavel, contato = payload.contato, status = payload.status;
+        responsavel = payload.responsavel, contato = payload.contato, status = payload.status,
+        mensalidade = payload.mensalidade, vencimento = payload.vencimento;
   if (!nome) return respostaJSON({ success: false, error: 'Nome é obrigatório' });
   const sheet = getSheet('alunos');
+  garantirColuna(sheet, 'Mensalidade');
+  garantirColuna(sheet, 'Vencimento');
   const headers = getHeaders(sheet);
   const linha = encontrarLinha(sheet, { 'Nome': s(nomeOriginal || nome).toUpperCase() });
   if (linha < 0) return respostaJSON({ success: false, error: 'Aluno não encontrado' });
@@ -1120,6 +1549,9 @@ function atualizarAluno(payload) {
       case 'Responsavel': return responsavel !== undefined ? s(responsavel).toUpperCase() : antigos[i];
       case 'Contato': return contato !== undefined ? s(contato) : antigos[i];
       case 'Status': return status !== undefined ? s(status).toUpperCase() : antigos[i];
+      // ✅ NOVO v2.6
+      case 'Mensalidade': return mensalidade !== undefined ? (Number(mensalidade) || 0) : antigos[i];
+      case 'Vencimento': return vencimento !== undefined ? (parseInt(vencimento, 10) || 10) : antigos[i];
       default: return antigos[i];
     }
   });
@@ -1214,10 +1646,7 @@ function salvarValorProfessor(payload) {
 }
 
 function garantirColunaValorHora(sheet) {
-  const headers = getHeaders(sheet);
-  if (headers.indexOf('Valor_Hora') < 0) {
-    sheet.getRange(1, sheet.getLastColumn() + 1).setValue('Valor_Hora');
-  }
+  garantirColuna(sheet, 'Valor_Hora');
 }
 
 function removerProfessor(payload) {
@@ -1237,11 +1666,17 @@ function listarProfessores() {
   return respostaJSON({ success: true, total: registros.length, professores: registros });
 }
 
+/**
+ * ✅ v2.6: salvarMatricula grava Mensalidade
+ */
 function salvarMatricula(payload) {
   const aluno = payload.aluno, curso = payload.curso, professor = payload.professor,
         dataMatricula = payload.dataMatricula, anoLetivo = payload.anoLetivo, status = payload.status;
+  // ✅ NOVO: valor da mensalidade vinculado à matrícula
+  const mensalidade = Number(payload.mensalidade) || 0;
   if (!aluno || !curso) return respostaJSON({ success: false, error: 'Aluno e Curso obrigatórios' });
   const sheet = getSheet('matriculas');
+  garantirColuna(sheet, 'Mensalidade'); // ✅ garante coluna
   const headers = getHeaders(sheet);
   const existente = encontrarLinha(sheet, { 'Aluno': s(aluno).toUpperCase(), 'Curso': s(curso) });
   if (existente > -1) {
@@ -1261,17 +1696,20 @@ function salvarMatricula(payload) {
       case 'Data_Matricula': return formatarData(dataMatricula) || dataHoje();
       case 'Ano_Letivo': return s(anoLetivo) || String(new Date().getFullYear());
       case 'Status': return s(status || 'ATIVO').toUpperCase();
+      case 'Mensalidade': return mensalidade; // ✅ NOVO
       default: return '';
     }
   });
   appendRegistro(sheet, valores);
-  return respostaJSON({ success: true, message: 'Matrícula registrada', id: id });
+  return respostaJSON({ success: true, message: 'Matrícula registrada', id: id, mensalidade: mensalidade });
 }
 
 function atualizarMatricula(payload) {
   const id = payload.id, aluno = payload.aluno, curso = payload.curso, professor = payload.professor,
         dataMatricula = payload.dataMatricula, anoLetivo = payload.anoLetivo, status = payload.status;
+  const mensalidade = payload.mensalidade; // ✅ NOVO (opcional)
   const sheet = getSheet('matriculas');
+  garantirColuna(sheet, 'Mensalidade');
   const headers = getHeaders(sheet);
   let linha = -1;
   if (id) linha = encontrarLinha(sheet, { 'ID_Matricula': s(id) });
@@ -1286,6 +1724,7 @@ function atualizarMatricula(payload) {
       case 'Data_Matricula': return dataMatricula !== undefined ? formatarData(dataMatricula) : antigos[i];
       case 'Ano_Letivo': return anoLetivo !== undefined ? s(anoLetivo) : antigos[i];
       case 'Status': return status !== undefined ? s(status).toUpperCase() : antigos[i];
+      case 'Mensalidade': return mensalidade !== undefined ? (Number(mensalidade) || 0) : antigos[i];
       default: return antigos[i];
     }
   });
@@ -1626,26 +2065,9 @@ function garantirAbaLogsAPI() {
 function registrarLogin(payload) {
   const nome = payload.nome, perfil = payload.perfil, acao = payload.acao;
   if (!nome || !perfil) return respostaJSON({ success: false, error: 'Nome e perfil obrigatórios' });
-  try {
-    const sheet = garantirAbaLogs();
-    const headers = getHeaders(sheet);
-    const id = gerarID('LOG');
-    const dataHora = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
-    const valores = headers.map(function(h) {
-      switch (h) {
-        case 'ID_Log': return id;
-        case 'Nome': return s(nome).toUpperCase();
-        case 'Perfil': return s(perfil);
-        case 'Data_Hora': return dataHora;
-        case 'Acao': return s(acao || 'LOGIN');
-        default: return '';
-      }
-    });
-    appendRegistro(sheet, valores);
-    return respostaJSON({ success: true, id: id, dataHora: dataHora });
-  } catch (e) {
-    return respostaJSON({ success: false, error: e.message });
-  }
+  const r = registrarLog(nome, perfil, acao || 'LOGIN', payload.detalhe || '');
+  if (r.success) return respostaJSON({ success: true, id: r.id });
+  return respostaJSON({ success: false, error: r.error });
 }
 
 function listarLogs(payload) {
@@ -1693,6 +2115,8 @@ function sincronizarTudo() {
       if (chave === 'arquivos') garantirAbaArquivos();
       if (chave === 'mensagens') garantirAbaMensagens();
       if (chave === 'notificacoes') garantirAbaNotificacoes();
+      if (chave === 'pagamentos') garantirAbaPagamentos();
+      if (chave === 'bugs') garantirAbaBugs();
       const sheet = getSheet(chave);
       res[chave] = getRegistros(sheet);
     } catch (e) {
@@ -1725,6 +2149,200 @@ function criarAbasComunicacaoAPI() {
   }
 }
 
+function criarAbasSistemaAPI() {
+  try {
+    garantirAbaUsuarios();
+    garantirAbaLogs();
+    garantirAbaArquivos();
+    garantirAbaMensagens();
+    garantirAbaNotificacoes();
+    garantirAbaPagamentos();
+    garantirAbaBugs();
+    return respostaJSON({ success: true, message: 'Todas as abas do sistema estão prontas.' });
+  } catch (e) {
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+// ============================================================
+// ADMINISTRADOR
+// ============================================================
+function adminVerSenha(payload) {
+  try {
+    const usuario = s(payload.usuario).toLowerCase();
+    if (!usuario) return respostaJSON({ success: false, error: 'Usuário obrigatório' });
+    const sheet = garantirAbaUsuarios();
+    const headers = getHeaders(sheet);
+    const linha = encontrarLinha(sheet, { 'Usuario': usuario });
+    if (linha < 0) return respostaJSON({ success: false, error: 'Usuário não encontrado' });
+
+    const valores = sheet.getRange(linha, 1, 1, headers.length).getValues()[0];
+    const obj = {};
+    headers.forEach(function(h, i) { obj[h] = valores[i]; });
+
+    if (obj['Senha_Provisoria'] && s(obj['Senha_Provisoria'])) {
+      return respostaJSON({ success: true, senha: s(obj['Senha_Provisoria']), tipo: 'provisoria' });
+    }
+    if (obj['Senha_Texto'] && s(obj['Senha_Texto'])) {
+      return respostaJSON({ success: true, senha: s(obj['Senha_Texto']), tipo: 'texto' });
+    }
+
+    return respostaJSON({
+      success: true,
+      senha: '🔒 Criptografada (SHA-256)',
+      tipo: 'hash',
+      hash: s(obj.Senha_Hash),
+      salt: s(obj.Salt),
+      aviso: 'A senha real não pode ser recuperada. Use "Resetar Senha" para definir uma nova.'
+    });
+  } catch (e) {
+    logErro('adminVerSenha', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+function adminListarLogs(payload) {
+  try {
+    const limite = parseInt(payload.limite, 10) || 200;
+    const sheet = garantirAbaLogs();
+    const headers = getHeaders(sheet);
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return respostaJSON({ success: true, total: 0, logs: [] });
+    const total = lastRow - 1;
+    const startRow = Math.max(2, lastRow - limite + 1);
+    const qtd = lastRow - startRow + 1;
+    const valores = sheet.getRange(startRow, 1, qtd, headers.length).getValues();
+    const logs = valores.map(function(row) {
+      const obj = {};
+      headers.forEach(function(h, i) { obj[h] = row[i]; });
+      return {
+        data: s(obj.Data_Hora),
+        usuario: s(obj.Nome),
+        perfil: s(obj.Perfil),
+        acao: s(obj.Acao),
+        detalhe: s(obj.Detalhe),
+        ip: s(obj.IP)
+      };
+    }).reverse();
+    return respostaJSON({ success: true, total: total, logs: logs });
+  } catch (e) {
+    logErro('adminListarLogs', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+function adminListarBugs(payload) {
+  try {
+    const sheet = garantirAbaBugs();
+    const regs = getRegistros(sheet).map(function(r) {
+      return {
+        id: s(r.ID_Bug),
+        titulo: s(r.Titulo),
+        descricao: s(r.Descricao),
+        contexto: s(r.Contexto),
+        usuario: s(r.Usuario),
+        data: s(r.Data),
+        status: s(r.Status)
+      };
+    }).reverse();
+    return respostaJSON({ success: true, total: regs.length, bugs: regs });
+  } catch (e) {
+    logErro('adminListarBugs', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+function adminRegistrarBug(payload) {
+  try {
+    const titulo = s(payload.titulo) || 'Bug sem título';
+    const descricao = s(payload.descricao);
+    const contexto = s(payload.contexto);
+    const usuario = s(payload.usuario) || 'sistema';
+    const sheet = garantirAbaBugs();
+    const headers = getHeaders(sheet);
+    const id = gerarID('BUG');
+    const valores = headers.map(function(h) {
+      switch (h) {
+        case 'ID_Bug': return id;
+        case 'Titulo': return titulo;
+        case 'Descricao': return descricao;
+        case 'Contexto': return contexto;
+        case 'Usuario': return usuario;
+        case 'Data': return dataHoraAgora();
+        case 'Status': return 'ABERTO';
+        default: return '';
+      }
+    });
+    appendRegistro(sheet, valores);
+    return respostaJSON({ success: true, message: 'Bug registrado', id: id });
+  } catch (e) {
+    logErro('adminRegistrarBug', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+function adminEstatisticas(payload) {
+  try {
+    const ss = getSS();
+    const abasInfo = {};
+    Object.keys(ABAS).forEach(function(chave) {
+      try {
+        const sh = ss.getSheetByName(ABAS[chave]);
+        abasInfo[chave] = sh ? { nome: sh.getName(), linhas: sh.getLastRow(), colunas: sh.getLastColumn() } : { erro: 'não encontrada' };
+      } catch (e) { abasInfo[chave] = { erro: e.message }; }
+    });
+
+    const usuarios = getRegistros(garantirAbaUsuarios());
+    const logs = getRegistros(garantirAbaLogs());
+    const bugs = getRegistros(garantirAbaBugs());
+    const pagamentos = getRegistros(garantirAbaPagamentos());
+
+    const porPerfil = {};
+    usuarios.forEach(function(u) {
+      const p = s(u.Perfil) || 'desconhecido';
+      porPerfil[p] = (porPerfil[p] || 0) + 1;
+    });
+
+    let totalPago = 0, totalPend = 0, totalAtras = 0;
+    pagamentos.forEach(function(p) {
+      const v = Number(p.Valor) || 0;
+      const st = s(p.Status).toUpperCase();
+      if (st === 'PAGO') totalPago += v;
+      else if (st === 'ATRASADO') totalAtras += v;
+      else if (st === 'PENDENTE') totalPend += v;
+    });
+
+    return respostaJSON({
+      success: true,
+      usuarios: { total: usuarios.length, porPerfil: porPerfil },
+      logs: { total: logs.length },
+      bugs: { total: bugs.length, abertos: bugs.filter(function(b) { return s(b.Status).toUpperCase() === 'ABERTO'; }).length },
+      pagamentos: { total: pagamentos.length, totalPago: totalPago, totalPendente: totalPend, totalAtrasado: totalAtras },
+      abas: abasInfo,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    logErro('adminEstatisticas', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
+function adminForcarSync(payload) {
+  try {
+    garantirAbaUsuarios();
+    garantirAbaLogs();
+    garantirAbaArquivos();
+    garantirAbaMensagens();
+    garantirAbaNotificacoes();
+    garantirAbaPagamentos();
+    garantirAbaBugs();
+    return respostaJSON({ success: true, message: 'Todas as abas garantidas/sincronizadas.' });
+  } catch (e) {
+    logErro('adminForcarSync', e);
+    return respostaJSON({ success: false, error: e.message });
+  }
+}
+
 // ============================================================
 // MENU E TESTES
 // ============================================================
@@ -1732,13 +2350,32 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('🎵 Escola de Música')
     .addItem('🧪 Testar API', 'testarAPI')
+    .addItem('📋 Criar TODAS as abas do sistema', 'menuCriarTodasAbas')
     .addItem('📋 Criar aba USUARIOS', 'menuCriarUsuarios')
     .addItem('📋 Criar aba LOGS', 'menuCriarLogs')
+    .addItem('📋 Criar aba PAGAMENTOS', 'menuCriarPagamentos')
+    .addItem('📋 Criar aba BUGS', 'menuCriarBugs')
     .addItem('📋 Criar abas de COMUNICAÇÃO', 'menuCriarComunicacao')
     .addItem('📋 Verificar coluna Valor_Hora', 'menuGarantirValorHora')
+    .addItem('📋 Verificar coluna Mensalidade em MATRICULAS', 'menuGarantirMensalidadeMatricula')
     .addSeparator()
     .addItem('🔗 URL do Web App', 'mostrarURLWebApp')
     .addToUi();
+}
+
+function menuCriarTodasAbas() {
+  try {
+    garantirAbaUsuarios();
+    garantirAbaLogs();
+    garantirAbaArquivos();
+    garantirAbaMensagens();
+    garantirAbaNotificacoes();
+    garantirAbaPagamentos();
+    garantirAbaBugs();
+    SpreadsheetApp.getUi().alert('✅ Todas as abas do sistema estão prontas.');
+  } catch (e) {
+    SpreadsheetApp.getUi().alert('❌ Erro: ' + e.message);
+  }
 }
 
 function menuCriarUsuarios() {
@@ -1749,6 +2386,16 @@ function menuCriarUsuarios() {
 function menuCriarLogs() {
   garantirAbaLogs();
   SpreadsheetApp.getUi().alert('✅ Aba LOGS criada/verificada.');
+}
+
+function menuCriarPagamentos() {
+  garantirAbaPagamentos();
+  SpreadsheetApp.getUi().alert('✅ Aba PAGAMENTOS criada/verificada.');
+}
+
+function menuCriarBugs() {
+  garantirAbaBugs();
+  SpreadsheetApp.getUi().alert('✅ Aba BUGS criada/verificada.');
 }
 
 function menuCriarComunicacao() {
@@ -1764,6 +2411,17 @@ function menuGarantirValorHora() {
   SpreadsheetApp.getUi().alert('✅ Coluna Valor_Hora verificada.');
 }
 
+/**
+ * ✅ NOVA v2.6: garante coluna Mensalidade na aba MATRICULAS
+ */
+function menuGarantirMensalidadeMatricula() {
+  const sheet = getSheet('matriculas');
+  const criada = garantirColuna(sheet, 'Mensalidade');
+  SpreadsheetApp.getUi().alert(criada
+    ? '✅ Coluna "Mensalidade" criada na aba MATRICULAS.'
+    : '✅ Coluna "Mensalidade" já existia na aba MATRICULAS.');
+}
+
 function testarAPI() {
   Logger.log('🧪 Testando...');
   Logger.log('ping: ' + processarAcao('ping', {}).getContent());
@@ -1772,6 +2430,8 @@ function testarAPI() {
   Logger.log('garantirAbaArquivos: ' + (garantirAbaArquivos() ? 'ok' : 'falhou'));
   Logger.log('garantirAbaMensagens: ' + (garantirAbaMensagens() ? 'ok' : 'falhou'));
   Logger.log('garantirAbaNotificacoes: ' + (garantirAbaNotificacoes() ? 'ok' : 'falhou'));
+  Logger.log('garantirAbaPagamentos: ' + (garantirAbaPagamentos() ? 'ok' : 'falhou'));
+  Logger.log('garantirAbaBugs: ' + (garantirAbaBugs() ? 'ok' : 'falhou'));
   Logger.log('listarCursos: ' + processarAcao('listarCursos', {}).getContent().substring(0, 200));
   Logger.log('✅ Concluído');
 }
