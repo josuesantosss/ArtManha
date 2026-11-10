@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * ESCOLA DE MÚSICA - WEB APP (API) - v2.3
+ * ESCOLA DE MÚSICA - WEB APP (API) - v2.4
  * ============================================================
  * CORREÇÕES CORS:
  *  - doPost aceita text/plain (não dispara preflight)
@@ -45,17 +45,28 @@ const ABAS = {
 // ENTRY POINTS (CORS-safe)
 // ============================================================
 function doOptions(e) {
+  // O GAS não consegue configurar Access-Control-Allow-Origin.
+  // Retornar 200 vazio evita erro 405 em alguns proxies.
   return ContentService.createTextOutput('').setMimeType(ContentService.MimeType.TEXT);
 }
 
 function doPost(e) {
   try {
+    // ✅ Log de debug (útil para diagnosticar CORS)
+    try {
+      Logger.log('📥 doPost — contentType: ' + (e && e.postData ? e.postData.type : '?'));
+      Logger.log('📥 doPost — contents (primeiros 200 chars): ' +
+        (e && e.postData && e.postData.contents ? e.postData.contents.substring(0, 200) : '(vazio)'));
+    } catch (logErr) { /* ignora */ }
+
     let dados = null;
 
+    // 1) Body JSON direto (text/plain ou application/json)
     if (e && e.postData && e.postData.contents) {
       const raw = e.postData.contents;
       try { dados = JSON.parse(raw); }
       catch (p) {
+        // 2) Form-urlencoded com campo data
         if (e.parameter && e.parameter.data) {
           try { dados = JSON.parse(e.parameter.data); }
           catch (e2) { return respostaJSON({ success: false, error: 'JSON inválido no campo data' }); }
@@ -63,7 +74,9 @@ function doPost(e) {
           return respostaJSON({ success: false, error: 'JSON inválido: ' + p.message });
         }
       }
-    } else if (e && e.parameter && e.parameter.data) {
+    }
+    // 3) Sem postData, mas com ?data=
+    else if (e && e.parameter && e.parameter.data) {
       try { dados = JSON.parse(e.parameter.data); }
       catch (p) { return respostaJSON({ success: false, error: 'JSON inválido: ' + p.message }); }
     }
@@ -83,9 +96,8 @@ function doGet(e) {
     if (!e || !e.parameter || !e.parameter.data) {
       return respostaJSON({
         success: true,
-        message: '🎵 API Escola de Música online (v2.3)',
-        timestamp: new Date().toISOString(),
-        acoes: listarAcoes()
+        message: '🎵 API Escola de Música online (v2.4)',
+        timestamp: new Date().toISOString()
       });
     }
     let dados;
@@ -102,7 +114,9 @@ function doGet(e) {
 // ROTEADOR
 // ============================================================
 function processarAcao(acao, payload) {
-  Logger.log('📥 Ação: ' + acao + ' | Payload: ' + JSON.stringify(payload));
+  try {
+    Logger.log('📥 Ação: ' + acao + ' | Payload: ' + JSON.stringify(payload).substring(0, 500));
+  } catch (e) { /* ignora se payload for grande */ }
 
   const acoes = {
     // LOGIN / USUÁRIOS
@@ -190,6 +204,7 @@ function processarAcao(acao, payload) {
   if (!fn) {
     return respostaJSON({ success: false, error: 'Ação desconhecida: ' + acao, acoes: Object.keys(acoes) });
   }
+  // ✅ Cada ação tem seu próprio try/catch — uma falha não derruba as outras
   try { return fn(payload); }
   catch (err) {
     logErro('processarAcao:' + acao, err);
@@ -205,7 +220,8 @@ function respostaJSON(obj) {
 }
 
 function logErro(ctx, err) {
-  Logger.log('❌ [' + ctx + '] ' + err.message + ' | Stack: ' + (err.stack || 'sem stack'));
+  Logger.log('❌ [' + ctx + '] ' + (err && err.message ? err.message : err) +
+             ' | Stack: ' + (err && err.stack ? err.stack : 'sem stack'));
 }
 
 function getSS() { return SpreadsheetApp.openById(SHEET_ID); }
@@ -674,7 +690,32 @@ function loginUsuario(payload) {
 }
 
 function logoutUsuario(payload) {
-  return respostaJSON({ success: true, message: 'Sessão encerrada' });
+  try {
+    const nome = payload && payload.nome ? s(payload.nome).toUpperCase() : '';
+    const perfil = payload && payload.perfil ? s(payload.perfil) : '';
+    if (nome && perfil) {
+      try {
+        const sheet = garantirAbaLogs();
+        const headers = getHeaders(sheet);
+        const id = gerarID('LOG');
+        const dataHora = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
+        const valores = headers.map(function(h) {
+          switch (h) {
+            case 'ID_Log': return id;
+            case 'Nome': return nome;
+            case 'Perfil': return perfil;
+            case 'Data_Hora': return dataHora;
+            case 'Acao': return 'LOGOUT';
+            default: return '';
+          }
+        });
+        appendRegistro(sheet, valores);
+      } catch (e) { Logger.log('⚠️ Falha ao registrar logout: ' + e.message); }
+    }
+    return respostaJSON({ success: true, message: 'Sessão encerrada' });
+  } catch (e) {
+    return respostaJSON({ success: false, error: e.message });
+  }
 }
 
 // ============================================================
@@ -699,6 +740,12 @@ function uploadArquivoGAS(payload) {
     const base64 = s(p.file);
     if (!base64) return respostaJSON({ success: false, error: 'Conteúdo do arquivo vazio.' });
 
+    // ✅ Limite de 25 MB em base64 (~18.75 MB binário) — evita timeout
+    const TAMANHO_MAX_B64 = 25 * 1024 * 1024;
+    if (base64.length > TAMANHO_MAX_B64) {
+      return respostaJSON({ success: false, error: 'Arquivo muito grande (máx 20MB binário).' });
+    }
+
     const professor = s(p.professor).toUpperCase();
     const curso = s(p.curso);
     const mensagem = s(p.mensagem);
@@ -712,8 +759,15 @@ function uploadArquivoGAS(payload) {
     }
     if (!destinatarios.length) return respostaJSON({ success: false, error: 'Nenhum destinatário informado.' });
 
+    // ✅ Decodifica base64 com try/catch específico
+    let blob;
+    try {
+      blob = Utilities.newBlob(Utilities.base64Decode(base64), mimeType, nomeArquivo);
+    } catch (decErr) {
+      return respostaJSON({ success: false, error: 'Base64 inválido: ' + decErr.message });
+    }
+
     const pasta = obterPastaDrive();
-    const blob = Utilities.newBlob(Utilities.base64Decode(base64), mimeType, nomeArquivo);
     const file = pasta.createFile(blob);
     try { file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }
     catch (err) { Logger.log('⚠️ Não foi possível compartilhar publicamente: ' + err.message); }
