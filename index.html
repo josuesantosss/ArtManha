@@ -6,29 +6,16 @@
 <title>Sistema de Gestão - Escola de Música</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh; padding: 20px; color: #2d3748;
-  overflow-x: hidden; touch-action: pan-y;
-}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #2d3748; overflow-x: hidden; touch-action: pan-y; }
 .container { max-width: 1400px; margin: 0 auto; }
-
-.header {
-  background: white; border-radius: 15px; padding: 20px 30px;
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 15px; margin-bottom: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
+.header { background: white; border-radius: 15px; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 .header h1 { color: #2d3748; font-size: 1.5em; }
 .subtitle { color: #718096; font-size: 0.9em; margin-top: 5px; }
 .badge-google { background: linear-gradient(135deg, #4285f4, #34a853); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
-
 .loading-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; }
 .loading-overlay.active { display: flex; }
 .loading-spinner { width: 50px; height: 50px; border: 5px solid #e2e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 .save-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 12000; padding: 20px; }
 .save-overlay.active { display: flex; }
 .save-card { background: white; border-radius: 16px; padding: 28px 32px; width: 100%; max-width: 460px; box-shadow: 0 25px 60px rgba(0,0,0,0.35); animation: modalIn 0.25s ease; }
@@ -46,12 +33,10 @@ body {
 .save-card .save-icon { width: 34px; height: 34px; border-radius: 50%; background: #ebf8ff; color: #3182ce; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1em; }
 .save-overlay.done .save-icon { background: #c6f6d5; color: #2f855a; }
 .save-overlay.error .save-icon { background: #fed7d7; color: #c53030; }
-
 .login-container { background: white; border-radius: 15px; padding: 40px; max-width: 500px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 .login-container h2 { margin-bottom: 20px; color: #2d3748; }
 .login-info { background: #ebf8ff; border-left: 4px solid #4299e1; padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9em; }
 .login-info strong { display: block; margin-bottom: 4px; }
-
 .login-progress { display: none; margin-top: 18px; padding: 14px 18px; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 10px; }
 .login-progress.active { display: block; }
 .login-progress-label { font-size: 0.85em; font-weight: 600; color: #4a5568; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -59,14 +44,12 @@ body {
 .login-progress.done .progress-fill { background: linear-gradient(90deg, #48bb78, #38a169); }
 .login-progress.error .progress-fill { background: linear-gradient(90deg, #f56565, #e53e3e); }
 .login-progress-msg { margin-top: 8px; font-size: 0.8em; color: #718096; }
-
 .form-group { margin-bottom: 15px; }
 .form-group label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9em; color: #4a5568; }
 .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.95em; font-family: inherit; transition: border-color 0.2s; }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
-
 .btn { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; }
 .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
 .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
@@ -78,7 +61,6 @@ body {
 .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
 .btn-logout { background: #fed7d7; color: #c53030; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9em; }
 .btn-logout:hover { background: #feb2b2; }
-
 .dashboard { display: none; }
 .dashboard.active { display: block; }
 .dashboard-header { background: white; border-radius: 15px; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
@@ -86,92 +68,101 @@ body {
 .sync-status { padding: 6px 14px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
 .sync-status.synced { background: #c6f6d5; color: #22543d; }
 .sync-status.error { background: #fed7d7; color: #742a2a; }
-
 .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px; }
 .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: transform 0.2s; }
 .card:hover { transform: translateY(-3px); }
 .card h3 { margin-bottom: 8px; color: #2d3748; }
 .card p { color: #718096; font-size: 0.9em; }
 .badge { display: inline-block; margin-top: 12px; padding: 4px 12px; background: #c6f6d5; color: #22543d; border-radius: 12px; font-size: 0.8em; font-weight: 600; }
-
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
 .stat-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-left: 4px solid #667eea; }
 .stat-icon { font-size: 1.8em; margin-bottom: 8px; }
 .stat-number { font-size: 2em; font-weight: 700; color: #2d3748; }
 .stat-label { color: #718096; font-size: 0.85em; margin-top: 4px; }
-
 .section-container { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
 .section-container h3 { margin-bottom: 20px; color: #2d3748; }
 .hidden { display: none !important; }
-
 .toggle-btn { background: #edf2f7; color: #4a5568; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9em; transition: all 0.2s; }
 .toggle-btn:hover { background: #e2e8f0; }
 .toggle-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-
 .table-container { overflow-x: auto; border-radius: 10px; border: 1px solid #e2e8f0; }
 table { width: 100%; border-collapse: collapse; }
 thead { background: #f7fafc; }
 th { padding: 12px 15px; text-align: left; font-weight: 600; color: #4a5568; font-size: 0.85em; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
 td { padding: 12px 15px; border-bottom: 1px solid #edf2f7; font-size: 0.9em; }
 tbody tr:hover { background: #f7fafc; }
-
 .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; }
 .status-badge.concluido { background: #c6f6d5; color: #22543d; }
 .status-badge.pendente { background: #feebc8; color: #7b341e; }
 .status-badge.inativo { background: #fed7d7; color: #742a2a; }
 .status-badge.info { background: #bee3f8; color: #2c5282; }
-
+.status-badge.pago { background: #c6f6d5; color: #22543d; }
+.status-badge.atrasado { background: #fed7d7; color: #742a2a; }
+.status-badge.pendente-pg { background: #feebc8; color: #7b341e; }
+.status-badge.isento { background: #e2e8f0; color: #4a5568; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; overflow-y: auto; }
 .modal-overlay.active { display: flex; }
 .modal-content { background: white; border-radius: 15px; padding: 30px; max-width: 700px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto; animation: modalIn 0.3s ease; }
 @keyframes modalIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 .modal-close { position: absolute; top: 15px; right: 20px; font-size: 1.8em; cursor: pointer; color: #a0aec0; line-height: 1; }
 .modal-close:hover { color: #4a5568; }
-
 .cursos-checklist { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 15px; background: #f7fafc; }
 .cursos-checklist label { cursor: pointer; }
-
 .turmas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
 .turma-item { background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 18px; cursor: pointer; transition: all 0.2s; font-weight: 600; color: #2d3748; }
 .turma-item:hover { border-color: #667eea; transform: translateY(-2px); }
 .turma-item.selected { border-color: #667eea; background: #ebf8ff; box-shadow: 0 5px 15px rgba(102,126,234,0.2); }
 .turma-item .ano, .turma-item .status { display: block; font-size: 0.8em; font-weight: 500; color: #718096; margin-top: 4px; }
-
 .registros-list { display: flex; flex-direction: column; gap: 10px; }
 .registro-item { background: #f7fafc; border-left: 4px solid #4299e1; border-radius: 8px; padding: 12px 15px; }
 .registro-item .data { font-weight: 600; color: #4a5568; font-size: 0.9em; }
 .registro-item .conteudo { color: #2d3748; margin-top: 4px; font-size: 0.9em; }
-
 .professores-list { display: flex; flex-direction: column; gap: 12px; }
 .professor-item { background: #f7fafc; border-radius: 10px; padding: 15px; border-left: 4px solid #9f7aea; }
 .professor-item .especialidade { color: #718096; font-size: 0.85em; margin: 4px 0; }
 .turmas-atribuidas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .turma-tag { background: #e9d8fd; color: #553c9a; padding: 3px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; }
-
 .toast { position: fixed; bottom: 30px; right: 30px; background: #2d3748; color: white; padding: 15px 25px; border-radius: 10px; font-weight: 600; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: toastIn 0.3s ease; }
 .toast-success { background: #38a169; }
 .toast-error { background: #e53e3e; }
 .toast-info { background: #3182ce; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-.notification-badge { background: #f56565; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; font-weight: 700; margin-left: 4px; }
-.notification-badge.hidden { display: none; }
-
 .relatorio-content { background: #f7fafc; border-radius: 10px; padding: 20px; }
 .relatorio-content h4 { margin-bottom: 12px; color: #2d3748; }
 .info-line { margin-bottom: 6px; font-size: 0.9em; color: #4a5568; }
-
 .aluno-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
 .aluno-hero { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; }
 .aluno-hero h2 { font-size: 1.8em; margin-bottom: 5px; }
 .aluno-hero p { opacity: 0.9; font-size: 0.95em; }
-
-@media (max-width: 768px) {
-  .header { flex-direction: column; text-align: center; }
-  .dashboard-header { flex-direction: column; align-items: flex-start; }
-}
-
-/* Notificações */
+.mensalidade-card { background: white; border-radius: 12px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-left: 4px solid #667eea; }
+.mensalidade-card .valor { font-size: 1.6em; font-weight: 700; color: #2d3748; margin: 8px 0; }
+.mensalidade-card .vencimento { font-size: 0.85em; color: #718096; }
+.mensalidade-card.pago { border-left-color: #48bb78; }
+.mensalidade-card.atrasado { border-left-color: #f56565; }
+.mensalidade-card.pendente-pg { border-left-color: #ed8936; }
+.ano-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+.ano-tab { padding: 8px 16px; border-radius: 8px; border: 2px solid #e2e8f0; background: white; cursor: pointer; font-weight: 600; color: #4a5568; font-size: 0.9em; }
+.ano-tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: transparent; }
+.mes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.mes-card { background: white; border-radius: 10px; padding: 14px; border: 1px solid #e2e8f0; text-align: center; }
+.mes-card .mes-nome { font-weight: 700; color: #2d3748; margin-bottom: 6px; font-size: 0.9em; }
+.mes-card .mes-valor { font-size: 1.1em; font-weight: 700; color: #2d3748; }
+.mes-card .mes-status { margin-top: 8px; font-size: 0.75em; }
+.mes-card.pago { border-left: 4px solid #48bb78; }
+.mes-card.atrasado { border-left: 4px solid #f56565; }
+.mes-card.pendente-pg { border-left: 4px solid #ed8936; }
+.mes-card.isento { border-left: 4px solid #a0aec0; opacity: 0.75; }
+.valor-mensalidade-box { background: linear-gradient(135deg, #ebf8ff, #f0fff4); border: 2px solid #4299e1; border-radius: 10px; padding: 15px; margin-bottom: 15px; }
+.valor-mensalidade-box .titulo { font-weight: 700; color: #2c5282; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.valor-mensalidade-box .aviso { font-size: 0.8em; color: #718096; margin-top: 8px; }
+.admin-log { font-family: 'Courier New', monospace; font-size: 0.8em; background: #1a202c; color: #68d391; padding: 12px; border-radius: 8px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+.admin-bug { background: #fff5f5; border-left: 4px solid #f56565; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85em; }
+.admin-warn { background: #fffaf0; border-left: 4px solid #ed8936; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85em; }
+.admin-ok { background: #f0fff4; border-left: 4px solid #48bb78; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85em; }
+.senha-cell { font-family: 'Courier New', monospace; background: #edf2f7; padding: 2px 8px; border-radius: 4px; cursor: pointer; }
+.senha-cell:hover { background: #e2e8f0; }
+.pagamento-debug { background: #1a202c; color: #68d391; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 0.8em; max-height: 500px; overflow-y: auto; white-space: pre-wrap; }
+@media (max-width: 768px) { .header { flex-direction: column; text-align: center; } .dashboard-header { flex-direction: column; align-items: flex-start; } }
 .notif-btn { position: relative; background: #edf2f7; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
 .notif-btn:hover { background: #e2e8f0; }
 .notif-btn .notif-badge { position: absolute; top: -4px; right: -4px; background: #f56565; color: white; min-width: 20px; height: 20px; border-radius: 10px; font-size: 0.7em; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 5px; border: 2px solid white; }
@@ -191,13 +182,13 @@ tbody tr:hover { background: #f7fafc; }
 .notif-item .notif-icon.tipo-arquivo { background: #bee3f8; }
 .notif-item .notif-icon.tipo-mensagem { background: #e9d8fd; }
 .notif-item .notif-icon.tipo-geral { background: #c6f6d5; }
+.notif-item .notif-icon.tipo-pagamento { background: #c6f6d5; }
+.notif-item .notif-icon.tipo-atraso { background: #fed7d7; }
 .notif-item .notif-body { flex: 1; min-width: 0; }
 .notif-item .notif-title { font-weight: 600; color: #2d3748; font-size: 0.9em; }
 .notif-item .notif-desc { color: #718096; font-size: 0.82em; margin-top: 2px; word-wrap: break-word; }
 .notif-item .notif-time { color: #a0aec0; font-size: 0.75em; margin-top: 4px; }
 .notif-empty { padding: 40px 20px; text-align: center; color: #a0aec0; font-size: 0.9em; }
-
-/* Comunicação do professor */
 .prof-comunicacao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 800px) { .prof-comunicacao-grid { grid-template-columns: 1fr; } }
 .comunicacao-card { background: #f7fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
@@ -209,7 +200,6 @@ tbody tr:hover { background: #f7fafc; }
 .file-preview { margin-top: 10px; padding: 8px 12px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .file-preview .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-preview button { background: #fed7d7; color: #c53030; border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; }
-
 .inline-progress { margin-top: 12px; display: none; }
 .inline-progress.active { display: block; }
 .inline-progress-label { font-size: 0.8em; color: #4a5568; margin-bottom: 4px; display: flex; justify-content: space-between; }
@@ -218,12 +208,10 @@ tbody tr:hover { background: #f7fafc; }
 .inline-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #667eea, #764ba2); transition: width 0.25s; border-radius: 999px; }
 .inline-progress.done .inline-progress-fill { background: linear-gradient(90deg, #48bb78, #38a169); }
 .inline-progress.error .inline-progress-fill { background: linear-gradient(90deg, #f56565, #e53e3e); }
-
 .msg-historico { margin-top: 18px; }
 .msg-historico h5 { color: #4a5568; font-size: 0.9em; margin-bottom: 10px; }
 .msg-item { background: white; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; border-left: 3px solid #9f7aea; font-size: 0.88em; }
 .msg-item .msg-meta { color: #a0aec0; font-size: 0.78em; margin-top: 4px; }
-
 .arquivo-item { display: flex; align-items: center; gap: 10px; background: white; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; border-left: 3px solid #4299e1; font-size: 0.88em; }
 .arquivo-item .arquivo-icone { font-size: 1.4em; }
 .arquivo-item .arquivo-info { flex: 1; min-width: 0; }
@@ -235,11 +223,7 @@ tbody tr:hover { background: #f7fafc; }
 </head>
 <body>
 <div id="loadingOverlay" class="loading-overlay">
-  <div>
-    <div class="loading-spinner"></div>
-    <h3>🔄 Carregando dados da planilha...</h3>
-    <p style="color: #718096;">Aguarde enquanto sincronizamos com o Google Sheets</p>
-  </div>
+  <div><div class="loading-spinner"></div><h3>🔄 Carregando dados da planilha...</h3><p style="color: #718096;">Aguarde enquanto sincronizamos com o Google Sheets</p></div>
 </div>
 
 <div id="saveProgressOverlay" class="save-overlay">
@@ -253,31 +237,21 @@ tbody tr:hover { background: #f7fafc; }
 </div>
 
 <div id="notifPanel" class="notif-panel">
-  <div class="notif-header">
-    <h4>🔔 Notificações</h4>
-    <button onclick="marcarTodasNotificacoesLidas()">Marcar todas como lidas</button>
-  </div>
+  <div class="notif-header"><h4>🔔 Notificações</h4><button onclick="marcarTodasNotificacoesLidas()">Marcar todas como lidas</button></div>
   <div class="notif-list" id="notifList"></div>
 </div>
 
 <div class="container">
   <div class="header">
-    <div>
-      <h1>🎵 Sistema de Gestão - Escola de Música</h1>
-      <p class="subtitle">Gestão de Cursos, Matrículas e Aulas</p>
-    </div>
+    <div><h1>🎵 Sistema de Gestão - Escola de Música</h1><p class="subtitle">Gestão de Cursos, Matrículas e Aulas</p></div>
     <div class="badge-google">📊 Integrado com Google Sheets</div>
   </div>
 
   <div id="loginContainer" class="login-container">
     <h2>🔐 Acesso ao Sistema</h2>
-    <div class="login-info">
-      <strong>📌 Autenticação:</strong>
-      <span>Use o <b>usuário</b> e <b>senha</b> cadastrados pela secretaria.</span>
-    </div>
+    <div class="login-info"><strong>📌 Autenticação:</strong><span>Use o <b>usuário</b> e <b>senha</b> cadastrados pela secretaria.</span></div>
     <form id="loginForm">
-      <div class="form-group">
-        <label for="loginPerfil">Perfil de Acesso</label>
+      <div class="form-group"><label for="loginPerfil">Perfil de Acesso</label>
         <select id="loginPerfil" required>
           <option value="">-- Escolha --</option>
           <option value="direcao">👔 Direção</option>
@@ -286,41 +260,27 @@ tbody tr:hover { background: #f7fafc; }
           <option value="professor">🎹 Professor</option>
           <option value="financeiro">💰 Financeiro</option>
           <option value="aluno">🎓 Aluno</option>
+          <option value="admin">🛡️ Administrador</option>
         </select>
       </div>
-      <div class="form-group">
-        <label for="loginUsuario">Usuário</label>
-        <input type="text" id="loginUsuario" placeholder="Digite seu usuário" required autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label for="loginSenha">Senha</label>
-        <input type="password" id="loginSenha" placeholder="Digite sua senha" required autocomplete="current-password">
-      </div>
+      <div class="form-group"><label for="loginUsuario">Usuário</label><input type="text" id="loginUsuario" placeholder="Digite seu usuário" required autocomplete="username"></div>
+      <div class="form-group"><label for="loginSenha">Senha</label><input type="password" id="loginSenha" placeholder="Digite sua senha" required autocomplete="current-password"></div>
       <button type="submit" id="btnEntrar" class="btn">Entrar no Sistema</button>
     </form>
-
     <div id="loginProgress" class="login-progress">
       <div class="login-progress-label"><span id="loginProgressText">Autenticando...</span><span class="pct" id="loginProgressPct">0%</span></div>
       <div class="progress-track"><div class="progress-fill" id="loginProgressFill"></div></div>
       <div class="login-progress-msg" id="loginProgressMsg"></div>
     </div>
-
-    <div style="margin-top: 15px; text-align: center; font-size: 0.9em; color: #718096;">
-      <span id="dataStatus">📊 Conectado à planilha: Escola de Música</span>
-    </div>
+    <div style="margin-top: 15px; text-align: center; font-size: 0.9em; color: #718096;"><span id="dataStatus">📊 Conectado à planilha: Escola de Música</span></div>
   </div>
 
   <div id="dashboard" class="dashboard">
     <div class="dashboard-header">
-      <div>
-        <h2 id="dashboardTitle">📊 Painel de Controle</h2>
-        <p id="userDisplay" class="user-info"></p>
-      </div>
+      <div><h2 id="dashboardTitle">📊 Painel de Controle</h2><p id="userDisplay" class="user-info"></p></div>
       <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
         <span id="syncStatus" class="sync-status synced">✅ Sincronizado</span>
-        <button id="notifBtn" class="notif-btn" onclick="toggleNotifPanel()" title="Notificações" style="display:none;">
-          🔔<span class="notif-badge hidden" id="notifBadge">0</span>
-        </button>
+        <button id="notifBtn" class="notif-btn" onclick="toggleNotifPanel()" title="Notificações" style="display:none;">🔔<span class="notif-badge hidden" id="notifBadge">0</span></button>
         <button onclick="carregarDadosPlanilha()" class="btn btn-secondary btn-small">🔄 Recarregar</button>
         <button onclick="logout(true)" class="btn-logout">🚪 Sair</button>
       </div>
@@ -328,6 +288,7 @@ tbody tr:hover { background: #f7fafc; }
 
     <div id="cardsContainer" class="cards-grid"></div>
 
+    <!-- ==================== SECRETARIA ==================== -->
     <div id="secretariaArea" class="hidden">
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
         <button class="toggle-btn active" onclick="toggleSecretaria('dashboard', event)">📊 Dashboard</button>
@@ -337,6 +298,7 @@ tbody tr:hover { background: #f7fafc; }
         <button class="toggle-btn" onclick="toggleSecretaria('cursos', event)">🎵 Cursos</button>
         <button class="toggle-btn" onclick="toggleSecretaria('usuarios', event)">🔑 Usuários/Senhas</button>
         <button class="toggle-btn" onclick="toggleSecretaria('frequencia', event)">✅ Frequência</button>
+        <button class="toggle-btn" onclick="toggleSecretaria('mensalidades', event)">💰 Mensalidades</button>
         <button class="toggle-btn" onclick="toggleSecretaria('relatorios', event)">📄 Relatórios</button>
       </div>
 
@@ -347,6 +309,7 @@ tbody tr:hover { background: #f7fafc; }
           <div class="stat-card" style="border-left:4px solid #48bb78;"><div class="stat-icon">✅</div><div class="stat-number" id="matriculasAtivas">0</div><div class="stat-label">Matrículas Ativas</div></div>
           <div class="stat-card" style="border-left:4px solid #4299e1;"><div class="stat-icon">🎵</div><div class="stat-number" id="totalCursosSecretaria">0</div><div class="stat-label">Cursos Ativos</div></div>
           <div class="stat-card" style="border-left:4px solid #9f7aea;"><div class="stat-icon">👨‍🏫</div><div class="stat-number" id="totalProfessoresSecretaria">0</div><div class="stat-label">Professores</div></div>
+          <div class="stat-card" style="border-left:4px solid #f56565;"><div class="stat-icon">💰</div><div class="stat-number" id="mensalidadesAtraso">0</div><div class="stat-label">Mensalidades Atrasadas</div></div>
         </div>
       </div>
 
@@ -356,12 +319,7 @@ tbody tr:hover { background: #f7fafc; }
           <div class="form-group" style="flex:1; min-width:200px;"><label>Buscar Aluno</label><input type="text" id="buscaAlunoSecretaria" placeholder="Digite o nome..." oninput="filtrarAlunosSecretaria()"></div>
           <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="abrirModalCadastroAluno()" class="btn btn-secondary">➕ Novo Aluno</button></div>
         </div>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>Nome</th><th>Nascimento</th><th>Responsável</th><th>Contato</th><th>Cursos</th><th>Status</th><th>Ações</th></tr></thead>
-            <tbody id="tabelaAlunosSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody>
-          </table>
-        </div>
+        <div class="table-container"><table><thead><tr><th>Nome</th><th>Nascimento</th><th>Responsável</th><th>Contato</th><th>Cursos</th><th>Mensalidade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaAlunosSecretaria"><tr><td colspan="8" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
       </div>
 
       <div id="secretaria-matriculas" class="section-container hidden">
@@ -371,12 +329,7 @@ tbody tr:hover { background: #f7fafc; }
           <div class="form-group" style="flex:1; min-width:200px;"><label>Buscar Aluno</label><input type="text" id="buscaMatriculaSecretaria" placeholder="Nome..." oninput="filtrarMatriculasSecretaria()"></div>
           <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="abrirModalNovaMatricula()" class="btn btn-secondary">➕ Nova Matrícula</button></div>
         </div>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>Aluno</th><th>Curso</th><th>Professor</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
-            <tbody id="tabelaMatriculasSecretaria"><tr><td colspan="6" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody>
-          </table>
-        </div>
+        <div class="table-container"><table><thead><tr><th>Aluno</th><th>Curso</th><th>Professor</th><th>Mensalidade</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaMatriculasSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
       </div>
 
       <div id="secretaria-professores" class="section-container hidden">
@@ -385,18 +338,10 @@ tbody tr:hover { background: #f7fafc; }
           <div class="form-group" style="flex:1; min-width:200px;"><label>Buscar Professor</label><input type="text" id="buscaProfessorSecretaria" placeholder="Nome..." oninput="filtrarProfessoresSecretaria()"></div>
           <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="abrirModalCadastroProfessor()" class="btn btn-secondary">➕ Novo Professor</button></div>
         </div>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>ID</th><th>Nome</th><th>Tipo</th><th>Cursos</th><th>Telefone</th><th>Email</th><th>Status</th></tr></thead>
-            <tbody id="tabelaProfessoresSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody>
-          </table>
-        </div>
+        <div class="table-container"><table><thead><tr><th>ID</th><th>Nome</th><th>Tipo</th><th>Cursos</th><th>Telefone</th><th>Email</th><th>Status</th></tr></thead><tbody id="tabelaProfessoresSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
       </div>
 
-      <div id="secretaria-cursos" class="section-container hidden">
-        <h3>🎵 Cursos Disponíveis</h3>
-        <div class="cards-grid" id="cursosGrid"></div>
-      </div>
+      <div id="secretaria-cursos" class="section-container hidden"><h3>🎵 Cursos Disponíveis</h3><div class="cards-grid" id="cursosGrid"></div></div>
 
       <div id="secretaria-usuarios" class="section-container hidden">
         <h3>🔑 Gestão de Usuários e Senhas</h3>
@@ -405,15 +350,8 @@ tbody tr:hover { background: #f7fafc; }
           <button onclick="abrirModalCriarUsuarioAluno()" class="btn btn-info btn-small">🎓 Criar Usuário de Aluno</button>
           <button onclick="carregarUsuariosSecretaria()" class="btn btn-warning btn-small">🔄 Atualizar Lista</button>
         </div>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Aluno Vinculado</th><th>Status</th><th>Criado em</th><th>Ações</th></tr></thead>
-            <tbody id="tabelaUsuariosSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody>
-          </table>
-        </div>
-        <div style="margin-top: 15px; padding: 12px; background: #fffaf0; border-left: 4px solid #ed8936; border-radius: 8px; font-size: 0.9em; color: #7b341e;">
-          ⚠️ <b>Importante:</b> ao criar um usuário de aluno, o sistema também cria uma aba individual com o nome do aluno na planilha (ALUNO_NOME), contendo matrículas, notas, presenças e relatórios.
-        </div>
+        <div class="table-container"><table><thead><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Aluno Vinculado</th><th>Status</th><th>Criado em</th><th>Ações</th></tr></thead><tbody id="tabelaUsuariosSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
+        <div style="margin-top: 15px; padding: 12px; background: #fffaf0; border-left: 4px solid #ed8936; border-radius: 8px; font-size: 0.9em; color: #7b341e;">⚠️ <b>Importante:</b> ao criar um usuário de aluno, o sistema também cria uma aba individual com o nome do aluno na planilha (ALUNO_NOME), contendo matrículas, notas, presenças e relatórios.</div>
       </div>
 
       <div id="secretaria-frequencia" class="section-container hidden">
@@ -425,12 +363,29 @@ tbody tr:hover { background: #f7fafc; }
         <div id="frequenciaResultados"><p style="color:#718096;">Selecione um curso.</p></div>
       </div>
 
+      <div id="secretaria-mensalidades" class="section-container hidden">
+        <h3>💰 Acompanhamento de Mensalidades</h3>
+        <div class="stats-grid" id="statsMensalidadesSecretaria" style="margin-bottom:20px;"></div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: #f7fafc; padding: 15px; border-radius: 8px;">
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Mês de Referência</label><input type="month" id="mensRefSecretaria" onchange="renderMensalidadesSecretaria()"></div>
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Buscar Aluno</label><input type="text" id="buscaMensalidadeSecretaria" placeholder="Nome..." oninput="renderMensalidadesSecretaria()"></div>
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Filtrar Status</label>
+            <select id="filtroStatusMensalidade" onchange="renderMensalidadesSecretaria()">
+              <option value="">Todos</option><option value="PAGO">✅ Pago</option><option value="PENDENTE">⏳ Pendente</option><option value="ATRASADO">⚠️ Atrasado</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-container"><table><thead><tr><th>Aluno</th><th>Valor (R$)</th><th>Vencimento (Dia)</th><th>Status</th><th>Data Pagamento</th><th>Mês</th></tr></thead><tbody id="tabelaMensalidadesSecretaria"><tr><td colspan="6" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
+        <div style="margin-top: 15px; padding: 12px; background: #fffaf0; border-left: 4px solid #ed8936; border-radius: 8px; font-size: 0.9em; color: #7b341e;">⚠️ <b>Atenção:</b> a <b>secretaria apenas acompanha</b>. O registro financeiro e o recebimento são gerenciados pelo <b>perfil Financeiro</b>. Ao identificar atraso, o aluno é <b>notificado automaticamente</b> em seu perfil.</div>
+      </div>
+
       <div id="secretaria-relatorios" class="section-container hidden">
         <h3>📄 Relatórios da Secretaria</h3>
         <div class="btn-group" style="margin-bottom: 20px;">
           <button onclick="gerarRelatorioAlunosSecretaria()" class="btn btn-secondary btn-small">📋 Lista de Alunos</button>
           <button onclick="gerarRelatorioMatriculasSecretaria()" class="btn btn-secondary btn-small">📋 Matrículas por Curso</button>
           <button onclick="gerarRelatorioUsuariosSecretaria()" class="btn btn-secondary btn-small">🔑 Usuários Cadastrados</button>
+          <button onclick="gerarRelatorioMensalidadesSecretaria()" class="btn btn-secondary btn-small">💰 Mensalidades</button>
         </div>
         <div id="relatorioSecretariaOutput" style="margin-top: 20px;"><p style="color:#718096;">Clique em um botão acima.</p></div>
       </div>
@@ -447,6 +402,14 @@ tbody tr:hover { background: #f7fafc; }
             <div class="form-row">
               <div class="form-group"><label>Responsável</label><input type="text" id="cadAlunoResponsavel" style="text-transform: uppercase;"></div>
               <div class="form-group"><label>Contato</label><input type="tel" id="cadAlunoContato"></div>
+            </div>
+            <div class="valor-mensalidade-box">
+              <div class="titulo">💰 Mensalidade Inicial</div>
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom:0;"><label>Valor (R$)</label><input type="number" id="cadAlunoMensalidade" step="0.01" min="0" value="0"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>Dia Vencimento</label><input type="number" id="cadAlunoVencimento" min="1" max="31" value="10"></div>
+              </div>
+              <div class="aviso">ℹ️ Estes valores serão vinculados ao aluno e aplicados automaticamente nas matrículas.</div>
             </div>
             <div class="form-group"><label>Cursos de Interesse</label><div id="cursosChecklist" class="cursos-checklist"></div></div>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
@@ -503,8 +466,16 @@ tbody tr:hover { background: #f7fafc; }
               <div class="form-group"><label>Professor *</label><select id="matriculaProfessor" required><option value="">--</option></select><small style="color:#718096;font-size:0.85em;">Preenchido pelo curso</small></div>
               <div class="form-group"><label>Ano Letivo *</label><input type="number" id="matriculaAno" value="2026" required></div>
             </div>
+            <div class="valor-mensalidade-box">
+              <div class="titulo">💰 Mensalidade Vinculada ao Aluno</div>
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom:0;"><label>Valor Mensalidade (R$)</label><input type="number" id="matriculaMensalidade" step="0.01" min="0" value="0"></div>
+                <div class="form-group" style="margin-bottom:0;"><label>Dia Vencimento Fixo</label><input type="number" id="matriculaVencimento" min="1" max="31" value="10"></div>
+              </div>
+              <div class="aviso" id="matriculaMensalidadeAviso">ℹ️ Esses valores serão gravados no cadastro do aluno e no registro de pagamento do mês.</div>
+            </div>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-              <button type="submit" class="btn btn-secondary">📋 Registrar</button>
+              <button type="submit" class="btn btn-secondary">📋 Registrar Matrícula</button>
               <button type="button" onclick="fecharModal('modalNovaMatricula')" class="btn btn-danger">Cancelar</button>
             </div>
           </form>
@@ -526,6 +497,7 @@ tbody tr:hover { background: #f7fafc; }
                   <option value="coordenacao">📚 Coordenação</option>
                   <option value="professor">🎹 Professor</option>
                   <option value="financeiro">💰 Financeiro</option>
+                  <option value="admin">🛡️ Administrador</option>
                 </select>
               </div>
             </div>
@@ -563,11 +535,9 @@ tbody tr:hover { background: #f7fafc; }
       </div>
     </div>
 
+    <!-- ==================== PROFESSOR ==================== -->
     <div id="professorArea" class="hidden">
-      <div id="cursosSection" class="hidden">
-        <h3 style="margin-top: 30px; color: #2d3748;">🎵 Meus Cursos</h3>
-        <div id="cursosContainer" class="turmas-grid"></div>
-      </div>
+      <div id="cursosSection" class="hidden"><h3 style="margin-top: 30px; color: #2d3748;">🎵 Meus Cursos</h3><div id="cursosContainer" class="turmas-grid"></div></div>
       <div id="registrosSection" class="hidden">
         <div class="section-container">
           <h3>📝 Registros do Curso: <span id="cursoSelecionadoNome">-</span></h3>
@@ -583,18 +553,12 @@ tbody tr:hover { background: #f7fafc; }
             <div class="form-row" style="margin-bottom: 15px;">
               <div class="form-group"><label>Bimestre</label>
                 <select id="bimestreNota" onchange="carregarTabelaNotas()">
-                  <option value="1">1º Bimestre</option><option value="2">2º Bimestre</option>
-                  <option value="3">3º Bimestre</option><option value="4">4º Bimestre</option>
+                  <option value="1">1º Bimestre</option><option value="2">2º Bimestre</option><option value="3">3º Bimestre</option><option value="4">4º Bimestre</option>
                 </select>
               </div>
               <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="carregarTabelaNotas()" class="btn btn-secondary btn-small">📊 Carregar</button></div>
             </div>
-            <div class="table-container">
-              <table>
-                <thead><tr><th>Nº</th><th>Aluno</th><th>Avaliação</th><th>Média</th><th>Status</th></tr></thead>
-                <tbody id="tabelaNotasBody"></tbody>
-              </table>
-            </div>
+            <div class="table-container"><table><thead><tr><th>Nº</th><th>Aluno</th><th>Avaliação</th><th>Média</th><th>Status</th></tr></thead><tbody id="tabelaNotasBody"></tbody></table></div>
             <div style="margin-top: 15px;"><button onclick="salvarNotas()" class="btn btn-secondary btn-small">💾 Salvar Avaliações</button></div>
           </div>
 
@@ -604,12 +568,7 @@ tbody tr:hover { background: #f7fafc; }
               <div class="form-group"><label>Conteúdo</label><input type="text" id="obsPresenca" placeholder="Descreva o conteúdo..."></div>
             </div>
             <div class="form-group"><label>Alunos Presentes</label>
-              <div class="table-container">
-                <table>
-                  <thead><tr><th style="width:15%;text-align:center;">Nº</th><th style="width:70%;">Aluno</th><th style="width:15%;text-align:center;">Presença</th></tr></thead>
-                  <tbody id="alunosPresencaTabela"></tbody>
-                </table>
-              </div>
+              <div class="table-container"><table><thead><tr><th style="width:15%;text-align:center;">Nº</th><th style="width:70%;">Aluno</th><th style="width:15%;text-align:center;">Presença</th></tr></thead><tbody id="alunosPresencaTabela"></tbody></table></div>
             </div>
             <button onclick="salvarPresenca()" class="btn btn-secondary btn-small" style="margin-top: 15px;">✅ Salvar Presença</button>
             <div id="registrosPresenca" class="registros-list" style="margin-top: 20px;"></div>
@@ -622,9 +581,7 @@ tbody tr:hover { background: #f7fafc; }
             </div>
             <div class="form-group"><label>Tipo</label>
               <select id="tipoObservacao">
-                <option value="Positiva">✅ Positiva</option>
-                <option value="Negativa">⚠️ Negativa</option>
-                <option value="Neutra">ℹ️ Neutra</option>
+                <option value="Positiva">✅ Positiva</option><option value="Negativa">⚠️ Negativa</option><option value="Neutra">ℹ️ Neutra</option>
               </select>
             </div>
             <div class="form-group"><label>Observação</label><textarea id="observacaoText" placeholder="Registre observações..."></textarea></div>
@@ -638,8 +595,7 @@ tbody tr:hover { background: #f7fafc; }
               <div class="form-group"><label>Aluno</label><select id="alunoRelatorioPreencher"></select></div>
               <div class="form-group"><label>Bimestre</label>
                 <select id="bimestreRelatorioPreencher">
-                  <option value="1">1º</option><option value="2">2º</option><option value="3">3º</option>
-                  <option value="4">4º</option><option value="anual">Anual</option>
+                  <option value="1">1º</option><option value="2">2º</option><option value="3">3º</option><option value="4">4º</option><option value="anual">Anual</option>
                 </select>
               </div>
               <div class="form-group"><label>Relatório</label><textarea id="relatorioTexto" rows="6" placeholder="Digite o relatório..."></textarea></div>
@@ -654,22 +610,16 @@ tbody tr:hover { background: #f7fafc; }
                 <h4>📎 Enviar Arquivo para Alunos</h4>
                 <div class="form-group">
                   <label>Aluno(s) destinatário(s)</label>
-                  <select id="uploadDestinatarios" multiple size="4" style="min-height:90px;">
-                    <option value="__TODOS__">👥 Todos os alunos do curso</option>
-                  </select>
+                  <select id="uploadDestinatarios" multiple size="4" style="min-height:90px;"><option value="__TODOS__">👥 Todos os alunos do curso</option></select>
                   <small style="color:#718096;font-size:0.8em;">Segure Ctrl/Cmd para selecionar vários.</small>
                 </div>
                 <div class="file-drop" id="fileDropZone" onclick="document.getElementById('uploadFileInput').click()">
-                  <div class="file-icon">📁</div>
-                  <div>Clique ou arraste um arquivo aqui</div>
+                  <div class="file-icon">📁</div><div>Clique ou arraste um arquivo aqui</div>
                   <div style="font-size:0.8em;margin-top:4px;">PDF, imagem, áudio, partitura, etc. (máx. 20MB)</div>
                   <input type="file" id="uploadFileInput" onchange="selecionarArquivoUpload(event)">
                 </div>
                 <div id="filePreview" style="display:none;"></div>
-                <div class="form-group" style="margin-top:12px;">
-                  <label>Mensagem (opcional)</label>
-                  <textarea id="uploadMensagem" rows="2" placeholder="Ex.: Segue a partitura da aula..."></textarea>
-                </div>
+                <div class="form-group" style="margin-top:12px;"><label>Mensagem (opcional)</label><textarea id="uploadMensagem" rows="2" placeholder="Ex.: Segue a partitura da aula..."></textarea></div>
                 <button onclick="enviarArquivoUpload()" class="btn btn-secondary btn-small" id="btnEnviarArquivo" disabled>📤 Enviar Arquivo</button>
                 <div class="inline-progress" id="uploadProgress">
                   <div class="inline-progress-label"><span id="uploadProgressLabel">Enviando...</span><span class="pct" id="uploadProgressPct">0%</span></div>
@@ -682,19 +632,11 @@ tbody tr:hover { background: #f7fafc; }
                 <h4>💬 Enviar Mensagem para Aluno(s)</h4>
                 <div class="form-group">
                   <label>Destinatário(s)</label>
-                  <select id="msgDestinatarios" multiple size="4" style="min-height:90px;">
-                    <option value="__TODOS__">👥 Todos os alunos do curso</option>
-                  </select>
+                  <select id="msgDestinatarios" multiple size="4" style="min-height:90px;"><option value="__TODOS__">👥 Todos os alunos do curso</option></select>
                   <small style="color:#718096;font-size:0.8em;">Segure Ctrl/Cmd para selecionar vários.</small>
                 </div>
-                <div class="form-group">
-                  <label>Assunto</label>
-                  <input type="text" id="msgAssunto" placeholder="Ex.: Aviso importante sobre a aula">
-                </div>
-                <div class="form-group">
-                  <label>Mensagem *</label>
-                  <textarea id="msgTexto" rows="5" placeholder="Digite sua mensagem..."></textarea>
-                </div>
+                <div class="form-group"><label>Assunto</label><input type="text" id="msgAssunto" placeholder="Ex.: Aviso importante sobre a aula"></div>
+                <div class="form-group"><label>Mensagem *</label><textarea id="msgTexto" rows="5" placeholder="Digite sua mensagem..."></textarea></div>
                 <button onclick="enviarMensagemAluno()" class="btn btn-info btn-small" id="btnEnviarMensagem">💬 Enviar Mensagem</button>
                 <div class="inline-progress" id="msgProgress">
                   <div class="inline-progress-label"><span id="msgProgressLabel">Enviando...</span><span class="pct" id="msgProgressPct">0%</span></div>
@@ -708,6 +650,7 @@ tbody tr:hover { background: #f7fafc; }
       </div>
     </div>
 
+    <!-- ==================== COORDENAÇÃO ==================== -->
     <div id="coordenadorArea" class="hidden">
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
         <button class="toggle-btn active" onclick="toggleCoordenacao('visao', event)">📊 Visão por Curso</button>
@@ -715,56 +658,43 @@ tbody tr:hover { background: #f7fafc; }
         <button class="toggle-btn" onclick="toggleCoordenacao('atribuicao', event)">📋 Atribuição</button>
         <button class="toggle-btn" onclick="toggleCoordenacao('receber', event)">📥 Relatórios</button>
       </div>
-      <div id="coordenacao-visao" class="section-container">
-        <h3>📊 Visão Geral por Curso</h3>
-        <div class="table-container">
-          <table><thead><tr><th>Curso</th><th>Professor</th><th>Média</th><th>Presença</th><th>Alunos</th><th>Ações</th></tr></thead><tbody id="visaoGeralCursos"></tbody></table>
-        </div>
-      </div>
+      <div id="coordenacao-visao" class="section-container"><h3>📊 Visão Geral por Curso</h3><div class="table-container"><table><thead><tr><th>Curso</th><th>Professor</th><th>Média</th><th>Presença</th><th>Alunos</th><th>Ações</th></tr></thead><tbody id="visaoGeralCursos"></tbody></table></div></div>
       <div id="coordenacao-acompanhamento" class="section-container hidden">
         <h3>👨‍🏫 Acompanhamento de Professores</h3>
-        <div class="form-row" style="margin-bottom: 20px;">
-          <div class="form-group"><label>Professor</label><select id="selectProfAcompanhamento" onchange="renderAcompanhamentoProf()"><option value="">--</option></select></div>
-        </div>
+        <div class="form-row" style="margin-bottom: 20px;"><div class="form-group"><label>Professor</label><select id="selectProfAcompanhamento" onchange="renderAcompanhamentoProf()"><option value="">--</option></select></div></div>
         <div id="acompanhamentoResultados"><p style="color:#718096;">Selecione um professor.</p></div>
       </div>
       <div id="coordenacao-atribuicao" class="section-container hidden">
         <h3>📋 Atribuição de Cursos</h3>
-        <div class="form-row">
-          <div class="form-group"><label>Professor</label><select id="professorSelect"><option value="">--</option></select></div>
-          <div class="form-group"><label>Curso</label><select id="cursoSelect"><option value="">--</option></select></div>
-        </div>
-        <div class="btn-group" style="margin-top: 15px;">
-          <button onclick="atribuirCurso()" class="btn btn-secondary btn-small">➕ Atribuir</button>
-          <button onclick="removerCurso()" class="btn btn-danger btn-small">❌ Remover</button>
-        </div>
+        <div class="form-row"><div class="form-group"><label>Professor</label><select id="professorSelect"><option value="">--</option></select></div><div class="form-group"><label>Curso</label><select id="cursoSelect"><option value="">--</option></select></div></div>
+        <div class="btn-group" style="margin-top: 15px;"><button onclick="atribuirCurso()" class="btn btn-secondary btn-small">➕ Atribuir</button><button onclick="removerCurso()" class="btn btn-danger btn-small">❌ Remover</button></div>
         <div style="margin-top: 20px;"><h4>📌 Professores e seus Cursos</h4><div id="professoresAtribuidos" class="professores-list"></div></div>
       </div>
-      <div id="coordenacao-receber" class="section-container hidden">
-        <h3>📥 Relatórios Recebidos</h3>
-        <div id="listaRelatoriosRecebidos" class="registros-list"></div>
-      </div>
+      <div id="coordenacao-receber" class="section-container hidden"><h3>📥 Relatórios Recebidos</h3><div id="listaRelatoriosRecebidos" class="registros-list"></div></div>
     </div>
 
+    <!-- ==================== DIREÇÃO ==================== -->
     <div id="direcaoArea" class="hidden">
-      <div class="section-container">
-        <h3>📊 Painel Gerencial</h3>
-        <div class="stats-grid" id="statsGerenciais"></div>
-      </div>
+      <div class="section-container"><h3>📊 Painel Gerencial</h3><div class="stats-grid" id="statsGerenciais"></div></div>
       <div class="section-container">
         <h3>📋 Relatórios Consolidados</h3>
         <div class="btn-group" style="margin-bottom: 20px;">
           <button onclick="gerarRelatorioGeral()" class="btn btn-secondary btn-small">📊 Geral</button>
           <button onclick="gerarRelatorioPorProfessor()" class="btn btn-secondary btn-small">📊 Por Professor</button>
+          <button onclick="gerarRelatorioFinanceiroDirecao()" class="btn btn-secondary btn-small">💰 Financeiro</button>
         </div>
         <div id="relatorioConsolidado" style="margin-top: 20px;"></div>
       </div>
     </div>
 
+    <!-- ==================== FINANCEIRO ==================== -->
     <div id="financeiroArea" class="hidden">
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
-        <button class="toggle-btn active" onclick="toggleFinanceiro('dashboard', event)">💰 Pagamentos</button>
-        <button class="toggle-btn" onclick="toggleFinanceiro('valores', event)">⚙️ Valores</button>
+        <button class="toggle-btn active" onclick="toggleFinanceiro('dashboard', event)">💰 Pagamentos Professores</button>
+        <button class="toggle-btn" onclick="toggleFinanceiro('mensalidades', event)">👥 Mensalidades Alunos</button>
+        <button class="toggle-btn" onclick="toggleFinanceiro('registrar', event)">📝 Registrar Pagamento</button>
+        <button class="toggle-btn" onclick="toggleFinanceiro('valores', event)">⚙️ Valores Professores</button>
+        <button class="toggle-btn" onclick="toggleFinanceiro('debug', event)">🔍 Debug PAGAMENTOS</button>
       </div>
       <div id="financeiro-dashboard" class="section-container">
         <h3>💰 Cálculo de Pagamento de Professores (por Semana)</h3>
@@ -772,32 +702,70 @@ tbody tr:hover { background: #f7fafc; }
           <div class="form-group"><label>Mês de Referência</label><input type="month" id="finMesReferencia" onchange="calcularPagamentos()"></div>
           <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="calcularPagamentos()" class="btn btn-info btn-small">🔄 Calcular</button></div>
         </div>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>Professor</th><th>Valor Hora</th><th>Sem 1</th><th>Sem 2</th><th>Sem 3</th><th>Sem 4</th><th>Sem 5</th><th>Total</th><th>A Pagar</th></tr></thead>
-            <tbody id="tabelaPagamentosFinanceiro"><tr><td colspan="9" style="text-align:center;color:#718096;">Selecione o mês e calcule.</td></tr></tbody>
-          </table>
-        </div>
-        <div style="margin-top: 12px; font-size: 0.85em; color: #718096;">
-          ℹ️ Semanas: <strong>Sem 1</strong> (1–7), <strong>Sem 2</strong> (8–14), <strong>Sem 3</strong> (15–21), <strong>Sem 4</strong> (22–28), <strong>Sem 5</strong> (29–31).
-        </div>
+        <div class="table-container"><table><thead><tr><th>Professor</th><th>Valor Hora</th><th>Sem 1</th><th>Sem 2</th><th>Sem 3</th><th>Sem 4</th><th>Sem 5</th><th>Total</th><th>A Pagar</th></tr></thead><tbody id="tabelaPagamentosFinanceiro"><tr><td colspan="9" style="text-align:center;color:#718096;">Selecione o mês e calcule.</td></tr></tbody></table></div>
+        <div style="margin-top: 12px; font-size: 0.85em; color: #718096;">ℹ️ Semanas: <strong>Sem 1</strong> (1–7), <strong>Sem 2</strong> (8–14), <strong>Sem 3</strong> (15–21), <strong>Sem 4</strong> (22–28), <strong>Sem 5</strong> (29–31).</div>
       </div>
+
+      <div id="financeiro-mensalidades" class="section-container hidden">
+        <h3>👥 Gestão de Mensalidades dos Alunos</h3>
+        <div class="stats-grid" id="statsMensalidadesFinanceiro" style="margin-bottom:20px;"></div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: #f7fafc; padding: 15px; border-radius: 8px;">
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Mês de Referência</label><input type="month" id="finMesMensalidade" onchange="renderMensalidadesFinanceiro()"></div>
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Buscar Aluno</label><input type="text" id="buscaMensalidadeFinanceiro" placeholder="Nome..." oninput="renderMensalidadesFinanceiro()"></div>
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Filtrar Status</label>
+            <select id="filtroStatusMensalidadeFinanceiro" onchange="renderMensalidadesFinanceiro()">
+              <option value="">Todos</option><option value="PAGO">✅ Pago</option><option value="PENDENTE">⏳ Pendente</option><option value="ATRASADO">⚠️ Atrasado</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-container"><table><thead><tr><th>Aluno</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Data Pagamento</th><th>Ações</th></tr></thead><tbody id="tabelaMensalidadesFinanceiro"><tr><td colspan="6" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
+      </div>
+
+      <div id="financeiro-registrar" class="section-container hidden">
+        <h3>📝 Registrar Pagamento de Mensalidade</h3>
+        <div style="background: #ebf8ff; border-left: 4px solid #4299e1; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9em; color: #2c5282;">ℹ️ Registre o pagamento do mês de referência. O status do aluno será atualizado e ele receberá uma notificação em seu perfil.</div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+          <div class="form-group" style="flex:1; min-width:220px;"><label>Aluno *</label><select id="registrarPagamentoAluno"><option value="">-- Selecione --</option></select></div>
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Mês de Referência *</label><input type="month" id="registrarPagamentoMes"></div>
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Data do Pagamento *</label><input type="date" id="registrarPagamentoData"></div>
+        </div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Valor (R$)</label><input type="number" id="registrarPagamentoValor" step="0.01" min="0"></div>
+          <div class="form-group" style="flex:1; min-width:180px;"><label>Dia Vencimento</label><input type="number" id="registrarPagamentoVencimento" min="1" max="31" value="10"></div>
+          <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="registrarPagamentoManual()" class="btn btn-info">💾 Registrar Pagamento</button></div>
+        </div>
+        <div id="registrarPagamentoInfo" style="margin-top: 15px;"></div>
+      </div>
+
       <div id="financeiro-valores" class="section-container hidden">
         <h3>⚙️ Cadastro de Valor Hora/Aula</h3>
-        <div class="table-container">
-          <table><thead><tr><th>Professor</th><th>Valor Hora (R$)</th><th>Ação</th></tr></thead><tbody id="tabelaValoresProfessores"></tbody></table>
+        <div class="table-container"><table><thead><tr><th>Professor</th><th>Valor Hora (R$)</th><th>Ação</th></tr></thead><tbody id="tabelaValoresProfessores"></tbody></table></div>
+      </div>
+
+      <div id="financeiro-debug" class="section-container hidden">
+        <h3>🔍 Debug: Dados Brutos da Aba PAGAMENTOS</h3>
+        <div style="background: #fffaf0; border-left: 4px solid #ed8936; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em;">
+          <strong>Como interpretar:</strong> se a lista abaixo estiver vazia, a aba PAGAMENTOS não foi lida. Verifique:
+          <ul style="margin-left: 20px; margin-top: 8px;">
+            <li>Nome exato da aba (deve ser <code>PAGAMENTOS</code>)</li>
+            <li>Cabeçalhos na linha 1: <code>Aluno | Valor | Vencimento | Status | Data_Pagamento | Referencia</code></li>
+            <li>Permissão de leitura pública da planilha (ou compartilhada com o e-mail do Apps Script)</li>
+          </ul>
         </div>
+        <div class="btn-group" style="margin-bottom: 15px;">
+          <button onclick="financeiroDebugPagamentos()" class="btn btn-warning btn-small">🔄 Recarregar Dados</button>
+          <button onclick="financeiroDebugGAS()" class="btn btn-secondary btn-small">📡 Testar GAS listarPagamentos</button>
+        </div>
+        <div id="financeiroDebugOutput" class="pagamento-debug">Clique em "Recarregar Dados".</div>
       </div>
     </div>
 
+    <!-- ==================== ALUNO ==================== -->
     <div id="alunoArea" class="hidden">
-      <div id="alunoHero" class="aluno-hero">
-        <h2 id="alunoHeroNome">🎓 Olá, Aluno!</h2>
-        <p id="alunoHeroInfo">Bem-vindo(a) à sua área pessoal</p>
-      </div>
-
+      <div id="alunoHero" class="aluno-hero"><h2 id="alunoHeroNome">🎓 Olá, Aluno!</h2><p id="alunoHeroInfo">Bem-vindo(a) à sua área pessoal</p></div>
       <div class="aluno-tabs">
         <button class="toggle-btn active" onclick="toggleAluno('painel', event)">📊 Meu Painel</button>
+        <button class="toggle-btn" onclick="toggleAluno('mensalidade', event)">💰 Minha Mensalidade</button>
         <button class="toggle-btn" onclick="toggleAluno('notas', event)">📝 Minhas Notas</button>
         <button class="toggle-btn" onclick="toggleAluno('frequencia', event)">✅ Frequência</button>
         <button class="toggle-btn" onclick="toggleAluno('conteudos', event)">📚 Conteúdos</button>
@@ -809,58 +777,40 @@ tbody tr:hover { background: #f7fafc; }
       <div id="aluno-painel" class="section-container">
         <h3>📊 Resumo Geral</h3>
         <div class="stats-grid" id="alunoStats"></div>
-        <div style="margin-top: 20px;">
-          <h4>🎵 Cursos Matriculados</h4>
-          <div id="alunoMatriculas" class="cards-grid" style="margin-top: 12px;"></div>
+        <div style="margin-top: 20px;"><h4>🎵 Cursos Matriculados</h4><div id="alunoMatriculas" class="cards-grid" style="margin-top: 12px;"></div></div>
+      </div>
+
+      <div id="aluno-mensalidade" class="section-container hidden">
+        <h3>💰 Minha Mensalidade</h3>
+        <div id="alunoMensalidadeResumo" class="stats-grid" style="margin-bottom: 20px;"></div>
+        <div id="alunoMensalidadeCards" class="cards-grid"></div>
+        <div style="margin-top: 25px;">
+          <h4 style="margin-bottom: 12px;">📅 Histórico de Pagamentos por Ano</h4>
+          <div class="ano-tabs" id="alunoAnoTabs"></div>
+          <div class="mes-grid" id="alunoMesesGrid"></div>
         </div>
+        <div style="margin-top: 20px; padding: 15px; background: #ebf8ff; border-left: 4px solid #4299e1; border-radius: 8px; font-size: 0.9em; color: #2c5282;">ℹ️ <b>Visualização apenas:</b> o aluno não pode alterar valores ou status. O registro é feito pelo setor <b>Financeiro</b>. Em caso de dúvidas, entre em contato com a secretaria.</div>
       </div>
 
       <div id="aluno-notas" class="section-container hidden">
         <h3>📝 Minhas Notas e Médias</h3>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>Curso</th><th>1º Bim</th><th>2º Bim</th><th>3º Bim</th><th>4º Bim</th><th>Média</th><th>Status</th></tr></thead>
-            <tbody id="alunoTabelaNotas"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody>
-          </table>
-        </div>
+        <div class="table-container"><table><thead><tr><th>Curso</th><th>1º Bim</th><th>2º Bim</th><th>3º Bim</th><th>4º Bim</th><th>Média</th><th>Status</th></tr></thead><tbody id="alunoTabelaNotas"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
       </div>
 
       <div id="aluno-frequencia" class="section-container hidden">
         <h3>✅ Minha Frequência</h3>
         <div id="alunoFrequenciaResumo" class="stats-grid" style="margin-bottom: 20px;"></div>
-        <div class="table-container">
-          <table>
-            <thead><tr><th>Curso</th><th>Data</th><th>Status</th><th>Conteúdo</th><th>Professor</th></tr></thead>
-            <tbody id="alunoTabelaFrequencia"><tr><td colspan="5" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody>
-          </table>
-        </div>
+        <div class="table-container"><table><thead><tr><th>Curso</th><th>Data</th><th>Status</th><th>Conteúdo</th><th>Professor</th></tr></thead><tbody id="alunoTabelaFrequencia"><tr><td colspan="5" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
       </div>
 
-      <div id="aluno-conteudos" class="section-container hidden">
-        <h3>📚 Conteúdos das Aulas</h3>
-        <div id="alunoListaConteudos" class="registros-list"></div>
-      </div>
-
-      <div id="aluno-relatorios" class="section-container hidden">
-        <h3>📄 Meus Relatórios Pedagógicos</h3>
-        <div id="alunoListaRelatorios" class="registros-list"></div>
-      </div>
+      <div id="aluno-conteudos" class="section-container hidden"><h3>📚 Conteúdos das Aulas</h3><div id="alunoListaConteudos" class="registros-list"></div></div>
+      <div id="aluno-relatorios" class="section-container hidden"><h3>📄 Meus Relatórios Pedagógicos</h3><div id="alunoListaRelatorios" class="registros-list"></div></div>
 
       <div id="aluno-materiais" class="section-container hidden">
         <h3>📎 Materiais e Mensagens dos Professores</h3>
         <div class="prof-comunicacao-grid">
-          <div class="comunicacao-card">
-            <h4>📁 Arquivos Recebidos</h4>
-            <div id="alunoListaArquivos" class="registros-list">
-              <p style="color:#718096;">Nenhum arquivo recebido.</p>
-            </div>
-          </div>
-          <div class="comunicacao-card">
-            <h4>💬 Mensagens Recebidas</h4>
-            <div id="alunoListaMensagens" class="registros-list">
-              <p style="color:#718096;">Nenhuma mensagem recebida.</p>
-            </div>
-          </div>
+          <div class="comunicacao-card"><h4>📁 Arquivos Recebidos</h4><div id="alunoListaArquivos" class="registros-list"><p style="color:#718096;">Nenhum arquivo recebido.</p></div></div>
+          <div class="comunicacao-card"><h4>💬 Mensagens Recebidas</h4><div id="alunoListaMensagens" class="registros-list"><p style="color:#718096;">Nenhuma mensagem recebida.</p></div></div>
         </div>
       </div>
 
@@ -872,9 +822,73 @@ tbody tr:hover { background: #f7fafc; }
           <div class="info-line"><strong>Responsável:</strong> <span id="alunoDadoResponsavel">-</span></div>
           <div class="info-line"><strong>Contato:</strong> <span id="alunoDadoContato">-</span></div>
           <div class="info-line"><strong>Status:</strong> <span id="alunoDadoStatus">-</span></div>
-          <div style="margin-top:15px; font-size:0.85em; color:#718096;">
-            ℹ️ Para alterar seus dados, procure a secretaria.
-          </div>
+          <div style="margin-top:15px; font-size:0.85em; color:#718096;">ℹ️ Para alterar seus dados, procure a secretaria.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ADMINISTRADOR ==================== -->
+    <div id="adminArea" class="hidden">
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+        <button class="toggle-btn active" onclick="toggleAdmin('dashboard', event)">🛡️ Dashboard</button>
+        <button class="toggle-btn" onclick="toggleAdmin('usuarios', event)">🔑 Usuários e Senhas</button>
+        <button class="toggle-btn" onclick="toggleAdmin('logs', event)">📜 Logs do Sistema</button>
+        <button class="toggle-btn" onclick="toggleAdmin('diagnostico', event)">🔍 Diagnóstico</button>
+        <button class="toggle-btn" onclick="toggleAdmin('bugs', event)">🐛 Bugs e Alertas</button>
+        <button class="toggle-btn" onclick="toggleAdmin('config', event)">⚙️ Configurações</button>
+      </div>
+
+      <div id="admin-dashboard" class="section-container">
+        <h3>🛡️ Painel do Administrador</h3>
+        <div class="stats-grid" id="adminStats"></div>
+        <div style="margin-top: 20px;"><h4>📊 Resumo Rápido</h4><div id="adminResumo" class="registros-list" style="margin-top:12px;"></div></div>
+      </div>
+
+      <div id="admin-usuarios" class="section-container hidden">
+        <h3>🔑 Usuários, Senhas e Permissões</h3>
+        <div class="btn-group" style="margin-bottom: 20px;">
+          <button onclick="adminCarregarUsuarios()" class="btn btn-warning btn-small">🔄 Atualizar</button>
+          <button onclick="adminVerSenhas()" class="btn btn-danger btn-small">👁️ Ver Senhas (Admin)</button>
+        </div>
+        <div class="table-container"><table><thead><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Aluno Vinculado</th><th>Status</th><th>Senha</th><th>Criado em</th></tr></thead><tbody id="adminTabelaUsuarios"><tr><td colspan="7" style="text-align:center;color:#718096;">Clique em "Atualizar".</td></tr></tbody></table></div>
+        <div style="margin-top: 15px; padding: 12px; background: #fff5f5; border-left: 4px solid #f56565; border-radius: 8px; font-size: 0.9em; color: #742a2a;">⚠️ <b>Área restrita:</b> acesso a senhas disponível apenas para o perfil Administrador.</div>
+      </div>
+
+      <div id="admin-logs" class="section-container hidden">
+        <h3>📜 Logs do Sistema</h3>
+        <div class="btn-group" style="margin-bottom: 20px;">
+          <button onclick="adminCarregarLogs()" class="btn btn-secondary btn-small">🔄 Carregar Logs</button>
+          <button onclick="adminLimparLogsView()" class="btn btn-warning btn-small">🧹 Limpar Visualização</button>
+        </div>
+        <div id="adminLogsContainer" class="admin-log">Clique em "Carregar Logs" para visualizar.</div>
+      </div>
+
+      <div id="admin-diagnostico" class="section-container hidden">
+        <h3>🔍 Diagnóstico do Sistema</h3>
+        <div class="btn-group" style="margin-bottom: 20px;"><button onclick="adminRodarDiagnostico()" class="btn btn-info btn-small">🔍 Executar Diagnóstico</button></div>
+        <div id="adminDiagnosticoResult" class="registros-list"><p style="color:#718096;">Clique em "Executar Diagnóstico".</p></div>
+      </div>
+
+      <div id="admin-bugs" class="section-container hidden">
+        <h3>🐛 Bugs e Alertas do Sistema</h3>
+        <div class="btn-group" style="margin-bottom: 20px;">
+          <button onclick="adminCarregarBugs()" class="btn btn-danger btn-small">🔄 Carregar Bugs</button>
+          <button onclick="adminGerarBugsAutomaticos()" class="btn btn-warning btn-small">🔎 Detectar Automaticamente</button>
+        </div>
+        <div id="adminBugsContainer" class="registros-list"><p style="color:#718096;">Clique em "Carregar Bugs" ou "Detectar Automaticamente".</p></div>
+      </div>
+
+      <div id="admin-config" class="section-container hidden">
+        <h3>⚙️ Configurações do Sistema</h3>
+        <div class="form-group"><label>URL do GAS (Web App)</label><input type="text" id="adminGasUrl" readonly style="background:#f7fafc;"></div>
+        <div class="form-group"><label>ID da Planilha</label><input type="text" id="adminSheetId" readonly style="background:#f7fafc;"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Total de Abas Carregadas</label><input type="text" id="adminTotalAbas" readonly style="background:#f7fafc;"></div>
+          <div class="form-group"><label>Última Sincronização</label><input type="text" id="adminUltimaSync" readonly style="background:#f7fafc;"></div>
+        </div>
+        <div class="btn-group" style="margin-top:15px;">
+          <button onclick="adminRecarregarTudo()" class="btn btn-info btn-small">🔄 Recarregar Todos os Dados</button>
+          <button onclick="adminTestarGAS()" class="btn btn-warning btn-small">📡 Testar GAS</button>
         </div>
       </div>
     </div>
@@ -891,7 +905,8 @@ const SHEET_CONFIG = {
     alunos: 'ALUNOS', matriculas: 'MATRICULAS', professores: 'PROFESSORES',
     avaliacoes: 'AVALIACOES', presencas: 'PRESENCAS', conteudos: 'CONTEUDOS',
     observacoes: 'OBSERVACOES', relatorios: 'RELATORIOS',
-    notificacoes: 'NOTIFICACOES', arquivos: 'ARQUIVOS', mensagens: 'MENSAGENS'
+    notificacoes: 'NOTIFICACOES', arquivos: 'ARQUIVOS', mensagens: 'MENSAGENS',
+    pagamentos: 'PAGAMENTOS', logs: 'LOGS'
   }
 };
 
@@ -924,29 +939,29 @@ const CURSOS = [
 const CURSOS_MAP = {};
 CURSOS.forEach(c => { CURSOS_MAP[c.id] = c; });
 
+const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
 // ============================================
 // ESTADO
 // ============================================
-let dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [], notificacoes: [], arquivos: [], mensagens: [] };
+let dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], logs: [] };
 let escolaData = { alunos: [], professores: [], cursos: CURSOS };
-let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [], notificacoes: [], arquivos: [], mensagens: [] };
+let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], pagamentosMensais: [], logs: [] };
 let currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
 let cursoSelecionado = null;
 let dadosAluno = null;
 let arquivoUploadSelecionado = null;
+let anoSelecionadoAluno = new Date().getFullYear();
+let notificacoesAtrasoGeradas = new Set();
 
 // ============================================
-// HELPERS
+// HELPERS BÁSICOS
 // ============================================
 function texto(v) { return (v === null || v === undefined) ? '' : String(v).trim(); }
 
 function normalizarNome(v) {
-  return texto(v)
-    .toUpperCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return texto(v).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
 }
 
 function nomesIguais(a, b) { return normalizarNome(a) === normalizarNome(b); }
@@ -964,6 +979,163 @@ function getColuna(obj, ...nomes) {
   return '';
 }
 
+// ============================================
+// ✅ NOVO v3.2: NORMALIZADORES ROBUSTOS PARA PAGAMENTOS
+// ============================================
+
+/**
+ * Normaliza VALOR:
+ *  - "1234.56" → 1234.56
+ *  - "1.234,56" → 1234.56
+ *  - "1234,56" → 1234.56
+ *  - "R$ 1.234,56" → 1234.56
+ *  - number → number
+ */
+function normalizarValor(raw) {
+  if (raw === null || raw === undefined || raw === '') return 0;
+  if (typeof raw === 'number') return isFinite(raw) ? raw : 0;
+  let str = String(raw).trim();
+  if (!str) return 0;
+  // Remove R$, espaços e caracteres não numéricos (exceto . e ,)
+  str = str.replace(/R\$\s*/gi, '').replace(/[^\d.,\-]/g, '');
+  if (!str) return 0;
+  // Caso 1: "1.234,56" (formato BR) → 1234.56
+  if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) {
+    str = str.replace(/\./g, '').replace(',', '.');
+  }
+  // Caso 2: "1234,56" (BR sem milhar) → 1234.56
+  else if (/^-?\d+(,\d+)$/.test(str)) {
+    str = str.replace(',', '.');
+  }
+  // Caso 3: "1,234.56" (US) → 1234.56
+  else if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(str)) {
+    str = str.replace(/,/g, '');
+  }
+  // Caso 4: já está em formato numérico padrão
+  const n = parseFloat(str);
+  return isNaN(n) ? 0 : n;
+}
+
+/**
+ * Normaliza REFERÊNCIA para formato YYYY-MM:
+ *  - "2026-03" → "2026-03"
+ *  - "2026-3" → "2026-03"
+ *  - "03-2026" → "2026-03"
+ *  - "3-2026" → "2026-03"
+ *  - "03/2026" → "2026-03"
+ *  - Date(2026,2,...) (gviz) → "2026-03"
+ *  - "01-03-2026" (DD-MM-YYYY) → "2026-03"
+ *  - "" / null → usa mês atual
+ */
+function normalizarReferencia(raw) {
+  if (raw === null || raw === undefined || raw === '') return mesRefAtual();
+  if (raw instanceof Date && !isNaN(raw.getTime())) {
+    return `${raw.getFullYear()}-${String(raw.getMonth()+1).padStart(2,'0')}`;
+  }
+  let str = String(raw).trim();
+  if (!str) return mesRefAtual();
+
+  // Formato gviz: "Date(2026,2,15)" → ano, mês (0-based), dia
+  const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
+  if (mGviz) {
+    const ano = parseInt(mGviz[1], 10);
+    const mes = parseInt(mGviz[2], 10) + 1;
+    return `${ano}-${String(mes).padStart(2,'0')}`;
+  }
+
+  // YYYY-MM ou YYYY-M
+  let m = str.match(/^(\d{4})-(\d{1,2})(?:-\d{1,2})?/);
+  if (m) return `${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
+
+  // DD-MM-YYYY (data brasileira)
+  m = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (m) return `${m[3]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
+
+  // DD/MM/YYYY
+  m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
+
+  // MM-YYYY ou MM/YYYY
+  m = str.match(/^(\d{1,2})[-\/](\d{4})$/);
+  if (m) return `${m[2]}-${String(parseInt(m[1],10)).padStart(2,'0')}`;
+
+  // Tenta Date.parse como último recurso
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+
+  return mesRefAtual();
+}
+
+/**
+ * Normaliza STATUS:
+ *  - "pago" / "Pago" / "PAGO" / "PAGO " → "PAGO"
+ *  - "pendente" → "PENDENTE"
+ *  - "atrasado" / "atrasada" → "ATRASADO"
+ *  - "isento" → "ISENTO"
+ *  - "" → "PENDENTE"
+ */
+function normalizarStatusPagamento(raw) {
+  if (raw === null || raw === undefined) return 'PENDENTE';
+  const s = String(raw).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (!s) return 'PENDENTE';
+  if (s.includes('PAG')) return 'PAGO';
+  if (s.includes('ATRAS')) return 'ATRASADO';
+  if (s.includes('ISENT')) return 'ISENTO';
+  if (s.includes('PEND')) return 'PENDENTE';
+  return 'PENDENTE';
+}
+
+/**
+ * Normaliza DATA de pagamento para DD-MM-YYYY
+ */
+function normalizarDataPagamento(raw) {
+  if (raw === null || raw === undefined || raw === '') return '';
+  if (raw instanceof Date && !isNaN(raw.getTime())) {
+    return `${String(raw.getDate()).padStart(2,'0')}-${String(raw.getMonth()+1).padStart(2,'0')}-${raw.getFullYear()}`;
+  }
+  const str = String(raw).trim();
+  if (!str) return '';
+  // gviz: Date(2026,2,15)
+  const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
+  if (mGviz) {
+    return `${String(parseInt(mGviz[3],10)).padStart(2,'0')}-${String(parseInt(mGviz[2],10)+1).padStart(2,'0')}-${mGviz[1]}`;
+  }
+  // DD-MM-YYYY
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) return str;
+  // DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) return str.replace(/\//g, '-');
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    const p = str.split('T')[0].split('-');
+    return `${p[2]}-${p[1]}-${p[0]}`;
+  }
+  // Número serial do Sheets
+  const num = Number(str);
+  if (!isNaN(num) && num > 30000 && num < 80000) {
+    const base = new Date(1899, 11, 30);
+    const d = new Date(base.getTime() + num * 24 * 60 * 60 * 1000);
+    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+  }
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+  }
+  return str;
+}
+
+/**
+ * Normaliza DIA DE VENCIMENTO (1-31)
+ */
+function normalizarDiaVencimento(raw) {
+  if (raw === null || raw === undefined || raw === '') return 10;
+  const n = parseInt(String(raw).replace(/[^\d]/g, ''), 10);
+  if (isNaN(n)) return 10;
+  return Math.max(1, Math.min(31, n));
+}
+
+// ============================================
+// HELPERS DE DATA
+// ============================================
 function formatarDataParaExibicao(dataISO) {
   if (!dataISO) return '';
   if (/^\d{2}-\d{2}-\d{4}$/.test(dataISO)) return dataISO;
@@ -987,19 +1159,10 @@ function formatarDataParaPlanilha(data) {
 function normalizarDataPresenca(valor) {
   if (valor === null || valor === undefined || valor === '') return '';
   if (valor instanceof Date && !isNaN(valor.getTime())) return `${String(valor.getDate()).padStart(2,'0')}-${String(valor.getMonth()+1).padStart(2,'0')}-${valor.getFullYear()}`;
-  const comoNumero = typeof valor === 'number' ? valor : Number(String(valor).trim());
-  if (!isNaN(comoNumero) && isFinite(comoNumero) && String(valor).trim() !== '' && comoNumero > 1000 && comoNumero < 80000) {
-    const base = new Date(1899, 11, 30);
-    const d = new Date(base.getTime() + comoNumero * 24 * 60 * 60 * 1000);
-    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-  }
   const str = String(valor).trim();
   if (/^\d{2}-\d{2}-\d{4}$/.test(str)) return str;
   const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)\)/);
-  if (mGviz) {
-    const ano = parseInt(mGviz[1],10), mes = parseInt(mGviz[2],10)+1, dia = parseInt(mGviz[3],10);
-    return `${String(dia).padStart(2,'0')}-${String(mes).padStart(2,'0')}-${ano}`;
-  }
+  if (mGviz) return `${String(parseInt(mGviz[3],10)).padStart(2,'0')}-${String(parseInt(mGviz[2],10)+1).padStart(2,'0')}-${mGviz[1]}`;
   if (/^\d{4}-\d{2}-\d{2}/.test(str)) { const p = str.split('T')[0].split('-'); return `${p[2]}-${p[1]}-${p[0]}`; }
   const d = new Date(str);
   if (!isNaN(d.getTime())) return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
@@ -1015,6 +1178,13 @@ function getDataHoraAtual() {
   const h = new Date();
   return `${String(h.getDate()).padStart(2,'0')}-${String(h.getMonth()+1).padStart(2,'0')}-${h.getFullYear()} ${String(h.getHours()).padStart(2,'0')}:${String(h.getMinutes()).padStart(2,'0')}`;
 }
+
+function getAnoMesAtual() {
+  const h = new Date();
+  return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}`;
+}
+
+function mesRefAtual() { return getAnoMesAtual(); }
 
 function mostrarToast(msg, tipo = 'success') {
   const t = document.createElement('div');
@@ -1033,19 +1203,14 @@ function labelCurso(id) {
 }
 
 function escapeHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function normalizarCursoId(raw) {
   if (!raw) return '';
   let r = texto(raw).toLowerCase().trim();
   if (!r) return '';
-  r = r.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
-       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-       .replace(/[^\w\s\-]/g, ' ')
-       .replace(/\s+/g, ' ').trim();
+  r = r.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s\-]/g, ' ').replace(/\s+/g, ' ').trim();
   if (!r) return '';
   if (CURSOS_MAP[r]) return r;
   const aliases = {
@@ -1059,10 +1224,7 @@ function normalizarCursoId(raw) {
   };
   if (aliases[r]) return aliases[r];
   for (const c of CURSOS) {
-    const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s\-]/g, ' ')
-      .replace(/\s+/g, ' ').trim().toLowerCase();
+    const nomeLimpo = c.nome.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s\-]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
     if (nomeLimpo === r) return c.id;
   }
   return r;
@@ -1073,15 +1235,10 @@ function extrairCursosDoProfessor(prof) {
   const partes = [];
   const bruto = [prof.curso || '', prof.cursos || '', prof.tipo || ''].join(' | ');
   if (!bruto.trim()) return [];
-  const pedacos = bruto
-    .replace(/[\r\n]+/g, ',')
-    .replace(/[;|/\\]+/g, ',')
-    .replace(/\s+(?:e|E|\+|&)\s+/g, ',')
-    .split(/,+/).map(p => p.trim()).filter(Boolean);
+  const pedacos = bruto.replace(/[\r\n]+/g, ',').replace(/[;|/\\]+/g, ',').replace(/\s+(?:e|E|\+|&)\s+/g, ',').split(/,+/).map(p => p.trim()).filter(Boolean);
   const ruido = new Set(['instrumento', 'teoria musical', 'musicalizacao', 'musicalização']);
   for (const p of pedacos) {
-    const norm = p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^\w\s\-]/g, ' ').replace(/\s+/g, ' ').trim();
+    const norm = p.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s\-]/g, ' ').replace(/\s+/g, ' ').trim();
     if (!norm) continue;
     if (ruido.has(norm)) continue;
     const id = normalizarCursoId(p);
@@ -1093,15 +1250,14 @@ function extrairCursosDoProfessor(prof) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ============================================
-// GAS — chamada JSON (text/plain EXATO, sem CORS)
-// ✅ CORRIGIDO: 'text/plain' SEM charset
+// GAS — chamada JSON
 // ============================================
 async function enviarParaGAS(acao, payload) {
   const corpo = { acao, payload: { ...payload, token: currentUser.token || undefined } };
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },   // ✅ EXATO — sem charset
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(corpo),
       redirect: 'follow'
     });
@@ -1118,14 +1274,12 @@ async function enviarParaGAS(acao, payload) {
 }
 
 // ============================================
-// UPLOAD sem CORS: base64 + text/plain EXATO
-// ✅ CORRIGIDO: 'text/plain' SEM charset
+// UPLOAD sem CORS
 // ============================================
 function uploadArquivoComProgresso(file, campos, onProgress) {
   return new Promise((resolve, reject) => {
     const MAX = 20 * 1024 * 1024;
     if (file.size > MAX) { reject(new Error('Arquivo maior que 20 MB')); return; }
-
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Falha ao ler o arquivo'));
     reader.onload = () => {
@@ -1133,7 +1287,6 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
         const dataUrl = String(reader.result || '');
         const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
         if (!base64) { reject(new Error('Falha na conversão base64')); return; }
-
         const body = JSON.stringify({
           acao: 'uploadArquivo',
           payload: {
@@ -1147,47 +1300,34 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
             file: base64
           }
         });
-
         const xhr = new XMLHttpRequest();
         xhr.open('POST', GAS_URL, true);
         xhr.setRequestHeader('Content-Type', 'text/plain');
-        
-        // ❌ REMOVIDO: xhr.upload.onprogress — era isso que causava o preflight
-        
         xhr.onload = () => {
           const txt = xhr.responseText || '';
-          if (txt.indexOf('accounts.google.com') !== -1) {
-            reject(new Error('Web App não está público. Reimplante como "Qualquer pessoa".'));
-            return;
-          }
+          if (txt.indexOf('accounts.google.com') !== -1) { reject(new Error('Web App não está público. Reimplante como "Qualquer pessoa".')); return; }
           try {
             const json = JSON.parse(txt);
-            if (json && json.success) { 
-              if (onProgress) onProgress(100); 
-              resolve(json); 
-            } else {
-              reject(new Error((json && json.error) || 'Falha no upload'));
-            }
-          } catch (e) {
-            reject(new Error('Resposta inválida: ' + txt.substring(0, 200)));
-          }
+            if (json && json.success) { if (onProgress) onProgress(100); resolve(json); }
+            else { reject(new Error((json && json.error) || 'Falha no upload')); }
+          } catch (e) { reject(new Error('Resposta inválida: ' + txt.substring(0, 200))); }
         };
         xhr.onerror = () => reject(new Error('Erro de rede no upload'));
         xhr.ontimeout = () => reject(new Error('Timeout no upload'));
         xhr.timeout = 180000;
-
-        if (onProgress) onProgress(30); // progresso simbólico
+        if (onProgress) onProgress(30);
         xhr.send(body);
       } catch (err) { reject(err); }
     };
     reader.readAsDataURL(file);
   });
 }
+
 // ============================================
 // SESSÃO
 // ============================================
-const SESSION_KEY = 'escolaMusica.session.v5';
-const ACTIVITY_KEY = 'escolaMusica.lastActivity.v5';
+const SESSION_KEY = 'escolaMusica.session.v8';
+const ACTIVITY_KEY = 'escolaMusica.lastActivity.v8';
 const INATIVIDADE_MS = 60 * 60 * 1000;
 
 function salvarSessao() {
@@ -1284,8 +1424,7 @@ const saveProgress = {
 async function executarComProgresso(opts) {
   const { titulo = 'Salvando...', subtitulo = 'Por favor, não feche.', etapas = [
     { pct: 10, label: 'Validando...' }, { pct: 35, label: 'Enviando...' },
-    { pct: 65, label: 'Gravando...' }, { pct: 85, label: 'Sincronizando...' },
-    { pct: 95, label: 'Finalizando...' }
+    { pct: 65, label: 'Gravando...' }, { pct: 85, label: 'Sincronizando...' }, { pct: 95, label: 'Finalizando...' }
   ], executar, sucesso = 'Salvo!', erro = 'Falha.' } = opts;
   saveProgress.init(); saveProgress.show(titulo, subtitulo);
   try {
@@ -1341,8 +1480,11 @@ async function carregarDadosPlanilha() {
       await carregarAbaEspecifica(aba, key);
     }
     atualizarBancoDados();
+    processarAtrasos();
     document.getElementById('syncStatus').className = 'sync-status synced';
     document.getElementById('syncStatus').textContent = '✅ Sincronizado';
+    const ultimaSync = document.getElementById('adminUltimaSync');
+    if (ultimaSync) ultimaSync.value = getDataHoraAtual();
     await renderAposCarregamento();
     if (window.__restaurarSessaoPendente) {
       window.__restaurarSessaoPendente = false;
@@ -1355,6 +1497,12 @@ async function carregarDadosPlanilha() {
   } finally { loading.classList.remove('active'); }
 }
 
+/**
+ * ✅ v3.2: leitura robusta do gviz.
+ * - Usa `cell.v` se existir, senão `cell.f`
+ * - Se `cell` for nulo/vazio, tenta `cell.f` como fallback
+ * - Mantém o objeto `__gvizRaw` em cada linha para debug
+ */
 async function carregarAbaEspecifica(nomeAba, chave) {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}`;
@@ -1364,14 +1512,23 @@ async function carregarAbaEspecifica(nomeAba, chave) {
     const jsonStr = txt.substring(txt.indexOf('{'), txt.lastIndexOf('}') + 1);
     const data = JSON.parse(jsonStr);
     if (data.table && data.table.rows) {
-      const cols = data.table.cols.map(c => texto(c.label) || c.id || '');
+      const cols = data.table.cols.map((c, i) => texto(c.label) || c.id || `coluna_${i}`);
       dadosPlanilha[chave] = data.table.rows.map(row => {
         const obj = {};
-        (row.c || []).forEach((cell, i) => { obj[cols[i] || `coluna_${i}`] = cell ? cell.v : ''; });
+        (row.c || []).forEach((cell, i) => {
+          const colName = cols[i] || `coluna_${i}`;
+          if (!cell) { obj[colName] = ''; return; }
+          let val = cell.v;
+          if (val === null || val === undefined) val = cell.f;
+          obj[colName] = val;
+        });
         return obj;
       });
     } else dadosPlanilha[chave] = [];
-  } catch (e) { console.warn(`Erro em ${nomeAba}:`, e); dadosPlanilha[chave] = []; }
+  } catch (e) {
+    console.warn(`Erro em ${nomeAba}:`, e);
+    dadosPlanilha[chave] = [];
+  }
 }
 
 async function renderAposCarregamento() {
@@ -1397,11 +1554,12 @@ async function renderAposCarregamento() {
     case 'direcao': renderStatsGerenciais(); break;
     case 'financeiro': renderFinanceiro(); break;
     case 'aluno': await carregarDadosAluno(); break;
+    case 'admin': adminCarregarDashboard(); break;
   }
 }
 
 // ============================================
-// BANCO DE DADOS LOCAL
+// ✅ v3.2: BANCO DE DADOS LOCAL — leitura ROBUSTA de PAGAMENTOS
 // ============================================
 function atualizarBancoDados() {
   escolaData.alunos = dadosPlanilha.alunos.map(a => ({
@@ -1409,7 +1567,9 @@ function atualizarBancoDados() {
     dataNascimento: formatarDataParaExibicao(texto(getColuna(a, 'Data_Nascimento', 'Nascimento'))),
     responsavel: texto(getColuna(a, 'Responsavel', 'Responsável')),
     contato: texto(getColuna(a, 'Contato', 'Telefone')),
-    status: texto(getColuna(a, 'Status') || 'ATIVO').toUpperCase()
+    status: texto(getColuna(a, 'Status') || 'ATIVO').toUpperCase(),
+    mensalidade: normalizarValor(getColuna(a, 'Mensalidade', 'Valor_Mensalidade')),
+    vencimento: normalizarDiaVencimento(getColuna(a, 'Vencimento', 'Dia_Vencimento'))
   })).filter(a => a.nome);
 
   const profMap = {};
@@ -1418,7 +1578,7 @@ function atualizarBancoDados() {
     if (!nome) return;
     const cursoBruto = texto(getColuna(p, 'Curso', 'Cursos', 'Curso_Principal'));
     const tipo = texto(getColuna(p, 'Tipo'));
-    const valorHora = parseFloat(String(texto(getColuna(p, 'Valor_Hora'))).replace(',', '.')) || 0;
+    const valorHora = normalizarValor(getColuna(p, 'Valor_Hora'));
     const id = texto(getColuna(p, 'ID_Professor','ID'));
     const telefone = texto(getColuna(p,'Telefone','Tel'));
     const email = texto(getColuna(p,'Email','E-mail'));
@@ -1440,7 +1600,8 @@ function atualizarBancoDados() {
     professor: texto(getColuna(m,'Professor')).toUpperCase(),
     dataMatricula: formatarDataParaExibicao(texto(getColuna(m,'Data_Matricula','Data'))),
     anoLetivo: texto(getColuna(m,'Ano_Letivo','Ano')),
-    status: texto(getColuna(m,'Status') || 'ATIVO').toUpperCase()
+    status: texto(getColuna(m,'Status') || 'ATIVO').toUpperCase(),
+    mensalidade: normalizarValor(getColuna(m, 'Mensalidade', 'Valor_Mensalidade'))
   }));
 
   db.avaliacoes = dadosPlanilha.avaliacoes.map(a => ({
@@ -1542,6 +1703,90 @@ function atualizarBancoDados() {
     lida: texto(getColuna(m,'Lida')).toUpperCase() === 'SIM' || texto(getColuna(m,'Lida')) === 'TRUE',
     data: texto(getColuna(m,'Data')) || formatarDataParaExibicao(texto(getColuna(m,'Data_ISO')))
   }));
+
+  // ============================================================
+  // ✅ v3.2: PAGAMENTOS — NORMALIZAÇÃO ROBUSTA CAMPO POR CAMPO
+  // ============================================================
+  const linhasPagamentoBrutas = dadosPlanilha.pagamentos || [];
+  const pagamentosNormalizados = [];
+
+  linhasPagamentoBrutas.forEach((p, idx) => {
+    // Lê o aluno
+    const alunoRaw = getColuna(p, 'Aluno', 'Nome', 'Nome_Aluno', 'ALUNO');
+    const alunoNorm = texto(alunoRaw).toUpperCase();
+    if (!alunoNorm) return; // linha sem aluno → ignora
+
+    // Valor (pode vir como "1.234,56" ou "1234.56" ou number)
+    const valorRaw = getColuna(p, 'Valor', 'Mensalidade', 'Valor_Mensalidade', 'VALOR');
+    const valor = normalizarValor(valorRaw);
+
+    // Vencimento (dia 1-31)
+    const vencRaw = getColuna(p, 'Vencimento', 'Dia_Vencimento', 'Dia', 'VENCIMENTO');
+    const vencimento = normalizarDiaVencimento(vencRaw);
+
+    // Status
+    const statusRaw = getColuna(p, 'Status', 'STATUS', 'Situacao', 'Situação');
+    const status = normalizarStatusPagamento(statusRaw);
+
+    // Data do pagamento
+    const dataPgRaw = getColuna(p, 'Data_Pagamento', 'DataPagamento', 'Data Pagamento', 'DATA_PAGAMENTO', 'Data');
+    const dataPagamento = normalizarDataPagamento(dataPgRaw);
+
+    // Referência (YYYY-MM) — tenta várias colunas
+    const refRaw = getColuna(p, 'Referencia', 'Referência', 'Referencia_Mes', 'Referência_Mês', 'Mes_Referencia', 'Mês_Referencia', 'Mes', 'Mês', 'Ref', 'REFERENCIA', 'MES');
+    let referencia = normalizarReferencia(refRaw);
+
+    // Se a referência veio vazia, tenta extrair da data de pagamento
+    if (!refRaw && dataPagamento) {
+      const m = dataPagamento.match(/(\d{2})-(\d{2})-(\d{4})/);
+      if (m) referencia = `${m[3]}-${m[2]}`;
+    }
+
+    // Última tentativa: se referência ainda é "mês atual" e há data de pagamento, usa a data
+    if ((!refRaw || referencia === mesRefAtual()) && dataPagamento && /^\d{2}-\d{2}-\d{4}$/.test(dataPagamento)) {
+      const m = dataPagamento.match(/(\d{2})-(\d{2})-(\d{4})/);
+      if (m) referencia = `${m[3]}-${m[2]}`;
+    }
+
+    pagamentosNormalizados.push({
+      aluno: alunoNorm,
+      valor: valor,
+      vencimento: vencimento,
+      status: status,
+      dataPagamento: dataPagamento,
+      referencia: referencia,
+      // Guarda linha bruta para debug
+      _raw: p,
+      _linha: idx + 2
+    });
+  });
+
+  // Remove duplicatas (mesmo aluno + mesma referência): mantém a última linha (mais recente)
+  const mapaPag = {};
+  pagamentosNormalizados.forEach(pg => {
+    const key = `${normalizarNome(pg.aluno)}||${pg.referencia}`;
+    mapaPag[key] = pg; // sobrescreve → última linha prevalece
+  });
+  db.pagamentosMensais = Object.values(mapaPag);
+
+  // Mantém também a lista "flat" para compatibilidade
+  db.pagamentos = pagamentosNormalizados;
+
+  db.logs = (dadosPlanilha.logs || []).map(l => ({
+    data: texto(getColuna(l,'Data')) || formatarDataParaExibicao(texto(getColuna(l,'Data_ISO'))),
+    usuario: texto(getColuna(l,'Usuario','Usuário')),
+    perfil: texto(getColuna(l,'Perfil')),
+    acao: texto(getColuna(l,'Acao','Ação')),
+    detalhe: texto(getColuna(l,'Detalhe','Detalhes')),
+    ip: texto(getColuna(l,'IP'))
+  }));
+
+  // Logs de diagnóstico no console
+  console.log('📊 [DEBUG] PAGAMENTOS brutos:', linhasPagamentoBrutas.length);
+  console.log('📊 [DEBUG] PAGAMENTOS normalizados:', db.pagamentosMensais.length);
+  if (db.pagamentosMensais.length > 0) {
+    console.log('📊 [DEBUG] Amostra:', db.pagamentosMensais.slice(0, 3));
+  }
 }
 
 // ============================================
@@ -1579,10 +1824,7 @@ function getCursosDoAluno(nomeAluno) {
 
 function getAlunosByCurso(curso) {
   if (!curso) return [];
-  return db.matriculas
-    .filter(m => m.curso === curso && m.status === 'ATIVO')
-    .map(m => escolaData.alunos.find(a => nomesIguais(a.nome, m.aluno)))
-    .filter(Boolean);
+  return db.matriculas.filter(m => m.curso === curso && m.status === 'ATIVO').map(m => escolaData.alunos.find(a => nomesIguais(a.nome, m.aluno))).filter(Boolean);
 }
 
 function getProfessorByCurso(curso) {
@@ -1595,12 +1837,6 @@ function getProfessorByCurso(curso) {
     prof = escolaData.professores.find(p => nomesIguais(p.nome, mat.professor));
     if (prof) return prof;
     return { id: '', nome: mat.professor, tipo: '', curso: alvo, telefone: '', email: '', status: 'ATIVO', valorHora: 0 };
-  }
-  const pres = (db.presencas[alvo] || []).find(x => x.professor);
-  if (pres && pres.professor) {
-    prof = escolaData.professores.find(p => nomesIguais(p.nome, pres.professor));
-    if (prof) return prof;
-    return { id: '', nome: pres.professor, tipo: '', curso: alvo, telefone: '', email: '', status: 'ATIVO', valorHora: 0 };
   }
   return null;
 }
@@ -1617,7 +1853,139 @@ function getMediaAluno(aluno, curso) {
 }
 
 // ============================================
-// CONFIG CARGO
+// PAGAMENTOS — LÓGICA MENSAL ROBUSTA
+// ============================================
+
+/**
+ * ✅ v3.2: busca pagamento do mês com fallback.
+ * Ordem:
+ *  1. db.pagamentosMensais (aluno + referência) — dado real da planilha
+ *  2. Cria registro VIRTUAL a partir do aluno.mensalidade
+ */
+function getPagamentoMes(aluno, refAnoMes) {
+  if (!aluno || !refAnoMes) return null;
+  const alvo = normalizarNome(aluno);
+  const refNorm = normalizarReferencia(refAnoMes);
+
+  // 1) Procura no banco local (dados reais)
+  const pg = db.pagamentosMensais.find(p => normalizarNome(p.aluno) === alvo && p.referencia === refNorm);
+  if (pg) return pg;
+
+  // 2) Fallback: cria registro virtual a partir do aluno
+  const al = encontrarAlunoPorNome(aluno);
+  if (!al || !al.mensalidade || al.mensalidade <= 0) return null;
+
+  const [ano, mes] = refNorm.split('-').map(Number);
+  const venc = al.vencimento || 10;
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const mesAtual = hoje.getMonth() + 1;
+  const diaAtual = hoje.getDate();
+
+  let status = 'PENDENTE';
+  if (ano < anoAtual || (ano === anoAtual && mes < mesAtual) ||
+      (ano === anoAtual && mes === mesAtual && diaAtual > venc)) {
+    status = 'ATRASADO';
+  }
+  return {
+    aluno: al.nome,
+    valor: al.mensalidade,
+    vencimento: venc,
+    status: status,
+    dataPagamento: '',
+    referencia: refNorm,
+    _virtual: true
+  };
+}
+
+function getPagamentosAno(aluno, ano) {
+  const resultado = [];
+  for (let m = 1; m <= 12; m++) {
+    const ref = `${ano}-${String(m).padStart(2,'0')}`;
+    const pg = getPagamentoMes(aluno, ref);
+    if (pg) resultado.push(pg);
+    else {
+      const al = encontrarAlunoPorNome(aluno);
+      if (al && al.mensalidade > 0) {
+        resultado.push({
+          aluno: al.nome, valor: al.mensalidade, vencimento: al.vencimento || 10,
+          status: 'PENDENTE', dataPagamento: '', referencia: ref, _virtual: true
+        });
+      }
+    }
+  }
+  return resultado;
+}
+
+function getPagamentoAluno(nomeAluno) {
+  if (!nomeAluno) return null;
+  const alvo = normalizarNome(nomeAluno);
+  const pgs = db.pagamentosMensais.filter(p => normalizarNome(p.aluno) === alvo);
+  if (pgs.length > 0) {
+    pgs.sort((a,b) => (b.referencia || '').localeCompare(a.referencia || ''));
+    return pgs[0];
+  }
+  const al = encontrarAlunoPorNome(nomeAluno);
+  if (al && al.mensalidade > 0) {
+    return { aluno: al.nome, valor: al.mensalidade, vencimento: al.vencimento || 10, status: 'PENDENTE', dataPagamento: '', referencia: '' };
+  }
+  return null;
+}
+
+function labelStatusPagamento(status) {
+  const map = { 'PAGO': '✅ Pago', 'PENDENTE': '⏳ Pendente', 'ATRASADO': '⚠️ Atrasado', 'ISENTO': '🚫 Isento' };
+  return map[status] || status || '⏳ Pendente';
+}
+
+function classeStatusPagamento(status) {
+  if (status === 'PAGO') return 'pago';
+  if (status === 'ATRASADO') return 'atrasado';
+  if (status === 'ISENTO') return 'isento';
+  return 'pendente-pg';
+}
+
+function processarAtrasos() {
+  try {
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = hoje.getMonth() + 1;
+    const dia = hoje.getDate();
+    const refAtual = `${ano}-${String(mes).padStart(2,'0')}`;
+
+    escolaData.alunos.forEach(al => {
+      if (al.status !== 'ATIVO' || !al.mensalidade) return;
+      const venc = al.vencimento || 10;
+      if (dia <= venc) return;
+
+      const pg = db.pagamentosMensais.find(p => nomesIguais(p.aluno, al.nome) && p.referencia === refAtual);
+      if (pg && pg.status === 'PAGO') return;
+
+      const chaveNotif = `${al.nome}::${refAtual}`;
+      if (notificacoesAtrasoGeradas.has(chaveNotif)) return;
+      notificacoesAtrasoGeradas.add(chaveNotif);
+
+      const jaNotificado = db.notificacoes.some(n =>
+        n.tipo === 'atraso' && nomesIguais(n.aluno, al.nome) &&
+        (n.titulo || '').includes(MESES_NOMES[mes - 1]) && (n.titulo || '').includes(String(ano))
+      );
+      if (jaNotificado) return;
+
+      const novaNotif = {
+        id: 'atraso_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
+        aluno: al.nome, tipo: 'atraso',
+        titulo: `⚠️ Mensalidade em atraso — ${MESES_NOMES[mes - 1]}/${ano}`,
+        descricao: `Sua mensalidade de ${MESES_NOMES[mes - 1]}/${ano} (vencimento dia ${venc}) está em atraso. Regularize com o financeiro.`,
+        curso: '', professor: 'SISTEMA', lida: false, data: getDataHoraAtual()
+      };
+      db.notificacoes.push(novaNotif);
+
+      try { enviarParaGAS('notificarAtraso', { aluno: al.nome, referencia: refAtual, valor: al.mensalidade, vencimento: venc }).catch(() => {}); } catch (err) { /* ignora */ }
+    });
+  } catch (e) { console.warn('processarAtrasos:', e); }
+}
+
+// ============================================
+// CARGO CONFIG
 // ============================================
 const cargoConfig = {
   'direcao': { titulo: '👔 Direção' },
@@ -1625,7 +1993,8 @@ const cargoConfig = {
   'coordenacao': { titulo: '📚 Coordenação Pedagógica' },
   'professor': { titulo: '🎹 Professor' },
   'financeiro': { titulo: '💰 Financeiro' },
-  'aluno': { titulo: '🎓 Aluno' }
+  'aluno': { titulo: '🎓 Aluno' },
+  'admin': { titulo: '🛡️ Administrador' }
 };
 
 // ============================================
@@ -1719,7 +2088,7 @@ async function aplicarSessaoRestaurada() {
 // ============================================
 async function renderDashboard(perfil) {
   document.getElementById('cardsContainer').innerHTML = `<div class="card"><h3>📌 ${cargoConfig[perfil].titulo}</h3><p>Bem-vindo ao painel</p><span class="badge">Ativo</span></div>`;
-  ['secretariaArea','professorArea','coordenadorArea','direcaoArea','financeiroArea','alunoArea'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  ['secretariaArea','professorArea','coordenadorArea','direcaoArea','financeiroArea','alunoArea','adminArea'].forEach(id => document.getElementById(id).classList.add('hidden'));
   if (perfil === 'secretaria') { document.getElementById('secretariaArea').classList.remove('hidden'); inicializarSecretaria(); }
   if (perfil === 'professor') {
     document.getElementById('professorArea').classList.remove('hidden');
@@ -1733,6 +2102,7 @@ async function renderDashboard(perfil) {
   if (perfil === 'direcao') { document.getElementById('direcaoArea').classList.remove('hidden'); renderStatsGerenciais(); }
   if (perfil === 'financeiro') { document.getElementById('financeiroArea').classList.remove('hidden'); renderFinanceiro(); }
   if (perfil === 'aluno') { document.getElementById('alunoArea').classList.remove('hidden'); await carregarDadosAluno(); }
+  if (perfil === 'admin') { document.getElementById('adminArea').classList.remove('hidden'); adminCarregarDashboard(); }
 }
 
 // ============================================
@@ -1762,6 +2132,20 @@ function notificacoesDoAluno() {
   db.mensagens.filter(m => nomesIguais(m.aluno, aluno)).forEach(m => {
     lista.push({ tipo:'mensagem', titulo:`Mensagem: ${m.assunto || '(sem assunto)'}`, descricao:(m.mensagem || '').substring(0, 120) + ((m.mensagem || '').length > 120 ? '...' : ''), data: m.data || '', lida: !!m.lida, curso: m.curso, id:`msg_${m.id || m.assunto}` });
   });
+  db.notificacoes.filter(n => nomesIguais(n.aluno, aluno) && (n.tipo === 'pagamento' || n.tipo === 'atraso')).forEach(n => {
+    lista.push({ tipo: n.tipo === 'atraso' ? 'atraso' : 'pagamento', titulo: n.titulo, descricao: n.descricao, data: n.data || '', lida: !!n.lida, curso: '', id: n.id });
+  });
+  const refAtual = getAnoMesAtual();
+  const pgAtual = getPagamentoMes(aluno, refAtual);
+  if (pgAtual) {
+    const [ano, mes] = refAtual.split('-');
+    lista.push({
+      tipo: pgAtual.status === 'ATRASADO' ? 'atraso' : 'pagamento',
+      titulo: `Mensalidade ${MESES_NOMES[parseInt(mes)-1]}/${ano}: ${labelStatusPagamento(pgAtual.status)}`,
+      descricao: `Valor: R$ ${pgAtual.valor.toFixed(2)} — Vencimento dia ${pgAtual.vencimento}`,
+      data: pgAtual.dataPagamento || '', lida: pgAtual.status === 'PAGO', curso: '', id: `pgatual_${refAtual}`
+    });
+  }
   lista.sort((a, b) => parseDataNotif(b.data) - parseDataNotif(a.data));
   return lista;
 }
@@ -1785,9 +2169,9 @@ function renderNotificacoesAluno() {
   const cont = document.getElementById('notifList');
   if (!cont) return;
   if (lista.length === 0) { cont.innerHTML = '<div class="notif-empty">🔔 Nenhuma notificação por enquanto.</div>'; return; }
-  const icones = { nota: '📝', arquivo: '📎', mensagem: '💬', geral: '🔔' };
+  const icones = { nota: '📝', arquivo: '📎', mensagem: '💬', geral: '🔔', pagamento: '💰', atraso: '⚠️' };
   cont.innerHTML = lista.map(n => `
-    <div class="notif-item ${n.lida ? '' : 'nao-lida'}" onclick="abrirNotificacao('${n.tipo}','${n.id.replace(/'/g,"\\'")}')">
+    <div class="notif-item ${n.lida ? '' : 'nao-lida'}" onclick="abrirNotificacao('${n.tipo}','${(n.id||'').replace(/'/g,"\\'")}')">
       <div class="notif-icon tipo-${n.tipo}">${icones[n.tipo] || '🔔'}</div>
       <div class="notif-body">
         <div class="notif-title">${escapeHtml(n.titulo)}</div>
@@ -1814,17 +2198,16 @@ document.addEventListener('click', (e) => {
 
 function abrirNotificacao(tipo, id) {
   const p = document.getElementById('notifPanel'); if (p) p.classList.remove('active');
-  if (tipo === 'arquivo' || tipo === 'mensagem') {
-    const target = document.getElementById('aluno-materiais');
+  let targetId = '';
+  if (tipo === 'arquivo' || tipo === 'mensagem') targetId = 'aluno-materiais';
+  else if (tipo === 'nota') targetId = 'aluno-notas';
+  else if (tipo === 'pagamento' || tipo === 'atraso') targetId = 'aluno-mensalidade';
+  if (targetId) {
+    const target = document.getElementById(targetId);
     if (target) {
       document.querySelectorAll('#alunoArea .section-container').forEach(el => el.classList.add('hidden'));
       target.classList.remove('hidden');
-    }
-  } else if (tipo === 'nota') {
-    const target = document.getElementById('aluno-notas');
-    if (target) {
-      document.querySelectorAll('#alunoArea .section-container').forEach(el => el.classList.add('hidden'));
-      target.classList.remove('hidden');
+      document.querySelectorAll('#alunoArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
     }
   }
 }
@@ -1833,6 +2216,7 @@ async function marcarTodasNotificacoesLidas() {
   const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
   if (aluno) {
     db.mensagens.forEach(m => { if (nomesIguais(m.aluno, aluno)) m.lida = true; });
+    db.notificacoes.forEach(n => { if (nomesIguais(n.aluno, aluno)) n.lida = true; });
     try { await enviarParaGAS('marcarNotificacoesLidas', { aluno }); } catch (e) {}
   }
   const badge = document.getElementById('notifBadge');
@@ -1847,6 +2231,7 @@ async function marcarTodasNotificacoesLidas() {
 function inicializarSecretaria() {
   carregarAlunosSecretaria(); carregarMatriculasSecretaria(); carregarProfessoresSecretaria();
   atualizarDashboardSecretaria(); carregarCursosGrid(); carregarFrequenciaSelectsSecretaria(); carregarUsuariosSecretaria();
+  renderMensalidadesSecretaria();
 }
 
 function toggleSecretaria(section, event) {
@@ -1861,16 +2246,24 @@ function toggleSecretaria(section, event) {
   if (section === 'cursos') carregarCursosGrid();
   if (section === 'usuarios') carregarUsuariosSecretaria();
   if (section === 'frequencia') carregarFrequenciaSelectsSecretaria();
+  if (section === 'mensalidades') renderMensalidadesSecretaria();
 }
 
 function atualizarDashboardSecretaria() {
   const alunosAtivos = escolaData.alunos.filter(a => a.status === 'ATIVO');
   const matAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
   const cursosAtivos = new Set(matAtivas.map(m => m.curso));
+  const refAtual = getAnoMesAtual();
+  const atrasadas = escolaData.alunos.filter(a => {
+    if (a.status !== 'ATIVO' || !a.mensalidade) return false;
+    const pg = getPagamentoMes(a.nome, refAtual);
+    return pg && pg.status === 'ATRASADO';
+  }).length;
   document.getElementById('totalAlunosSecretaria').textContent = alunosAtivos.length;
   document.getElementById('matriculasAtivas').textContent = matAtivas.length;
   document.getElementById('totalCursosSecretaria').textContent = cursosAtivos.size;
   document.getElementById('totalProfessoresSecretaria').textContent = escolaData.professores.length;
+  document.getElementById('mensalidadesAtraso').textContent = atrasadas;
 }
 
 function carregarAlunosSecretaria() {
@@ -1878,21 +2271,26 @@ function carregarAlunosSecretaria() {
   let alunos = escolaData.alunos;
   if (busca) alunos = alunos.filter(a => a.nome.toLowerCase().includes(busca));
   const tbody = document.getElementById('tabelaAlunosSecretaria');
-  if (alunos.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum aluno.</td></tr>'; return; }
+  if (alunos.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#718096;">Nenhum aluno.</td></tr>'; return; }
   tbody.innerHTML = alunos.map(aluno => {
     const mat = db.matriculas.filter(m => nomesIguais(m.aluno, aluno.nome) && m.status === 'ATIVO');
     const cursos = mat.map(m => {
       const prof = m.professor || (getProfessorByCurso(m.curso)?.nome || '');
       return labelCurso(m.curso) + (prof ? ` (${prof})` : '');
     }).join(', ') || 'Nenhum';
+    const valorTxt = aluno.mensalidade ? `R$ ${aluno.mensalidade.toFixed(2)}` : '-';
+    const refAtual = getAnoMesAtual();
+    const pg = getPagamentoMes(aluno.nome, refAtual);
+    const statusPg = pg ? `<span class="status-badge ${classeStatusPagamento(pg.status)}">${labelStatusPagamento(pg.status)}</span>` : '-';
     return `<tr>
       <td><strong>${aluno.nome}</strong></td>
       <td>${aluno.dataNascimento || '-'}</td>
       <td>${aluno.responsavel || '-'}</td>
       <td>${aluno.contato || '-'}</td>
       <td style="font-size:0.85em;">${cursos}</td>
+      <td>${valorTxt}<br>${statusPg}</td>
       <td><span class="status-badge ${aluno.status === 'ATIVO' ? 'concluido' : 'inativo'}">${aluno.status}</span></td>
-      <td><button onclick="mostrarToast('Em breve.','info')" class="btn btn-small btn-info" style="padding:2px 8px;">✏️</button></td>
+      <td><button onclick="abrirModalCadastroAluno()" class="btn btn-small btn-info" style="padding:2px 8px;" title="Ver detalhes">👁️</button></td>
     </tr>`;
   }).join('');
 }
@@ -1901,6 +2299,8 @@ function filtrarAlunosSecretaria() { carregarAlunosSecretaria(); }
 
 function abrirModalCadastroAluno() {
   document.getElementById('formCadastroAluno').reset();
+  document.getElementById('cadAlunoMensalidade').value = 0;
+  document.getElementById('cadAlunoVencimento').value = 10;
   document.getElementById('cursosChecklist').innerHTML = CURSOS.map(c => `<label style="display:block; padding:4px 0;"><input type="checkbox" value="${c.id}" class="curso-checkbox"> ${c.nome}</label>`).join('');
   document.getElementById('modalCadastroAluno').classList.add('active');
 }
@@ -1911,22 +2311,28 @@ document.getElementById('formCadastroAluno').addEventListener('submit', async fu
   const dataNascimento = document.getElementById('cadAlunoNascimento').value;
   const responsavel = document.getElementById('cadAlunoResponsavel').value.trim().toUpperCase();
   const contato = document.getElementById('cadAlunoContato').value.trim();
+  const mensalidade = parseFloat(document.getElementById('cadAlunoMensalidade').value) || 0;
+  const vencimento = parseInt(document.getElementById('cadAlunoVencimento').value) || 10;
   const cursosSelecionados = Array.from(document.querySelectorAll('.curso-checkbox:checked')).map(cb => cb.value);
   if (!nome) { alert('Nome obrigatório.'); return; }
   try {
     await executarComProgresso({
-      titulo: 'Cadastrando aluno...',
-      subtitulo: `${nome} (${cursosSelecionados.length} matrícula(s))`,
+      titulo: 'Cadastrando aluno...', subtitulo: `${nome} (${cursosSelecionados.length} matrícula(s))`,
       etapas: [{pct:10,label:'Validando...'},{pct:30,label:'Salvando aluno...'},{pct:55,label:'Matriculando...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Finalizando...'}],
       executar: async () => {
-        const r = await enviarParaGAS('salvarAluno', { nome, dataNascimento, responsavel, contato, status: 'ATIVO' });
+        const r = await enviarParaGAS('salvarAluno', { nome, dataNascimento, responsavel, contato, status: 'ATIVO', mensalidade, vencimento });
         if (!r.success) throw new Error(r.error || 'Falha.');
-        escolaData.alunos.push({ nome, dataNascimento: formatarDataParaExibicao(dataNascimento), responsavel, contato, status: 'ATIVO' });
+        escolaData.alunos.push({ nome, dataNascimento: formatarDataParaExibicao(dataNascimento), responsavel, contato, status: 'ATIVO', mensalidade, vencimento });
         for (const cursoId of cursosSelecionados) {
           const prof = getProfessorByCurso(cursoId);
-          const mp = { aluno: nome, curso: cursoId, professor: prof ? prof.nome : '', dataMatricula: getDataAtualFormatada(), anoLetivo: String(new Date().getFullYear()), status: 'ATIVO' };
+          const mp = { aluno: nome, curso: cursoId, professor: prof ? prof.nome : '', dataMatricula: getDataAtualFormatada(), anoLetivo: String(new Date().getFullYear()), status: 'ATIVO', mensalidade };
           await enviarParaGAS('salvarMatricula', mp);
           db.matriculas.push(mp);
+        }
+        if (mensalidade > 0) {
+          const ref = getAnoMesAtual();
+          await enviarParaGAS('salvarPagamento', { aluno: nome, valor: mensalidade, vencimento, status: 'PENDENTE', referencia: ref });
+          db.pagamentosMensais.push({ aluno: nome, valor: mensalidade, vencimento, status: 'PENDENTE', dataPagamento: '', referencia: ref });
         }
         return { success: true };
       },
@@ -1946,13 +2352,17 @@ function carregarMatriculasSecretaria() {
   if (filtro) mat = mat.filter(m => m.curso === filtro);
   if (busca) mat = mat.filter(m => m.aluno.toLowerCase().includes(busca));
   const tbody = document.getElementById('tabelaMatriculasSecretaria');
-  if (mat.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhuma.</td></tr>'; return; }
+  if (mat.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhuma.</td></tr>'; return; }
   tbody.innerHTML = mat.map(m => {
     const profNome = m.professor || (getProfessorByCurso(m.curso)?.nome || '');
+    const al = encontrarAlunoPorNome(m.aluno);
+    const valorMsg = (m.mensalidade && m.mensalidade > 0) ? m.mensalidade : (al?.mensalidade || 0);
+    const valorTxt = valorMsg > 0 ? `R$ ${valorMsg.toFixed(2)}` : '-';
     return `<tr>
       <td><strong>${m.aluno}</strong></td>
       <td>${labelCurso(m.curso)}</td>
       <td>${profNome || '-'}</td>
+      <td><strong style="color:#2f855a;">${valorTxt}</strong></td>
       <td>${m.dataMatricula || '-'}</td>
       <td><span class="status-badge ${m.status === 'ATIVO' ? 'concluido' : 'inativo'}">${m.status}</span></td>
       <td><button onclick="cancelarMatricula('${m.aluno.replace(/'/g,"\\'")}','${m.curso}')" class="btn btn-small btn-danger" style="padding:2px 8px;">❌</button></td>
@@ -1995,6 +2405,25 @@ function abrirModalNovaMatricula() {
     else selProf.innerHTML = '<option value="">⚠️ Sem professor</option>';
     selProf.disabled = true;
   };
+  const campoMensalidade = document.getElementById('matriculaMensalidade');
+  const campoVencimento = document.getElementById('matriculaVencimento');
+  const aviso = document.getElementById('matriculaMensalidadeAviso');
+  campoMensalidade.value = 0;
+  campoVencimento.value = 10;
+  aviso.textContent = 'ℹ️ Esses valores serão gravados no cadastro do aluno e no registro de pagamento do mês.';
+  selAl.onchange = function() {
+    const al = encontrarAlunoPorNome(this.value);
+    if (al) {
+      if (al.mensalidade > 0) {
+        campoMensalidade.value = al.mensalidade;
+        aviso.textContent = `ℹ️ Valor já cadastrado para ${al.nome}: R$ ${al.mensalidade.toFixed(2)} (vencimento dia ${al.vencimento}). Pode ser ajustado.`;
+      } else {
+        campoMensalidade.value = 0;
+        aviso.textContent = `⚠️ ${al.nome} ainda não tem mensalidade cadastrada. Defina o valor abaixo — será gravado no cadastro do aluno.`;
+      }
+      campoVencimento.value = al.vencimento || 10;
+    }
+  };
   document.getElementById('modalNovaMatricula').classList.add('active');
 }
 
@@ -2003,23 +2432,46 @@ document.getElementById('formNovaMatricula').addEventListener('submit', async fu
   const aluno = document.getElementById('matriculaAluno').value;
   const curso = document.getElementById('matriculaCurso').value;
   const ano = document.getElementById('matriculaAno').value;
+  const mensalidade = parseFloat(document.getElementById('matriculaMensalidade').value) || 0;
+  const vencimento = parseInt(document.getElementById('matriculaVencimento').value) || 10;
   if (!aluno || !curso) { alert('Preencha aluno e curso.'); return; }
   const prof = getProfessorByCurso(curso);
   const profNome = prof ? prof.nome : '';
-  const payload = { aluno, curso, professor: profNome, dataMatricula: getDataAtualFormatada(), anoLetivo: ano, status: 'ATIVO' };
+  const alunoObj = encontrarAlunoPorNome(aluno);
+  const precisaAtualizarAluno = alunoObj && (
+    !alunoObj.mensalidade || alunoObj.mensalidade !== mensalidade ||
+    !alunoObj.vencimento || alunoObj.vencimento !== vencimento
+  );
+  const payloadMat = { aluno, curso, professor: profNome, dataMatricula: getDataAtualFormatada(), anoLetivo: ano, status: 'ATIVO', mensalidade };
+  const refMes = getAnoMesAtual();
   try {
     await executarComProgresso({
       titulo: 'Matriculando...', subtitulo: `${aluno} em ${labelCurso(curso)}`,
-      etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Gravando...'},{pct:80,label:'Painel...'},{pct:95,label:'Final...'}],
+      etapas: [{pct:10,label:'Validando...'},{pct:30,label:'Atualizando mensalidade...'},{pct:50,label:'Gravando matrícula...'},{pct:70,label:'Registrando pagamento...'},{pct:90,label:'Finalizando...'}],
       executar: async () => {
-        const r = await enviarParaGAS('salvarMatricula', payload);
-        if (!r.success) throw new Error(r.error || 'Falha.');
-        db.matriculas.push(payload); return { success: true };
+        if (precisaAtualizarAluno) {
+          const rAluno = await enviarParaGAS('atualizarAluno', { nome: aluno, mensalidade, vencimento });
+          if (!rAluno.success) throw new Error('Falha ao atualizar mensalidade do aluno: ' + (rAluno.error || ''));
+          if (alunoObj) { alunoObj.mensalidade = mensalidade; alunoObj.vencimento = vencimento; }
+        }
+        const rMat = await enviarParaGAS('salvarMatricula', payloadMat);
+        if (!rMat.success) throw new Error(rMat.error || 'Falha ao salvar matrícula.');
+        db.matriculas.push(payloadMat);
+        if (mensalidade > 0) {
+          const rPg = await enviarParaGAS('salvarPagamento', { aluno, valor: mensalidade, vencimento, status: 'PENDENTE', referencia: refMes });
+          if (!rPg.success) { console.warn('Pagamento não registrado:', rPg.error); }
+          else {
+            db.pagamentosMensais = db.pagamentosMensais.filter(p => !(nomesIguais(p.aluno, aluno) && p.referencia === refMes));
+            db.pagamentosMensais.push({ aluno, valor: mensalidade, vencimento, status: 'PENDENTE', dataPagamento: '', referencia: refMes });
+          }
+        }
+        return { success: true };
       },
-      sucesso: `✅ Matrícula registrada${profNome ? ' (Prof. ' + profNome + ')' : ''}!`
+      sucesso: `✅ Matrícula registrada${profNome ? ' (Prof. ' + profNome + ')' : ''} — Mensalidade R$ ${mensalidade.toFixed(2)}`
     });
-    fecharModal('modalNovaMatricula'); carregarMatriculasSecretaria(); atualizarDashboardSecretaria();
-    setTimeout(() => carregarDadosPlanilha(), 1000);
+    fecharModal('modalNovaMatricula');
+    carregarMatriculasSecretaria(); carregarAlunosSecretaria(); atualizarDashboardSecretaria();
+    setTimeout(() => carregarDadosPlanilha(), 1200);
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 });
 
@@ -2114,6 +2566,90 @@ function carregarFrequenciaSecretaria() {
   });
   html += '</tbody></table></div>';
   cont.innerHTML = html;
+}
+
+// ============================================
+// MENSALIDADES — SECRETARIA
+// ============================================
+function renderMensalidadesSecretaria() {
+  const tbody = document.getElementById('tabelaMensalidadesSecretaria');
+  if (!tbody) return;
+  const refInput = document.getElementById('mensRefSecretaria');
+  if (refInput && !refInput.value) refInput.value = getAnoMesAtual();
+  const ref = normalizarReferencia(refInput ? refInput.value : getAnoMesAtual());
+  const busca = (document.getElementById('buscaMensalidadeSecretaria')?.value || '').toLowerCase();
+  const filtro = document.getElementById('filtroStatusMensalidade')?.value || '';
+
+  const stats = document.getElementById('statsMensalidadesSecretaria');
+  if (stats) {
+    let pagos = 0, pendentes = 0, atrasados = 0, totalRecebido = 0, totalPend = 0, totalAtras = 0;
+    escolaData.alunos.forEach(a => {
+      if (a.status !== 'ATIVO') return;
+      const pg = getPagamentoMes(a.nome, ref);
+      if (!pg) return;
+      if (pg.status === 'PAGO') { pagos++; totalRecebido += pg.valor; }
+      else if (pg.status === 'ATRASADO') { atrasados++; totalAtras += pg.valor; }
+      else if (pg.status === 'PENDENTE') { pendentes++; totalPend += pg.valor; }
+    });
+    const [ano, mes] = ref.split('-');
+    stats.innerHTML = `
+      <div class="stat-card" style="border-left:4px solid #4299e1;"><div class="stat-icon">📅</div><div class="stat-number" style="font-size:1.3em;">${MESES_NOMES[parseInt(mes)-1]}/${ano}</div><div class="stat-label">Mês de Referência</div></div>
+      <div class="stat-card" style="border-left:4px solid #48bb78;"><div class="stat-icon">✅</div><div class="stat-number">${pagos}</div><div class="stat-label">Pagos (R$ ${totalRecebido.toFixed(0)})</div></div>
+      <div class="stat-card" style="border-left:4px solid #ed8936;"><div class="stat-icon">⏳</div><div class="stat-number">${pendentes}</div><div class="stat-label">Pendentes (R$ ${totalPend.toFixed(0)})</div></div>
+      <div class="stat-card" style="border-left:4px solid #f56565;"><div class="stat-icon">⚠️</div><div class="stat-number">${atrasados}</div><div class="stat-label">Atrasados (R$ ${totalAtras.toFixed(0)})</div></div>
+    `;
+  }
+
+  let alunos = escolaData.alunos.filter(a => a.status === 'ATIVO' && a.mensalidade > 0);
+  if (busca) alunos = alunos.filter(a => a.nome.toLowerCase().includes(busca));
+
+  const linhas = [];
+  alunos.forEach(a => {
+    const pg = getPagamentoMes(a.nome, ref);
+    if (!pg) return;
+    if (filtro && pg.status !== filtro) return;
+    linhas.push({ aluno: a, pg: pg });
+  });
+
+  if (linhas.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhum registro encontrado.</td></tr>'; return; }
+  tbody.innerHTML = linhas.map(({ aluno, pg }) => `
+    <tr>
+      <td><strong>${aluno.nome}</strong></td>
+      <td>R$ ${pg.valor.toFixed(2)}</td>
+      <td>Dia ${pg.vencimento}</td>
+      <td><span class="status-badge ${classeStatusPagamento(pg.status)}">${labelStatusPagamento(pg.status)}</span></td>
+      <td>${pg.dataPagamento || '-'}</td>
+      <td><span style="font-size:0.8em;color:#a0aec0;">${pg.referencia || '-'}</span></td>
+    </tr>
+  `).join('');
+}
+
+function gerarRelatorioMensalidadesSecretaria() {
+  const out = document.getElementById('relatorioSecretariaOutput');
+  const ref = normalizarReferencia(document.getElementById('mensRefSecretaria')?.value || getAnoMesAtual());
+  const [ano, mes] = ref.split('-');
+  const linhas = [];
+  escolaData.alunos.filter(a => a.status === 'ATIVO' && a.mensalidade > 0).forEach(a => {
+    const pg = getPagamentoMes(a.nome, ref);
+    if (pg) linhas.push({ aluno: a, pg });
+  });
+  const pagos = linhas.filter(l => l.pg.status === 'PAGO');
+  const pendentes = linhas.filter(l => l.pg.status === 'PENDENTE');
+  const atrasados = linhas.filter(l => l.pg.status === 'ATRASADO');
+  const totalPago = pagos.reduce((s,l) => s + l.pg.valor, 0);
+  const totalPend = pendentes.reduce((s,l) => s + l.pg.valor, 0);
+  const totalAtras = atrasados.reduce((s,l) => s + l.pg.valor, 0);
+  out.innerHTML = `<div class="relatorio-content">
+    <h4>💰 Mensalidades — ${MESES_NOMES[parseInt(mes)-1]}/${ano}</h4>
+    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+    <div class="info-line"><strong>✅ Pagos:</strong> ${pagos.length} — R$ ${totalPago.toFixed(2)}</div>
+    <div class="info-line"><strong>⏳ Pendentes:</strong> ${pendentes.length} — R$ ${totalPend.toFixed(2)}</div>
+    <div class="info-line"><strong>⚠️ Atrasados:</strong> ${atrasados.length} — R$ ${totalAtras.toFixed(2)}</div>
+    <table style="margin-top:15px;width:100%;border-collapse:collapse;">
+      <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Aluno</th><th style="padding:8px;border:1px solid #e2e8f0;">Valor</th><th style="padding:8px;border:1px solid #e2e8f0;">Status</th><th style="padding:8px;border:1px solid #e2e8f0;">Pagamento</th></tr></thead>
+      <tbody>${linhas.map(l => `<tr><td style="padding:8px;border:1px solid #e2e8f0;">${l.aluno.nome}</td><td style="padding:8px;border:1px solid #e2e8f0;">R$ ${l.pg.valor.toFixed(2)}</td><td style="padding:8px;border:1px solid #e2e8f0;">${labelStatusPagamento(l.pg.status)}</td><td style="padding:8px;border:1px solid #e2e8f0;">${l.pg.dataPagamento || '-'}</td></tr>`).join('')}</tbody>
+    </table>
+  </div>`;
 }
 
 // ============================================
@@ -2550,13 +3086,7 @@ async function enviarArquivoUpload() {
   btn.disabled = true;
   setInlineProgress('upload', 0, 'Iniciando upload...');
   try {
-    const campos = {
-      token: currentUser.token || '',
-      professor: currentUser.nome,
-      curso: cursoSelecionado,
-      destinatarios: JSON.stringify(destinatarios),
-      mensagem
-    };
+    const campos = { token: currentUser.token || '', professor: currentUser.nome, curso: cursoSelecionado, destinatarios: JSON.stringify(destinatarios), mensagem };
     const resUpload = await uploadArquivoComProgresso(arquivoUploadSelecionado, campos, (pct) => {
       let label = 'Lendo arquivo...';
       if (pct >= 20 && pct < 95) label = 'Enviando arquivo...';
@@ -2567,12 +3097,7 @@ async function enviarArquivoUpload() {
     setInlineProgress('upload', 100, 'Concluído!', true, false);
     mostrarToast(`✅ Arquivo "${arquivoUploadSelecionado.name}" enviado para ${destinatarios.length} aluno(s).`, 'success');
     destinatarios.forEach(aluno => {
-      db.arquivos.push({
-        id: 'local_' + Date.now() + '_' + aluno,
-        aluno: aluno.toUpperCase(), curso: cursoSelecionado, professor: currentUser.nome.toUpperCase(),
-        nome: arquivoUploadSelecionado.name, url: resUpload.url || '', fileId: resUpload.fileId || '',
-        mensagem, data: getDataHoraAtual()
-      });
+      db.arquivos.push({ id: 'local_' + Date.now() + '_' + aluno, aluno: aluno.toUpperCase(), curso: cursoSelecionado, professor: currentUser.nome.toUpperCase(), nome: arquivoUploadSelecionado.name, url: resUpload.url || '', fileId: resUpload.fileId || '', mensagem, data: getDataHoraAtual() });
     });
     limparArquivoUpload();
     document.getElementById('uploadMensagem').value = '';
@@ -2603,11 +3128,7 @@ async function enviarMensagemAluno() {
     if (!r || !r.success) throw new Error((r && r.error) || 'Falha ao enviar mensagem');
     setInlineProgress('msg', 100, 'Mensagem enviada!', true, false);
     destinatarios.forEach(aluno => {
-      db.mensagens.push({
-        id: 'localmsg_' + Date.now() + '_' + aluno,
-        aluno: aluno.toUpperCase(), curso: cursoSelecionado, professor: currentUser.nome.toUpperCase(),
-        assunto, mensagem, lida: false, data: getDataHoraAtual()
-      });
+      db.mensagens.push({ id: 'localmsg_' + Date.now() + '_' + aluno, aluno: aluno.toUpperCase(), curso: cursoSelecionado, professor: currentUser.nome.toUpperCase(), assunto, mensagem, lida: false, data: getDataHoraAtual() });
     });
     document.getElementById('msgAssunto').value = '';
     document.getElementById('msgTexto').value = '';
@@ -2799,12 +3320,19 @@ function renderStatsGerenciais() {
   let soma = 0, cnt = 0;
   db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => { const m2 = getMediaAluno(m.aluno, m.curso); if (m2 > 0) { soma += m2; cnt++; } });
   const media = cnt > 0 ? soma / cnt : 0;
+  const refAtual = getAnoMesAtual();
+  let recebido = 0;
+  escolaData.alunos.forEach(a => {
+    const pg = getPagamentoMes(a.nome, refAtual);
+    if (pg && pg.status === 'PAGO') recebido += pg.valor;
+  });
   cont.innerHTML = `
     <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-number">${alAtivos}</div><div class="stat-label">Alunos Ativos</div></div>
     <div class="stat-card" style="border-left:4px solid #48bb78;"><div class="stat-icon">📋</div><div class="stat-number">${matAtivas}</div><div class="stat-label">Matrículas</div></div>
     <div class="stat-card" style="border-left:4px solid #4299e1;"><div class="stat-icon">🎵</div><div class="stat-number">${cursosAtivos}</div><div class="stat-label">Cursos Ativos</div></div>
     <div class="stat-card" style="border-left:4px solid #9f7aea;"><div class="stat-icon">👨‍🏫</div><div class="stat-number">${escolaData.professores.length}</div><div class="stat-label">Professores</div></div>
     <div class="stat-card" style="border-left:4px solid #ed8936;"><div class="stat-icon">📈</div><div class="stat-number">${media.toFixed(1)}</div><div class="stat-label">Média Geral</div></div>
+    <div class="stat-card" style="border-left:4px solid #38a169;"><div class="stat-icon">💰</div><div class="stat-number">R$ ${recebido.toFixed(0)}</div><div class="stat-label">Recebido no Mês</div></div>
   `;
 }
 
@@ -2839,6 +3367,29 @@ function gerarRelatorioPorProfessor() {
   }).join('')}</div></div>`;
 }
 
+function gerarRelatorioFinanceiroDirecao() {
+  const cont = document.getElementById('relatorioConsolidado');
+  const refAtual = getAnoMesAtual();
+  let totalPago = 0, totalPend = 0, totalAtras = 0, nPago = 0, nPend = 0, nAtras = 0;
+  escolaData.alunos.forEach(a => {
+    if (a.status !== 'ATIVO') return;
+    const pg = getPagamentoMes(a.nome, refAtual);
+    if (!pg) return;
+    if (pg.status === 'PAGO') { totalPago += pg.valor; nPago++; }
+    else if (pg.status === 'ATRASADO') { totalAtras += pg.valor; nAtras++; }
+    else if (pg.status === 'PENDENTE') { totalPend += pg.valor; nPend++; }
+  });
+  const [ano, mes] = refAtual.split('-');
+  cont.innerHTML = `<div class="relatorio-content">
+    <h4>💰 Relatório Financeiro — ${MESES_NOMES[parseInt(mes)-1]}/${ano}</h4>
+    <div class="info-line"><strong>Data:</strong> ${getDataAtualFormatada()}</div>
+    <div class="info-line"><strong>✅ Recebido:</strong> R$ ${totalPago.toFixed(2)} (${nPago} mensalidades)</div>
+    <div class="info-line"><strong>⏳ A receber:</strong> R$ ${totalPend.toFixed(2)} (${nPend} mensalidades)</div>
+    <div class="info-line"><strong>⚠️ Em atraso:</strong> R$ ${totalAtras.toFixed(2)} (${nAtras} mensalidades)</div>
+    <div class="info-line"><strong>📊 Total previsto:</strong> R$ ${(totalPago + totalPend + totalAtras).toFixed(2)}</div>
+  </div>`;
+}
+
 // ============================================
 // FINANCEIRO
 // ============================================
@@ -2849,13 +3400,22 @@ function toggleFinanceiro(section, event) {
   document.querySelectorAll('#financeiroArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
   if (event && event.target) event.target.classList.add('active');
   if (section === 'valores') renderValoresProfessores();
+  if (section === 'mensalidades') renderMensalidadesFinanceiro();
+  if (section === 'registrar') prepararRegistroPagamento();
+  if (section === 'debug') financeiroDebugPagamentos();
 }
 
 function renderFinanceiro() {
   renderValoresProfessores();
   const h = new Date();
-  document.getElementById('finMesReferencia').value = `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}`;
+  const mesAtual = `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}`;
+  const elRef = document.getElementById('finMesReferencia');
+  if (elRef) elRef.value = mesAtual;
+  const elMesPg = document.getElementById('finMesMensalidade');
+  if (elMesPg) elMesPg.value = mesAtual;
   calcularPagamentos();
+  renderMensalidadesFinanceiro();
+  prepararRegistroPagamento();
 }
 
 function renderValoresProfessores() {
@@ -2924,6 +3484,177 @@ function calcularPagamentos() {
 }
 
 // ============================================
+// ✅ v3.2: RENDER DE MENSALIDADES NO FINANCEIRO — ROBUSTO
+// ============================================
+function renderMensalidadesFinanceiro() {
+  const stats = document.getElementById('statsMensalidadesFinanceiro');
+  const tbody = document.getElementById('tabelaMensalidadesFinanceiro');
+  if (!tbody) return;
+  const refInput = document.getElementById('finMesMensalidade');
+  if (refInput && !refInput.value) refInput.value = getAnoMesAtual();
+  const ref = normalizarReferencia(refInput ? refInput.value : getAnoMesAtual());
+  const busca = (document.getElementById('buscaMensalidadeFinanceiro')?.value || '').toLowerCase();
+  const filtro = (document.getElementById('filtroStatusMensalidadeFinanceiro')?.value || '').toUpperCase();
+
+  let pagos = 0, pendentes = 0, atrasados = 0, tPago = 0, tPend = 0, tAtras = 0;
+  const linhas = [];
+
+  escolaData.alunos.forEach(a => {
+    if (a.status !== 'ATIVO') return;
+    const pg = getPagamentoMes(a.nome, ref);
+    if (!pg) return;
+    // Contabiliza stats independentemente do filtro
+    if (pg.status === 'PAGO') { pagos++; tPago += pg.valor; }
+    else if (pg.status === 'ATRASADO') { atrasados++; tAtras += pg.valor; }
+    else if (pg.status === 'PENDENTE') { pendentes++; tPend += pg.valor; }
+    // Aplica filtros de busca e status
+    if (busca && !a.nome.toLowerCase().includes(busca)) return;
+    if (filtro && pg.status !== filtro) return;
+    linhas.push({ aluno: a, pg });
+  });
+
+  if (stats) {
+    const [ano, mes] = ref.split('-');
+    stats.innerHTML = `
+      <div class="stat-card" style="border-left:4px solid #4299e1;"><div class="stat-icon">📅</div><div class="stat-number" style="font-size:1.3em;">${MESES_NOMES[parseInt(mes)-1]}/${ano}</div><div class="stat-label">Mês de Referência</div></div>
+      <div class="stat-card" style="border-left:4px solid #48bb78;"><div class="stat-icon">✅</div><div class="stat-number">R$ ${tPago.toFixed(0)}</div><div class="stat-label">Recebido (${pagos})</div></div>
+      <div class="stat-card" style="border-left:4px solid #ed8936;"><div class="stat-icon">⏳</div><div class="stat-number">R$ ${tPend.toFixed(0)}</div><div class="stat-label">Pendente (${pendentes})</div></div>
+      <div class="stat-card" style="border-left:4px solid #f56565;"><div class="stat-icon">⚠️</div><div class="stat-number">R$ ${tAtras.toFixed(0)}</div><div class="stat-label">Atrasado (${atrasados})</div></div>
+    `;
+  }
+
+  if (linhas.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhum registro encontrado para o mês.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = linhas.map(({ aluno, pg }) => `
+    <tr>
+      <td><strong>${aluno.nome}</strong></td>
+      <td>R$ ${pg.valor.toFixed(2)}</td>
+      <td>Dia ${pg.vencimento}</td>
+      <td><span class="status-badge ${classeStatusPagamento(pg.status)}">${labelStatusPagamento(pg.status)}</span></td>
+      <td>${pg.dataPagamento || '-'}</td>
+      <td><button onclick="abrirRegistroPagamentoPara('${aluno.nome.replace(/'/g,"\\'")}')" class="btn btn-small btn-info">💰 Registrar</button></td>
+    </tr>
+  `).join('');
+}
+
+function prepararRegistroPagamento() {
+  const sel = document.getElementById('registrarPagamentoAluno');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Selecione --</option>' + escolaData.alunos.filter(a => a.status === 'ATIVO').map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
+  const elMes = document.getElementById('registrarPagamentoMes');
+  if (elMes && !elMes.value) elMes.value = getAnoMesAtual();
+  const elData = document.getElementById('registrarPagamentoData');
+  if (elData && !elData.value) elData.value = new Date().toISOString().split('T')[0];
+  sel.onchange = function() {
+    const al = encontrarAlunoPorNome(this.value);
+    if (al) {
+      document.getElementById('registrarPagamentoValor').value = al.mensalidade || 0;
+      document.getElementById('registrarPagamentoVencimento').value = al.vencimento || 10;
+      const ref = normalizarReferencia(document.getElementById('registrarPagamentoMes').value);
+      const pg = getPagamentoMes(al.nome, ref);
+      const info = document.getElementById('registrarPagamentoInfo');
+      if (pg) {
+        info.innerHTML = `<div class="admin-${pg.status === 'PAGO' ? 'ok' : 'warn'}">Status atual em ${ref}: <strong>${labelStatusPagamento(pg.status)}</strong>${pg.dataPagamento ? ' — Pago em ' + pg.dataPagamento : ''}</div>`;
+      } else {
+        info.innerHTML = '<div class="admin-warn">Nenhum registro para este mês.</div>';
+      }
+    }
+  };
+}
+
+function abrirRegistroPagamentoPara(nomeAluno) {
+  toggleFinanceiro('registrar', { target: document.querySelector('#financeiroArea .toggle-btn[onclick*="registrar"]') });
+  const sel = document.getElementById('registrarPagamentoAluno');
+  if (sel) { sel.value = nomeAluno; sel.onchange(); }
+}
+
+async function registrarPagamentoManual() {
+  const aluno = document.getElementById('registrarPagamentoAluno').value;
+  const refRaw = document.getElementById('registrarPagamentoMes').value;
+  const ref = normalizarReferencia(refRaw);
+  const dataInput = document.getElementById('registrarPagamentoData').value;
+  const valor = parseFloat(document.getElementById('registrarPagamentoValor').value) || 0;
+  const vencimento = parseInt(document.getElementById('registrarPagamentoVencimento').value) || 10;
+  if (!aluno || !ref || !dataInput) { alert('Preencha aluno, mês e data.'); return; }
+  const dataPagamento = formatarDataParaPlanilha(dataInput);
+  const payload = { aluno, valor, vencimento, status: 'PAGO', dataPagamento, referencia: ref };
+  try {
+    await executarComProgresso({
+      titulo: 'Registrando pagamento...', subtitulo: `${aluno} — ${ref}`,
+      etapas: [{pct:15,label:'Validando...'},{pct:45,label:'Gravando...'},{pct:75,label:'Notificando...'},{pct:95,label:'Final...'}],
+      executar: async () => {
+        const r = await enviarParaGAS('salvarPagamento', payload);
+        if (!r.success) throw new Error(r.error || 'Falha.');
+        db.pagamentosMensais = db.pagamentosMensais.filter(p => !(nomesIguais(p.aluno, aluno) && p.referencia === ref));
+        db.pagamentosMensais.push(payload);
+        try { await enviarParaGAS('notificarPagamento', { aluno, valor, status: 'PAGO', vencimento, referencia: ref }); } catch (err) {}
+        return { success: true };
+      },
+      sucesso: `✅ Pagamento de ${aluno} (${ref}) registrado!`
+    });
+    prepararRegistroPagamento();
+    renderMensalidadesFinanceiro();
+    setTimeout(() => carregarDadosPlanilha(), 1000);
+  } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
+}
+
+// ============================================
+// ✅ v3.2: DEBUG DO PAGAMENTOS (Financeiro)
+// ============================================
+function financeiroDebugPagamentos() {
+  const out = document.getElementById('financeiroDebugOutput');
+  if (!out) return;
+  const brutos = dadosPlanilha.pagamentos || [];
+  const normalizados = db.pagamentosMensais || [];
+  let html = '';
+  html += `=== RESUMO ===\n`;
+  html += `Linhas brutas na aba PAGAMENTOS: ${brutos.length}\n`;
+  html += `Registros normalizados (únicos por aluno+ref): ${normalizados.length}\n\n`;
+  html += `=== PRIMEIRAS 5 LINHAS BRUTAS ===\n`;
+  brutos.slice(0, 5).forEach((p, i) => {
+    html += `--- Linha ${i + 2} ---\n`;
+    html += `Aluno: ${JSON.stringify(getColuna(p, 'Aluno', 'Nome', 'Aluno'))}\n`;
+    html += `Valor: ${JSON.stringify(getColuna(p, 'Valor', 'Mensalidade'))}\n`;
+    html += `Vencimento: ${JSON.stringify(getColuna(p, 'Vencimento'))}\n`;
+    html += `Status: ${JSON.stringify(getColuna(p, 'Status'))}\n`;
+    html += `Data_Pagamento: ${JSON.stringify(getColuna(p, 'Data_Pagamento', 'DataPagamento'))}\n`;
+    html += `Referencia: ${JSON.stringify(getColuna(p, 'Referencia'))}\n\n`;
+  });
+  html += `=== PRIMEIROS 5 NORMALIZADOS ===\n`;
+  normalizados.slice(0, 5).forEach(p => {
+    html += `Aluno: ${p.aluno} | Valor: ${p.valor} | Venc: ${p.vencimento} | Status: ${p.status} | DataPg: ${p.dataPagamento} | Ref: ${p.referencia}\n`;
+  });
+  if (normalizados.length === 0) {
+    html += `\n⚠️ NENHUM registro normalizado. Possíveis causas:\n`;
+    html += `1. Aba PAGAMENTOS não existe ou está vazia\n`;
+    html += `2. Cabeçalhos na linha 1 estão diferentes de: Aluno | Valor | Vencimento | Status | Data_Pagamento | Referencia\n`;
+    html += `3. Coluna "Aluno" está vazia em todas as linhas\n`;
+  }
+  out.textContent = html;
+}
+
+async function financeiroDebugGAS() {
+  const out = document.getElementById('financeiroDebugOutput');
+  if (!out) return;
+  out.textContent = '📡 Consultando GAS...';
+  try {
+    const r = await enviarParaGAS('listarPagamentos', {});
+    if (!r.success) { out.textContent = '❌ Erro GAS: ' + (r.error || 'desconhecido'); return; }
+    const pgs = r.pagamentos || [];
+    let html = `=== GAS listarPagamentos ===\nTotal: ${pgs.length}\n\n`;
+    pgs.slice(0, 10).forEach((p, i) => {
+      html += `${i + 1}. ${p.aluno} | R$ ${p.valor} | Venc ${p.vencimento} | ${p.status} | Pg: ${p.dataPagamento || '-'} | Ref: ${p.referencia || '-'}\n`;
+    });
+    out.textContent = html;
+  } catch (e) {
+    out.textContent = '❌ Erro: ' + e.message;
+  }
+}
+
+// ============================================
 // ALUNO
 // ============================================
 async function carregarDadosAluno() {
@@ -2936,6 +3667,7 @@ async function carregarDadosAluno() {
   try {
     const res = await enviarParaGAS('dadosAlunoCompleto', { nome: nomeReal });
     if (!res.success) {
+      // Fallback local
       const cursosIds = getCursosDoAluno(nomeReal);
       const matriculas = db.matriculas.filter(m => nomesIguais(m.aluno, nomeReal));
       const avals = db.avaliacoes.filter(a => nomesIguais(a.aluno, nomeReal));
@@ -2955,7 +3687,7 @@ async function carregarDadosAluno() {
       dadosAluno = {
         success: true,
         aluno: alunoLocal || { nome: nomeReal, status: 'ATIVO' },
-        matriculas: matriculas.map(m => ({ curso: m.curso, professor: m.professor, status: m.status, dataMatricula: m.dataMatricula, anoLetivo: m.anoLetivo })),
+        matriculas: matriculas.map(m => ({ curso: m.curso, professor: m.professor, status: m.status, dataMatricula: m.dataMatricula, anoLetivo: m.anoLetivo, mensalidade: m.mensalidade })),
         avaliacoes: avals.map(a => ({ curso: a.curso, bimestre: a.bimestre, nota: a.nota, professor: a.professor, dataLancamento: a.dataLancamento })),
         presencas: aulas, conteudos, relatorios, arquivos, mensagens
       };
@@ -2964,6 +3696,20 @@ async function carregarDadosAluno() {
       if (!dadosAluno.arquivos) dadosAluno.arquivos = db.arquivos.filter(a => nomesIguais(a.aluno, nomeReal));
       if (!dadosAluno.mensagens) dadosAluno.mensagens = db.mensagens.filter(m => nomesIguais(m.aluno, nomeReal));
     }
+    dadosAluno.pagamentos = { anoAtual: new Date().getFullYear(), anos: [], porMes: {} };
+    const anosDisponiveis = new Set();
+    db.pagamentosMensais.forEach(p => {
+      if (nomesIguais(p.aluno, nomeReal) && p.referencia) {
+        const ano = parseInt(p.referencia.split('-')[0]);
+        if (!isNaN(ano)) anosDisponiveis.add(ano);
+      }
+    });
+    anosDisponiveis.add(new Date().getFullYear());
+    dadosAluno.pagamentos.anos = Array.from(anosDisponiveis).sort((a,b) => b - a);
+    dadosAluno.pagamentos.porMes = {};
+    dadosAluno.pagamentos.anos.forEach(ano => {
+      dadosAluno.pagamentos.porMes[ano] = getPagamentosAno(nomeReal, ano);
+    });
     renderAluno();
     renderNotificacoesAluno();
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
@@ -2971,7 +3717,7 @@ async function carregarDadosAluno() {
 
 function renderAluno() {
   if (!dadosAluno) return;
-  const { aluno, matriculas, avaliacoes, presencas, conteudos, relatorios, arquivos, mensagens } = dadosAluno;
+  const { aluno, matriculas, avaliacoes, presencas, conteudos, relatorios, arquivos, mensagens, pagamentos } = dadosAluno;
   document.getElementById('alunoDadoNome').textContent = aluno.nome || '-';
   document.getElementById('alunoDadoNascimento').textContent = aluno.dataNascimento || '-';
   document.getElementById('alunoDadoResponsavel').textContent = aluno.responsavel || '-';
@@ -2986,19 +3732,29 @@ function renderAluno() {
   const mediaG = cntM > 0 ? somaM / cntM : 0;
   const cursosAtivos = matriculas.filter(m => m.status === 'ATIVO').length;
 
+  const refAtual = getAnoMesAtual();
+  const pgAtual = pagamentos && pagamentos.porMes && pagamentos.porMes[parseInt(refAtual.split('-')[0])]
+    ? pagamentos.porMes[parseInt(refAtual.split('-')[0])].find(p => p.referencia === refAtual)
+    : null;
+
   document.getElementById('alunoStats').innerHTML = `
     <div class="stat-card" style="border-left:4px solid #4299e1;"><div class="stat-icon">🎵</div><div class="stat-number">${cursosAtivos}</div><div class="stat-label">Cursos Ativos</div></div>
     <div class="stat-card" style="border-left:4px solid #48bb78;"><div class="stat-icon">✅</div><div class="stat-number">${taxaPres.toFixed(0)}%</div><div class="stat-label">Frequência</div></div>
     <div class="stat-card" style="border-left:4px solid #ed8936;"><div class="stat-icon">📈</div><div class="stat-number">${mediaG.toFixed(1)}</div><div class="stat-label">Média Geral</div></div>
     <div class="stat-card" style="border-left:4px solid #9f7aea;"><div class="stat-icon">📄</div><div class="stat-number">${relatorios.length}</div><div class="stat-label">Relatórios</div></div>
+    <div class="stat-card" style="border-left:4px solid ${pgAtual && pgAtual.status === 'PAGO' ? '#48bb78' : pgAtual && pgAtual.status === 'ATRASADO' ? '#f56565' : '#ed8936'};"><div class="stat-icon">💰</div><div class="stat-number">${pgAtual ? 'R$ ' + pgAtual.valor.toFixed(0) : '-'}</div><div class="stat-label">${pgAtual ? labelStatusPagamento(pgAtual.status) : 'Mensalidade'}</div></div>
   `;
+
+  renderMensalidadeAluno(pgAtual, pagamentos);
 
   const matCont = document.getElementById('alunoMatriculas');
   if (matriculas.length === 0) matCont.innerHTML = '<p style="color:#718096;">Nenhuma matrícula.</p>';
   else matCont.innerHTML = matriculas.map(m => {
+    const valorMat = (m.mensalidade && m.mensalidade > 0) ? m.mensalidade : (aluno.mensalidade || 0);
     return `<div class="stat-card" style="border-left:4px solid #4299e1;">
       <div style="font-size:1.1em;margin-bottom:5px;">${labelCurso(m.curso)}</div>
       <div style="color:#718096;font-size:0.85em;"><strong>Professor:</strong> ${m.professor || '-'}</div>
+      <div style="color:#718096;font-size:0.85em;"><strong>Mensalidade:</strong> ${valorMat > 0 ? 'R$ ' + valorMat.toFixed(2) : '-'}</div>
       <div style="color:#718096;font-size:0.85em;"><strong>Status:</strong> ${m.status}</div>
       <div style="color:#718096;font-size:0.85em;"><strong>Ano:</strong> ${m.anoLetivo || '-'}</div>
     </div>`;
@@ -3081,6 +3837,78 @@ function renderAluno() {
     </div>`).join('');
 }
 
+function renderMensalidadeAluno(pgAtual, pagamentos) {
+  const resumoPg = document.getElementById('alunoMensalidadeResumo');
+  const cardsPg = document.getElementById('alunoMensalidadeCards');
+  const anoTabs = document.getElementById('alunoAnoTabs');
+  const mesesGrid = document.getElementById('alunoMesesGrid');
+  if (!resumoPg || !cardsPg) return;
+  if (!pgAtual) {
+    resumoPg.innerHTML = '';
+    cardsPg.innerHTML = '<p style="color:#718096;">Nenhuma mensalidade cadastrada pela secretaria.</p>';
+  } else {
+    resumoPg.innerHTML = `
+      <div class="stat-card" style="border-left:4px solid ${pgAtual.status === 'PAGO' ? '#48bb78' : pgAtual.status === 'ATRASADO' ? '#f56565' : '#ed8936'};">
+        <div class="stat-icon">💰</div>
+        <div class="stat-number">R$ ${pgAtual.valor.toFixed(2)}</div>
+        <div class="stat-label">Valor da Mensalidade</div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #4299e1;">
+        <div class="stat-icon">📅</div>
+        <div class="stat-number">Dia ${pgAtual.vencimento}</div>
+        <div class="stat-label">Vencimento Fixo</div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid ${pgAtual.status === 'PAGO' ? '#48bb78' : pgAtual.status === 'ATRASADO' ? '#f56565' : '#ed8936'};">
+        <div class="stat-icon">${pgAtual.status === 'PAGO' ? '✅' : pgAtual.status === 'ATRASADO' ? '⚠️' : '⏳'}</div>
+        <div class="stat-number" style="font-size:1.3em;">${labelStatusPagamento(pgAtual.status)}</div>
+        <div class="stat-label">Status do Mês</div>
+      </div>
+      <div class="stat-card" style="border-left:4px solid #9f7aea;">
+        <div class="stat-icon">🗓️</div>
+        <div class="stat-number" style="font-size:1.3em;">${pgAtual.dataPagamento || '-'}</div>
+        <div class="stat-label">Data do Pagamento</div>
+      </div>
+    `;
+    cardsPg.innerHTML = `
+      <div class="mensalidade-card ${classeStatusPagamento(pgAtual.status)}">
+        <div style="font-weight:600;font-size:1.05em;">💰 Mensalidade do Mês</div>
+        <div class="valor">R$ ${pgAtual.valor.toFixed(2)}</div>
+        <div class="vencimento">Vencimento: dia ${pgAtual.vencimento}</div>
+        <div style="margin-top:10px;"><span class="status-badge ${classeStatusPagamento(pgAtual.status)}">${labelStatusPagamento(pgAtual.status)}</span></div>
+        ${pgAtual.dataPagamento ? `<div class="vencimento" style="margin-top:6px;">Pago em: ${pgAtual.dataPagamento}</div>` : ''}
+      </div>
+    `;
+  }
+  if (anoTabs && mesesGrid && pagamentos) {
+    const anos = pagamentos.anos || [];
+    if (anos.length === 0) { anoTabs.innerHTML = ''; mesesGrid.innerHTML = '<p style="color:#718096;">Nenhum histórico disponível.</p>'; return; }
+    if (!anos.includes(anoSelecionadoAluno)) anoSelecionadoAluno = anos[0];
+    anoTabs.innerHTML = anos.map(a => `<button class="ano-tab ${a === anoSelecionadoAluno ? 'active' : ''}" onclick="selecionarAnoAluno(${a})">${a}</button>`).join('');
+    const pgsAno = pagamentos.porMes[anoSelecionadoAluno] || [];
+    mesesGrid.innerHTML = pgsAno.map(pg => {
+      const [ano, mes] = pg.referencia.split('-');
+      const nomeMes = MESES_NOMES[parseInt(mes)-1];
+      return `<div class="mes-card ${classeStatusPagamento(pg.status)}">
+        <div class="mes-nome">${nomeMes}</div>
+        <div class="mes-valor">R$ ${pg.valor.toFixed(2)}</div>
+        <div class="mes-status"><span class="status-badge ${classeStatusPagamento(pg.status)}">${labelStatusPagamento(pg.status)}</span></div>
+        ${pg.dataPagamento ? `<div style="font-size:0.7em;color:#718096;margin-top:6px;">Pago em ${pg.dataPagamento}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+}
+
+function selecionarAnoAluno(ano) {
+  anoSelecionadoAluno = ano;
+  if (dadosAluno && dadosAluno.pagamentos) {
+    const refAtual = getAnoMesAtual();
+    const anoAtual = parseInt(refAtual.split('-')[0]);
+    const pgs = dadosAluno.pagamentos.porMes[ano] || [];
+    const pgAtual = ano === anoAtual ? pgs.find(p => p.referencia === refAtual) : null;
+    renderMensalidadeAluno(pgAtual, dadosAluno.pagamentos);
+  }
+}
+
 function toggleAluno(section, event) {
   document.querySelectorAll('#alunoArea .section-container').forEach(el => el.classList.add('hidden'));
   const t = document.getElementById(`aluno-${section}`);
@@ -3090,26 +3918,208 @@ function toggleAluno(section, event) {
 }
 
 // ============================================
+// ADMINISTRADOR
+// ============================================
+function toggleAdmin(section, event) {
+  document.querySelectorAll('#adminArea .section-container').forEach(el => el.classList.add('hidden'));
+  const t = document.getElementById(`admin-${section}`);
+  if (t) t.classList.remove('hidden');
+  document.querySelectorAll('#adminArea .toggle-btn').forEach(btn => btn.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  if (section === 'dashboard') adminCarregarDashboard();
+  if (section === 'usuarios') adminCarregarUsuarios();
+  if (section === 'logs') adminCarregarLogs();
+  if (section === 'config') adminPreencherConfig();
+}
+
+function adminCarregarDashboard() {
+  const stats = document.getElementById('adminStats');
+  if (!stats) return;
+  stats.innerHTML = `
+    <div class="stat-card" style="border-left:4px solid #4299e1;"><div class="stat-icon">👥</div><div class="stat-number">${escolaData.alunos.length}</div><div class="stat-label">Alunos</div></div>
+    <div class="stat-card" style="border-left:4px solid #9f7aea;"><div class="stat-icon">👨‍🏫</div><div class="stat-number">${escolaData.professores.length}</div><div class="stat-label">Professores</div></div>
+    <div class="stat-card" style="border-left:4px solid #48bb78;"><div class="stat-icon">📋</div><div class="stat-number">${db.matriculas.length}</div><div class="stat-label">Matrículas</div></div>
+    <div class="stat-card" style="border-left:4px solid #ed8936;"><div class="stat-icon">💰</div><div class="stat-number">${db.pagamentosMensais.length}</div><div class="stat-label">Pagamentos</div></div>
+    <div class="stat-card" style="border-left:4px solid #f56565;"><div class="stat-icon">📜</div><div class="stat-number">${db.logs.length}</div><div class="stat-label">Logs</div></div>
+  `;
+  const resumo = document.getElementById('adminResumo');
+  if (resumo) {
+    resumo.innerHTML = `
+      <div class="admin-ok">✅ Sistema operacional — ${getDataHoraAtual()}</div>
+      <div class="admin-ok">✅ GAS configurado: ${GAS_URL.substring(0, 50)}...</div>
+      <div class="admin-ok">✅ Planilha: ${SHEET_CONFIG.sheetId}</div>
+      <div class="admin-warn">⚠️ Abas carregadas: ${Object.values(SHEET_CONFIG.abas).length}</div>
+      <div class="admin-ok">✅ Sessão atual: ${currentUser.nome} (${currentUser.perfil})</div>
+    `;
+  }
+  adminPreencherConfig();
+}
+
+function adminPreencherConfig() {
+  const gas = document.getElementById('adminGasUrl');
+  const sid = document.getElementById('adminSheetId');
+  const tab = document.getElementById('adminTotalAbas');
+  if (gas) gas.value = GAS_URL;
+  if (sid) sid.value = SHEET_CONFIG.sheetId;
+  if (tab) tab.value = Object.keys(SHEET_CONFIG.abas).length + ' abas';
+}
+
+async function adminCarregarUsuarios() {
+  const tbody = document.getElementById('adminTabelaUsuarios');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr>';
+  try {
+    const res = await enviarParaGAS('listarUsuarios', {});
+    if (!res.success) throw new Error(res.error || 'Falha.');
+    const usuarios = res.usuarios || [];
+    if (usuarios.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum usuário.</td></tr>'; return; }
+    tbody.innerHTML = usuarios.map(u => `
+      <tr>
+        <td><code>${u.usuario}</code></td>
+        <td><strong>${u.nome}</strong></td>
+        <td><span class="status-badge info">${u.perfil}</span></td>
+        <td>${u.alunoVinculado || '-'}</td>
+        <td><span class="status-badge ${u.status === 'ATIVO' ? 'concluido' : 'inativo'}">${u.status}</span></td>
+        <td><span class="senha-cell" onclick="adminRevelarSenha(this,'${u.usuario}')">👁️ Ver</span></td>
+        <td>${u.dataCriacao || '-'}</td>
+      </tr>
+    `).join('');
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#e53e3e;">Erro: ${e.message}</td></tr>`; }
+}
+
+async function adminRevelarSenha(el, usuario) {
+  try {
+    const res = await enviarParaGAS('adminVerSenha', { usuario });
+    if (res.success && res.senha) { el.textContent = res.senha; el.style.background = '#fefcbf'; }
+    else { el.textContent = '❌ Indisponível'; }
+  } catch (e) { el.textContent = '❌ Erro'; }
+}
+
+async function adminVerSenhas() {
+  const tbody = document.getElementById('adminTabelaUsuarios');
+  if (!tbody) return;
+  const cells = tbody.querySelectorAll('.senha-cell');
+  for (const cell of cells) {
+    const usuario = cell.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    if (usuario) {
+      try {
+        const res = await enviarParaGAS('adminVerSenha', { usuario });
+        if (res.success && res.senha) { cell.textContent = res.senha; cell.style.background = '#fefcbf'; }
+      } catch (e) {}
+    }
+  }
+  mostrarToast('🔓 Senhas reveladas (admin).', 'info');
+}
+
+async function adminCarregarLogs() {
+  const cont = document.getElementById('adminLogsContainer');
+  if (!cont) return;
+  cont.textContent = '⏳ Carregando logs...';
+  try {
+    const res = await enviarParaGAS('adminListarLogs', { limite: 200 });
+    if (!res.success) throw new Error(res.error || 'Falha.');
+    const logs = res.logs || [];
+    if (logs.length === 0) { cont.textContent = '📭 Nenhum log registrado.'; return; }
+    cont.textContent = logs.map(l => `[${l.data || '?'}] ${l.perfil || '?'} | ${l.usuario || '?'} | ${l.acao || '?'} | ${l.detalhe || ''}`).join('\n');
+  } catch (e) { cont.textContent = '❌ Erro: ' + e.message; }
+}
+
+function adminLimparLogsView() {
+  const cont = document.getElementById('adminLogsContainer');
+  if (cont) cont.textContent = 'Clique em "Carregar Logs" para visualizar.';
+}
+
+async function adminRodarDiagnostico() {
+  const cont = document.getElementById('adminDiagnosticoResult');
+  if (!cont) return;
+  cont.innerHTML = '<p>⏳ Executando diagnóstico...</p>';
+  const resultados = [];
+  try {
+    const res = await enviarParaGAS('ping', {});
+    if (res.success) resultados.push({ tipo:'ok', msg:'✅ GAS respondeu ao ping.' });
+    else resultados.push({ tipo:'warn', msg:'⚠️ GAS respondeu com erro: ' + (res.error || 'desconhecido') });
+  } catch (e) { resultados.push({ tipo:'bug', msg:'❌ GAS inacessível: ' + e.message }); }
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=ALUNOS`;
+    const res = await fetch(url);
+    if (res.ok) resultados.push({ tipo:'ok', msg:'✅ Planilha acessível (aba ALUNOS).' });
+    else resultados.push({ tipo:'warn', msg:'⚠️ Planilha respondeu HTTP ' + res.status });
+  } catch (e) { resultados.push({ tipo:'bug', msg:'❌ Planilha inacessível: ' + e.message }); }
+  if (escolaData.alunos.length > 0) resultados.push({ tipo:'ok', msg:`✅ ${escolaData.alunos.length} alunos carregados.` });
+  else resultados.push({ tipo:'warn', msg:'⚠️ Nenhum aluno carregado (verifique aba ALUNOS).' });
+  if (escolaData.professores.length > 0) resultados.push({ tipo:'ok', msg:`✅ ${escolaData.professores.length} professores carregados.` });
+  else resultados.push({ tipo:'warn', msg:'⚠️ Nenhum professor carregado.' });
+  if (db.pagamentosMensais.length > 0) resultados.push({ tipo:'ok', msg:`✅ ${db.pagamentosMensais.length} pagamentos mensais carregados.` });
+  else resultados.push({ tipo:'warn', msg:'⚠️ Nenhum pagamento mensal carregado (verifique aba PAGAMENTOS).' });
+  if (db.logs.length > 0) resultados.push({ tipo:'ok', msg:`✅ ${db.logs.length} logs carregados.` });
+  else resultados.push({ tipo:'warn', msg:'⚠️ Nenhum log carregado (verifique aba LOGS).' });
+  cont.innerHTML = resultados.map(r => `<div class="admin-${r.tipo}">${r.msg}</div>`).join('');
+}
+
+async function adminCarregarBugs() {
+  const cont = document.getElementById('adminBugsContainer');
+  if (!cont) return;
+  cont.innerHTML = '<p>⏳ Carregando bugs...</p>';
+  try {
+    const res = await enviarParaGAS('adminListarBugs', {});
+    if (!res.success) throw new Error(res.error || 'Falha.');
+    const bugs = res.bugs || [];
+    if (bugs.length === 0) { cont.innerHTML = '<div class="admin-ok">✅ Nenhum bug registrado no GAS.</div>'; return; }
+    cont.innerHTML = bugs.map(b => `<div class="admin-bug">🐛 <strong>${b.titulo || 'Bug'}</strong><br><small>${b.descricao || ''} — ${b.data || ''}</small></div>`).join('');
+  } catch (e) { cont.innerHTML = `<div class="admin-bug">❌ Erro ao carregar bugs: ${e.message}</div>`; }
+}
+
+function adminGerarBugsAutomaticos() {
+  const cont = document.getElementById('adminBugsContainer');
+  if (!cont) return;
+  const bugs = [];
+  escolaData.alunos.forEach(a => {
+    if (a.status === 'ATIVO' && (!a.mensalidade || a.mensalidade === 0)) bugs.push({ tipo:'warn', msg:`⚠️ Aluno "${a.nome}" sem valor de mensalidade cadastrado.` });
+  });
+  db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => {
+    const prof = getProfessorByCurso(m.curso);
+    if (!prof) bugs.push({ tipo:'warn', msg:`⚠️ Curso "${labelCurso(m.curso)}" com matrícula ativa mas sem professor atribuído.` });
+  });
+  CURSOS.forEach(c => {
+    const al = getAlunosByCurso(c.id);
+    if (al.length === 0 && getProfessorByCurso(c.id)) bugs.push({ tipo:'info', msg:`ℹ️ Curso "${c.nome}" com professor mas sem alunos.` });
+  });
+  escolaData.alunos.filter(a => a.status === 'ATIVO').forEach(a => {
+    const mats = db.matriculas.filter(m => nomesIguais(m.aluno, a.nome) && m.status === 'ATIVO');
+    if (mats.length === 0) bugs.push({ tipo:'warn', msg:`⚠️ Aluno "${a.nome}" está ATIVO mas não possui matrícula.` });
+  });
+  if (bugs.length === 0) { cont.innerHTML = '<div class="admin-ok">✅ Nenhum problema detectado automaticamente.</div>'; return; }
+  cont.innerHTML = bugs.map(b => `<div class="admin-${b.tipo}">${b.msg}</div>`).join('');
+}
+
+async function adminRecarregarTudo() {
+  mostrarToast('🔄 Recarregando todos os dados...', 'info');
+  await carregarDadosPlanilha();
+  adminCarregarDashboard();
+  mostrarToast('✅ Dados recarregados!', 'success');
+}
+
+async function adminTestarGAS() {
+  mostrarToast('📡 Testando GAS...', 'info');
+  try {
+    const res = await enviarParaGAS('ping', {});
+    if (res.success) mostrarToast('✅ GAS respondeu com sucesso!', 'success');
+    else mostrarToast('⚠️ GAS respondeu: ' + (res.error || 'erro desconhecido'), 'error');
+  } catch (e) { mostrarToast('❌ GAS inacessível: ' + e.message, 'error'); }
+}
+
+// ============================================
 // MODAL / UTILITÁRIOS
 // ============================================
 function fecharModal(id) { document.getElementById(id).classList.remove('active'); }
 document.addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('active'); });
 
-// ✅ CORRIGIDO: logout com Content-Type 'text/plain' EXATO
 async function logout(manual = true, motivo = null) {
   const tk = currentUser.token;
   inactivityTimer.parar();
   if (window.__notifInterval) { clearInterval(window.__notifInterval); window.__notifInterval = null; }
   limparSessao();
-  if (tk) {
-    try {
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },   // ✅ EXATO — sem charset
-        body: JSON.stringify({ acao: 'logout', payload: { token: tk } })
-      }).catch(() => {});
-    } catch (e) {}
-  }
+  if (tk) { try { fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ acao: 'logout', payload: { token: tk } }) }).catch(() => {}); } catch (e) {} }
   document.getElementById('dashboard').classList.remove('active');
   document.getElementById('loginContainer').style.display = 'block';
   document.getElementById('loginForm').reset();
