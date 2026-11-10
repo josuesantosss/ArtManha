@@ -219,6 +219,45 @@ tbody tr:hover { background: #f7fafc; }
 .arquivo-item .arquivo-meta { color: #a0aec0; font-size: 0.78em; margin-top: 2px; }
 .arquivo-item a { color: #3182ce; font-weight: 600; text-decoration: none; font-size: 0.85em; }
 .arquivo-item a:hover { text-decoration: underline; }
+
+/* POPUP NOTIFICAÇÃO (canto direito) */
+.popup-notif {
+  position: fixed; top: 90px; right: -400px;
+  width: 360px; max-width: calc(100vw - 40px);
+  background: white; border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  padding: 14px 18px; z-index: 13000;
+  display: flex; gap: 12px; align-items: flex-start;
+  border-left: 5px solid #4299e1;
+  transition: right 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+  opacity: 0;
+}
+.popup-notif.show { right: 20px; opacity: 1; }
+.popup-notif.tipo-nota { border-left-color: #ed8936; }
+.popup-notif.tipo-arquivo { border-left-color: #4299e1; }
+.popup-notif.tipo-mensagem { border-left-color: #9f7aea; }
+.popup-notif.tipo-pagamento { border-left-color: #48bb78; }
+.popup-notif.tipo-atraso { border-left-color: #f56565; }
+.popup-notif.tipo-geral { border-left-color: #667eea; }
+.popup-notif .popup-icon { font-size: 1.6em; flex-shrink: 0; }
+.popup-notif .popup-body { flex: 1; min-width: 0; }
+.popup-notif .popup-title { font-weight: 700; color: #2d3748; font-size: 0.92em; margin-bottom: 3px; }
+.popup-notif .popup-desc { color: #4a5568; font-size: 0.83em; word-wrap: break-word; }
+.popup-notif .popup-time { color: #a0aec0; font-size: 0.72em; margin-top: 4px; }
+.popup-notif .popup-close { background: none; border: none; color: #a0aec0; cursor: pointer; font-size: 1.2em; padding: 0; line-height: 1; }
+.popup-notif .popup-close:hover { color: #4a5568; }
+
+/* Matrícula + Credenciais no modal */
+.credenciais-box {
+  background: linear-gradient(135deg, #f0fff4, #ebf8ff);
+  border: 2px solid #48bb78;
+  border-radius: 10px; padding: 15px; margin-bottom: 15px;
+}
+.credenciais-box .titulo { font-weight: 700; color: #22543d; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.credenciais-box .aviso { font-size: 0.8em; color: #718096; margin-top: 8px; }
+.credenciais-box .campo-senha { display: flex; gap: 8px; }
+.credenciais-box .campo-senha input { flex: 1; }
+.credenciais-box .campo-senha button { width: auto; padding: 10px 14px; font-size: 0.85em; }
 </style>
 </head>
 <body>
@@ -241,6 +280,9 @@ tbody tr:hover { background: #f7fafc; }
   <div class="notif-list" id="notifList"></div>
 </div>
 
+<!-- Container para popups -->
+<div id="popupContainer"></div>
+
 <div class="container">
   <div class="header">
     <div><h1>🎵 Sistema de Gestão - Escola de Música</h1><p class="subtitle">Gestão de Cursos, Matrículas e Aulas</p></div>
@@ -249,7 +291,11 @@ tbody tr:hover { background: #f7fafc; }
 
   <div id="loginContainer" class="login-container">
     <h2>🔐 Acesso ao Sistema</h2>
-    <div class="login-info"><strong>📌 Autenticação:</strong><span>Use o <b>usuário</b> e <b>senha</b> cadastrados pela secretaria.</span></div>
+    <div class="login-info">
+      <strong>📌 Autenticação:</strong>
+      <span>Selecione seu <b>perfil</b>, use o <b>usuário</b> e <b>senha</b> cadastrados.</span>
+      <div style="margin-top:6px;font-size:0.85em;color:#2c5282;">💡 <b>Admin</b> pode logar em qualquer perfil.</div>
+    </div>
     <form id="loginForm">
       <div class="form-group"><label for="loginPerfil">Perfil de Acesso</label>
         <select id="loginPerfil" required>
@@ -317,9 +363,9 @@ tbody tr:hover { background: #f7fafc; }
         <h3>👥 Gestão de Alunos</h3>
         <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
           <div class="form-group" style="flex:1; min-width:200px;"><label>Buscar Aluno</label><input type="text" id="buscaAlunoSecretaria" placeholder="Digite o nome..." oninput="filtrarAlunosSecretaria()"></div>
-          <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="abrirModalCadastroAluno()" class="btn btn-secondary">➕ Novo Aluno</button></div>
+          <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="abrirModalCadastroAluno()" class="btn btn-secondary">➕ Novo Aluno (Matrícula)</button></div>
         </div>
-        <div class="table-container"><table><thead><tr><th>Nome</th><th>Nascimento</th><th>Responsável</th><th>Contato</th><th>Cursos</th><th>Mensalidade</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaAlunosSecretaria"><tr><td colspan="8" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
+        <div class="table-container"><table><thead><tr><th>Nome</th><th>Nascimento</th><th>Responsável</th><th>Contato</th><th>Cursos</th><th>Mensalidade</th><th>Status</th></tr></thead><tbody id="tabelaAlunosSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
       </div>
 
       <div id="secretaria-matriculas" class="section-container hidden">
@@ -347,11 +393,10 @@ tbody tr:hover { background: #f7fafc; }
         <h3>🔑 Gestão de Usuários e Senhas</h3>
         <div class="btn-group" style="margin-bottom: 20px;">
           <button onclick="abrirModalCriarUsuario()" class="btn btn-secondary btn-small">➕ Novo Usuário (Funcionário)</button>
-          <button onclick="abrirModalCriarUsuarioAluno()" class="btn btn-info btn-small">🎓 Criar Usuário de Aluno</button>
           <button onclick="carregarUsuariosSecretaria()" class="btn btn-warning btn-small">🔄 Atualizar Lista</button>
         </div>
         <div class="table-container"><table><thead><tr><th>Usuário</th><th>Nome</th><th>Perfil</th><th>Aluno Vinculado</th><th>Status</th><th>Criado em</th><th>Ações</th></tr></thead><tbody id="tabelaUsuariosSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
-        <div style="margin-top: 15px; padding: 12px; background: #fffaf0; border-left: 4px solid #ed8936; border-radius: 8px; font-size: 0.9em; color: #7b341e;">⚠️ <b>Importante:</b> ao criar um usuário de aluno, o sistema também cria uma aba individual com o nome do aluno na planilha (ALUNO_NOME), contendo matrículas, notas, presenças e relatórios.</div>
+        <div style="margin-top: 15px; padding: 12px; background: #fffaf0; border-left: 4px solid #ed8936; border-radius: 8px; font-size: 0.9em; color: #7b341e;">⚠️ <b>Importante:</b> usuários de aluno são criados automaticamente ao cadastrar uma matrícula.</div>
       </div>
 
       <div id="secretaria-frequencia" class="section-container hidden">
@@ -376,7 +421,6 @@ tbody tr:hover { background: #f7fafc; }
           </div>
         </div>
         <div class="table-container"><table><thead><tr><th>Aluno</th><th>Valor (R$)</th><th>Vencimento (Dia)</th><th>Status</th><th>Data Pagamento</th><th>Mês</th></tr></thead><tbody id="tabelaMensalidadesSecretaria"><tr><td colspan="6" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
-        <div style="margin-top: 15px; padding: 12px; background: #fffaf0; border-left: 4px solid #ed8936; border-radius: 8px; font-size: 0.9em; color: #7b341e;">⚠️ <b>Atenção:</b> a <b>secretaria apenas acompanha</b>. O registro financeiro e o recebimento são gerenciados pelo <b>perfil Financeiro</b>. Ao identificar atraso, o aluno é <b>notificado automaticamente</b> em seu perfil.</div>
       </div>
 
       <div id="secretaria-relatorios" class="section-container hidden">
@@ -390,10 +434,14 @@ tbody tr:hover { background: #f7fafc; }
         <div id="relatorioSecretariaOutput" style="margin-top: 20px;"><p style="color:#718096;">Clique em um botão acima.</p></div>
       </div>
 
+      <!-- ===== MODAL CADASTRO DE ALUNO (agora com matrícula + credenciais) ===== -->
       <div id="modalCadastroAluno" class="modal-overlay">
         <div class="modal-content">
           <span class="modal-close" onclick="fecharModal('modalCadastroAluno')">&times;</span>
-          <h2>📝 Cadastro de Aluno</h2>
+          <h2>📝 Matrícula de Novo Aluno</h2>
+          <div style="background:#ebf8ff;border-left:4px solid #4299e1;padding:12px 15px;border-radius:8px;margin-bottom:15px;font-size:0.9em;color:#2c5282;">
+            ℹ️ Este formulário cadastra o aluno <b>e cria automaticamente o usuário/senha</b> para login na plataforma.
+          </div>
           <form id="formCadastroAluno">
             <div class="form-row">
               <div class="form-group"><label>Nome Completo *</label><input type="text" id="cadAlunoNome" required style="text-transform: uppercase;"></div>
@@ -411,9 +459,29 @@ tbody tr:hover { background: #f7fafc; }
               </div>
               <div class="aviso">ℹ️ Estes valores serão vinculados ao aluno e aplicados automaticamente nas matrículas.</div>
             </div>
-            <div class="form-group"><label>Cursos de Interesse</label><div id="cursosChecklist" class="cursos-checklist"></div></div>
+
+            <!-- ✅ NOVO: credenciais de login -->
+            <div class="credenciais-box">
+              <div class="titulo">🔐 Credenciais de Acesso do Aluno</div>
+              <div class="form-row">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label>Usuário (login) *</label>
+                  <input type="text" id="cadAlunoLogin" required placeholder="ex: aluno.joao" autocomplete="off">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label>Senha * (mín. 4)</label>
+                  <div class="campo-senha">
+                    <input type="password" id="cadAlunoSenha" required minlength="4" placeholder="Defina a senha" autocomplete="new-password">
+                    <button type="button" onclick="gerarSenhaAleatoria('cadAlunoSenha')" class="btn btn-warning">🎲</button>
+                  </div>
+                </div>
+              </div>
+              <div class="aviso">⚠️ O aluno usará estas credenciais para logar com o perfil <b>🎓 Aluno</b>.</div>
+            </div>
+
+            <div class="form-group"><label>Cursos de Interesse (marque 1+)</label><div id="cursosChecklist" class="cursos-checklist"></div></div>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-              <button type="submit" class="btn btn-secondary">💾 Salvar Aluno</button>
+              <button type="submit" class="btn btn-info">💾 Matricular + Criar Login</button>
               <button type="button" onclick="fecharModal('modalCadastroAluno')" class="btn btn-danger">Cancelar</button>
             </div>
           </form>
@@ -508,27 +576,6 @@ tbody tr:hover { background: #f7fafc; }
             <div style="display: flex; gap: 10px; margin-top: 15px;">
               <button type="submit" class="btn btn-secondary">💾 Criar Usuário</button>
               <button type="button" onclick="fecharModal('modalCriarUsuario')" class="btn btn-danger">Cancelar</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div id="modalCriarUsuarioAluno" class="modal-overlay">
-        <div class="modal-content">
-          <span class="modal-close" onclick="fecharModal('modalCriarUsuarioAluno')">&times;</span>
-          <h2>🎓 Criar Usuário de Aluno</h2>
-          <div style="background: #ebf8ff; border-left: 4px solid #4299e1; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em;">
-            Ao criar o usuário, o sistema também cria uma <b>aba individual na planilha</b> com o nome do aluno (ALUNO_NOME), contendo matrículas, notas, presenças e relatórios.
-          </div>
-          <form id="formCriarUsuarioAluno">
-            <div class="form-group"><label>Aluno Cadastrado *</label><select id="userAlunoNome" required><option value="">-- Selecione o aluno --</option></select></div>
-            <div class="form-row">
-              <div class="form-group"><label>Usuário (login) *</label><input type="text" id="userAlunoLogin" required placeholder="ex: aluno.joao" autocomplete="off"></div>
-              <div class="form-group"><label>Senha * (min 4)</label><input type="password" id="userAlunoSenha" required minlength="4" autocomplete="new-password"></div>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-              <button type="submit" class="btn btn-info">🎓 Criar Usuário + Aba</button>
-              <button type="button" onclick="fecharModal('modalCriarUsuarioAluno')" class="btn btn-danger">Cancelar</button>
             </div>
           </form>
         </div>
@@ -745,12 +792,7 @@ tbody tr:hover { background: #f7fafc; }
       <div id="financeiro-debug" class="section-container hidden">
         <h3>🔍 Debug: Dados Brutos da Aba PAGAMENTOS</h3>
         <div style="background: #fffaf0; border-left: 4px solid #ed8936; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em;">
-          <strong>Como interpretar:</strong> se a lista abaixo estiver vazia, a aba PAGAMENTOS não foi lida. Verifique:
-          <ul style="margin-left: 20px; margin-top: 8px;">
-            <li>Nome exato da aba (deve ser <code>PAGAMENTOS</code>)</li>
-            <li>Cabeçalhos na linha 1: <code>Aluno | Valor | Vencimento | Status | Data_Pagamento | Referencia</code></li>
-            <li>Permissão de leitura pública da planilha (ou compartilhada com o e-mail do Apps Script)</li>
-          </ul>
+          <strong>Como interpretar:</strong> se a lista abaixo estiver vazia, a aba PAGAMENTOS não foi lida.
         </div>
         <div class="btn-group" style="margin-bottom: 15px;">
           <button onclick="financeiroDebugPagamentos()" class="btn btn-warning btn-small">🔄 Recarregar Dados</button>
@@ -789,7 +831,7 @@ tbody tr:hover { background: #f7fafc; }
           <div class="ano-tabs" id="alunoAnoTabs"></div>
           <div class="mes-grid" id="alunoMesesGrid"></div>
         </div>
-        <div style="margin-top: 20px; padding: 15px; background: #ebf8ff; border-left: 4px solid #4299e1; border-radius: 8px; font-size: 0.9em; color: #2c5282;">ℹ️ <b>Visualização apenas:</b> o aluno não pode alterar valores ou status. O registro é feito pelo setor <b>Financeiro</b>. Em caso de dúvidas, entre em contato com a secretaria.</div>
+        <div style="margin-top: 20px; padding: 15px; background: #ebf8ff; border-left: 4px solid #4299e1; border-radius: 8px; font-size: 0.9em; color: #2c5282;">ℹ️ <b>Visualização apenas:</b> o aluno não pode alterar valores ou status.</div>
       </div>
 
       <div id="aluno-notas" class="section-container hidden">
@@ -906,7 +948,7 @@ const SHEET_CONFIG = {
     avaliacoes: 'AVALIACOES', presencas: 'PRESENCAS', conteudos: 'CONTEUDOS',
     observacoes: 'OBSERVACOES', relatorios: 'RELATORIOS',
     notificacoes: 'NOTIFICACOES', arquivos: 'ARQUIVOS', mensagens: 'MENSAGENS',
-    pagamentos: 'PAGAMENTOS', logs: 'LOGS'
+    pagamentos: 'PAGAMENTOS', logs: 'LOGS', usuarios: 'USUARIOS'
   }
 };
 
@@ -944,15 +986,18 @@ const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julh
 // ============================================
 // ESTADO
 // ============================================
-let dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], logs: [] };
+let dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], logs: [], usuarios: [] };
 let escolaData = { alunos: [], professores: [], cursos: CURSOS };
-let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], pagamentosMensais: [], logs: [] };
+let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], pagamentosMensais: [], logs: [], usuarios: [] };
 let currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
 let cursoSelecionado = null;
 let dadosAluno = null;
 let arquivoUploadSelecionado = null;
 let anoSelecionadoAluno = new Date().getFullYear();
 let notificacoesAtrasoGeradas = new Set();
+let popupIdsMostrados = new Set();
+let notifPollInterval = null;
+let ultimaNotifTimestamp = null;
 
 // ============================================
 // HELPERS BÁSICOS
@@ -979,101 +1024,40 @@ function getColuna(obj, ...nomes) {
   return '';
 }
 
-// ============================================
-// ✅ NOVO v3.2: NORMALIZADORES ROBUSTOS PARA PAGAMENTOS
-// ============================================
-
-/**
- * Normaliza VALOR:
- *  - "1234.56" → 1234.56
- *  - "1.234,56" → 1234.56
- *  - "1234,56" → 1234.56
- *  - "R$ 1.234,56" → 1234.56
- *  - number → number
- */
 function normalizarValor(raw) {
   if (raw === null || raw === undefined || raw === '') return 0;
   if (typeof raw === 'number') return isFinite(raw) ? raw : 0;
   let str = String(raw).trim();
   if (!str) return 0;
-  // Remove R$, espaços e caracteres não numéricos (exceto . e ,)
   str = str.replace(/R\$\s*/gi, '').replace(/[^\d.,\-]/g, '');
   if (!str) return 0;
-  // Caso 1: "1.234,56" (formato BR) → 1234.56
-  if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) {
-    str = str.replace(/\./g, '').replace(',', '.');
-  }
-  // Caso 2: "1234,56" (BR sem milhar) → 1234.56
-  else if (/^-?\d+(,\d+)$/.test(str)) {
-    str = str.replace(',', '.');
-  }
-  // Caso 3: "1,234.56" (US) → 1234.56
-  else if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(str)) {
-    str = str.replace(/,/g, '');
-  }
-  // Caso 4: já está em formato numérico padrão
+  if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) str = str.replace(/\./g, '').replace(',', '.');
+  else if (/^-?\d+(,\d+)$/.test(str)) str = str.replace(',', '.');
+  else if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(str)) str = str.replace(/,/g, '');
   const n = parseFloat(str);
   return isNaN(n) ? 0 : n;
 }
 
-/**
- * Normaliza REFERÊNCIA para formato YYYY-MM:
- *  - "2026-03" → "2026-03"
- *  - "2026-3" → "2026-03"
- *  - "03-2026" → "2026-03"
- *  - "3-2026" → "2026-03"
- *  - "03/2026" → "2026-03"
- *  - Date(2026,2,...) (gviz) → "2026-03"
- *  - "01-03-2026" (DD-MM-YYYY) → "2026-03"
- *  - "" / null → usa mês atual
- */
 function normalizarReferencia(raw) {
   if (raw === null || raw === undefined || raw === '') return mesRefAtual();
-  if (raw instanceof Date && !isNaN(raw.getTime())) {
-    return `${raw.getFullYear()}-${String(raw.getMonth()+1).padStart(2,'0')}`;
-  }
+  if (raw instanceof Date && !isNaN(raw.getTime())) return `${raw.getFullYear()}-${String(raw.getMonth()+1).padStart(2,'0')}`;
   let str = String(raw).trim();
   if (!str) return mesRefAtual();
-
-  // Formato gviz: "Date(2026,2,15)" → ano, mês (0-based), dia
   const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
-  if (mGviz) {
-    const ano = parseInt(mGviz[1], 10);
-    const mes = parseInt(mGviz[2], 10) + 1;
-    return `${ano}-${String(mes).padStart(2,'0')}`;
-  }
-
-  // YYYY-MM ou YYYY-M
+  if (mGviz) return `${parseInt(mGviz[1],10)}-${String(parseInt(mGviz[2],10)+1).padStart(2,'0')}`;
   let m = str.match(/^(\d{4})-(\d{1,2})(?:-\d{1,2})?/);
   if (m) return `${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
-
-  // DD-MM-YYYY (data brasileira)
   m = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
   if (m) return `${m[3]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
-
-  // DD/MM/YYYY
   m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) return `${m[3]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
-
-  // MM-YYYY ou MM/YYYY
   m = str.match(/^(\d{1,2})[-\/](\d{4})$/);
   if (m) return `${m[2]}-${String(parseInt(m[1],10)).padStart(2,'0')}`;
-
-  // Tenta Date.parse como último recurso
   const d = new Date(str);
   if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-
   return mesRefAtual();
 }
 
-/**
- * Normaliza STATUS:
- *  - "pago" / "Pago" / "PAGO" / "PAGO " → "PAGO"
- *  - "pendente" → "PENDENTE"
- *  - "atrasado" / "atrasada" → "ATRASADO"
- *  - "isento" → "ISENTO"
- *  - "" → "PENDENTE"
- */
 function normalizarStatusPagamento(raw) {
   if (raw === null || raw === undefined) return 'PENDENTE';
   const s = String(raw).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1085,31 +1069,16 @@ function normalizarStatusPagamento(raw) {
   return 'PENDENTE';
 }
 
-/**
- * Normaliza DATA de pagamento para DD-MM-YYYY
- */
 function normalizarDataPagamento(raw) {
   if (raw === null || raw === undefined || raw === '') return '';
-  if (raw instanceof Date && !isNaN(raw.getTime())) {
-    return `${String(raw.getDate()).padStart(2,'0')}-${String(raw.getMonth()+1).padStart(2,'0')}-${raw.getFullYear()}`;
-  }
+  if (raw instanceof Date && !isNaN(raw.getTime())) return `${String(raw.getDate()).padStart(2,'0')}-${String(raw.getMonth()+1).padStart(2,'0')}-${raw.getFullYear()}`;
   const str = String(raw).trim();
   if (!str) return '';
-  // gviz: Date(2026,2,15)
   const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
-  if (mGviz) {
-    return `${String(parseInt(mGviz[3],10)).padStart(2,'0')}-${String(parseInt(mGviz[2],10)+1).padStart(2,'0')}-${mGviz[1]}`;
-  }
-  // DD-MM-YYYY
+  if (mGviz) return `${String(parseInt(mGviz[3],10)).padStart(2,'0')}-${String(parseInt(mGviz[2],10)+1).padStart(2,'0')}-${mGviz[1]}`;
   if (/^\d{2}-\d{2}-\d{4}$/.test(str)) return str;
-  // DD/MM/YYYY
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) return str.replace(/\//g, '-');
-  // YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-    const p = str.split('T')[0].split('-');
-    return `${p[2]}-${p[1]}-${p[0]}`;
-  }
-  // Número serial do Sheets
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) { const p = str.split('T')[0].split('-'); return `${p[2]}-${p[1]}-${p[0]}`; }
   const num = Number(str);
   if (!isNaN(num) && num > 30000 && num < 80000) {
     const base = new Date(1899, 11, 30);
@@ -1117,15 +1086,10 @@ function normalizarDataPagamento(raw) {
     return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
   }
   const d = new Date(str);
-  if (!isNaN(d.getTime())) {
-    return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
-  }
+  if (!isNaN(d.getTime())) return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
   return str;
 }
 
-/**
- * Normaliza DIA DE VENCIMENTO (1-31)
- */
 function normalizarDiaVencimento(raw) {
   if (raw === null || raw === undefined || raw === '') return 10;
   const n = parseInt(String(raw).replace(/[^\d]/g, ''), 10);
@@ -1133,9 +1097,6 @@ function normalizarDiaVencimento(raw) {
   return Math.max(1, Math.min(31, n));
 }
 
-// ============================================
-// HELPERS DE DATA
-// ============================================
 function formatarDataParaExibicao(dataISO) {
   if (!dataISO) return '';
   if (/^\d{2}-\d{2}-\d{4}$/.test(dataISO)) return dataISO;
@@ -1249,6 +1210,14 @@ function extrairCursosDoProfessor(prof) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+function gerarSenhaAleatoria(inputId) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s = '';
+  for (let i = 0; i < 8; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+  const inp = document.getElementById(inputId);
+  if (inp) { inp.value = s; inp.type = 'text'; setTimeout(() => { inp.type = 'password'; }, 2500); }
+}
+
 // ============================================
 // GAS — chamada JSON
 // ============================================
@@ -1289,16 +1258,7 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
         if (!base64) { reject(new Error('Falha na conversão base64')); return; }
         const body = JSON.stringify({
           acao: 'uploadArquivo',
-          payload: {
-            token: campos.token || '',
-            professor: campos.professor || '',
-            curso: campos.curso || '',
-            destinatarios: campos.destinatarios || '[]',
-            mensagem: campos.mensagem || '',
-            nomeArquivo: file.name,
-            mimeType: file.type || 'application/octet-stream',
-            file: base64
-          }
+          payload: { token: campos.token || '', professor: campos.professor || '', curso: campos.curso || '', destinatarios: campos.destinatarios || '[]', mensagem: campos.mensagem || '', nomeArquivo: file.name, mimeType: file.type || 'application/octet-stream', file: base64 }
         });
         const xhr = new XMLHttpRequest();
         xhr.open('POST', GAS_URL, true);
@@ -1326,8 +1286,8 @@ function uploadArquivoComProgresso(file, campos, onProgress) {
 // ============================================
 // SESSÃO
 // ============================================
-const SESSION_KEY = 'escolaMusica.session.v8';
-const ACTIVITY_KEY = 'escolaMusica.lastActivity.v8';
+const SESSION_KEY = 'escolaMusica.session.v9';
+const ACTIVITY_KEY = 'escolaMusica.lastActivity.v9';
 const INATIVIDADE_MS = 60 * 60 * 1000;
 
 function salvarSessao() {
@@ -1497,12 +1457,6 @@ async function carregarDadosPlanilha() {
   } finally { loading.classList.remove('active'); }
 }
 
-/**
- * ✅ v3.2: leitura robusta do gviz.
- * - Usa `cell.v` se existir, senão `cell.f`
- * - Se `cell` for nulo/vazio, tenta `cell.f` como fallback
- * - Mantém o objeto `__gvizRaw` em cada linha para debug
- */
 async function carregarAbaEspecifica(nomeAba, chave) {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}`;
@@ -1559,7 +1513,7 @@ async function renderAposCarregamento() {
 }
 
 // ============================================
-// ✅ v3.2: BANCO DE DADOS LOCAL — leitura ROBUSTA de PAGAMENTOS
+// BANCO DE DADOS LOCAL
 // ============================================
 function atualizarBancoDados() {
   escolaData.alunos = dadosPlanilha.alunos.map(a => ({
@@ -1704,72 +1658,36 @@ function atualizarBancoDados() {
     data: texto(getColuna(m,'Data')) || formatarDataParaExibicao(texto(getColuna(m,'Data_ISO')))
   }));
 
-  // ============================================================
-  // ✅ v3.2: PAGAMENTOS — NORMALIZAÇÃO ROBUSTA CAMPO POR CAMPO
-  // ============================================================
+  // ===== USUÁRIOS (para login por perfil) =====
+  db.usuarios = (dadosPlanilha.usuarios || []).map(u => ({
+    id: texto(getColuna(u, 'ID_Usuario','ID')),
+    nome: texto(getColuna(u, 'Nome')).toUpperCase(),
+    perfil: texto(getColuna(u, 'Perfil')).toLowerCase(),
+    usuario: texto(getColuna(u, 'Usuario')).toLowerCase(),
+    status: texto(getColuna(u, 'Status') || 'ATIVO').toUpperCase(),
+    alunoVinculado: texto(getColuna(u, 'Aluno_Vinculado')).toUpperCase(),
+    dataCriacao: texto(getColuna(u, 'Data_Criacao'))
+  })).filter(u => u.usuario);
+
+  // ===== PAGAMENTOS =====
   const linhasPagamentoBrutas = dadosPlanilha.pagamentos || [];
   const pagamentosNormalizados = [];
-
   linhasPagamentoBrutas.forEach((p, idx) => {
-    // Lê o aluno
     const alunoRaw = getColuna(p, 'Aluno', 'Nome', 'Nome_Aluno', 'ALUNO');
     const alunoNorm = texto(alunoRaw).toUpperCase();
-    if (!alunoNorm) return; // linha sem aluno → ignora
-
-    // Valor (pode vir como "1.234,56" ou "1234.56" ou number)
-    const valorRaw = getColuna(p, 'Valor', 'Mensalidade', 'Valor_Mensalidade', 'VALOR');
-    const valor = normalizarValor(valorRaw);
-
-    // Vencimento (dia 1-31)
-    const vencRaw = getColuna(p, 'Vencimento', 'Dia_Vencimento', 'Dia', 'VENCIMENTO');
-    const vencimento = normalizarDiaVencimento(vencRaw);
-
-    // Status
-    const statusRaw = getColuna(p, 'Status', 'STATUS', 'Situacao', 'Situação');
-    const status = normalizarStatusPagamento(statusRaw);
-
-    // Data do pagamento
-    const dataPgRaw = getColuna(p, 'Data_Pagamento', 'DataPagamento', 'Data Pagamento', 'DATA_PAGAMENTO', 'Data');
-    const dataPagamento = normalizarDataPagamento(dataPgRaw);
-
-    // Referência (YYYY-MM) — tenta várias colunas
-    const refRaw = getColuna(p, 'Referencia', 'Referência', 'Referencia_Mes', 'Referência_Mês', 'Mes_Referencia', 'Mês_Referencia', 'Mes', 'Mês', 'Ref', 'REFERENCIA', 'MES');
+    if (!alunoNorm) return;
+    const valor = normalizarValor(getColuna(p, 'Valor', 'Mensalidade', 'Valor_Mensalidade', 'VALOR'));
+    const vencimento = normalizarDiaVencimento(getColuna(p, 'Vencimento', 'Dia_Vencimento', 'Dia', 'VENCIMENTO'));
+    const status = normalizarStatusPagamento(getColuna(p, 'Status', 'STATUS', 'Situacao', 'Situação'));
+    const dataPagamento = normalizarDataPagamento(getColuna(p, 'Data_Pagamento', 'DataPagamento', 'Data Pagamento', 'DATA_PAGAMENTO', 'Data'));
+    const refRaw = getColuna(p, 'Referencia', 'Referência', 'Referencia_Mes', 'Mês_Referencia', 'Mes', 'Mês', 'Ref', 'REFERENCIA', 'MES');
     let referencia = normalizarReferencia(refRaw);
-
-    // Se a referência veio vazia, tenta extrair da data de pagamento
-    if (!refRaw && dataPagamento) {
-      const m = dataPagamento.match(/(\d{2})-(\d{2})-(\d{4})/);
-      if (m) referencia = `${m[3]}-${m[2]}`;
-    }
-
-    // Última tentativa: se referência ainda é "mês atual" e há data de pagamento, usa a data
-    if ((!refRaw || referencia === mesRefAtual()) && dataPagamento && /^\d{2}-\d{2}-\d{4}$/.test(dataPagamento)) {
-      const m = dataPagamento.match(/(\d{2})-(\d{2})-(\d{4})/);
-      if (m) referencia = `${m[3]}-${m[2]}`;
-    }
-
-    pagamentosNormalizados.push({
-      aluno: alunoNorm,
-      valor: valor,
-      vencimento: vencimento,
-      status: status,
-      dataPagamento: dataPagamento,
-      referencia: referencia,
-      // Guarda linha bruta para debug
-      _raw: p,
-      _linha: idx + 2
-    });
+    if (!refRaw && dataPagamento) { const m = dataPagamento.match(/(\d{2})-(\d{2})-(\d{4})/); if (m) referencia = `${m[3]}-${m[2]}`; }
+    pagamentosNormalizados.push({ aluno: alunoNorm, valor, vencimento, status, dataPagamento, referencia, _raw: p, _linha: idx + 2 });
   });
-
-  // Remove duplicatas (mesmo aluno + mesma referência): mantém a última linha (mais recente)
   const mapaPag = {};
-  pagamentosNormalizados.forEach(pg => {
-    const key = `${normalizarNome(pg.aluno)}||${pg.referencia}`;
-    mapaPag[key] = pg; // sobrescreve → última linha prevalece
-  });
+  pagamentosNormalizados.forEach(pg => { mapaPag[`${normalizarNome(pg.aluno)}||${pg.referencia}`] = pg; });
   db.pagamentosMensais = Object.values(mapaPag);
-
-  // Mantém também a lista "flat" para compatibilidade
   db.pagamentos = pagamentosNormalizados;
 
   db.logs = (dadosPlanilha.logs || []).map(l => ({
@@ -1781,16 +1699,11 @@ function atualizarBancoDados() {
     ip: texto(getColuna(l,'IP'))
   }));
 
-  // Logs de diagnóstico no console
-  console.log('📊 [DEBUG] PAGAMENTOS brutos:', linhasPagamentoBrutas.length);
-  console.log('📊 [DEBUG] PAGAMENTOS normalizados:', db.pagamentosMensais.length);
-  if (db.pagamentosMensais.length > 0) {
-    console.log('📊 [DEBUG] Amostra:', db.pagamentosMensais.slice(0, 3));
-  }
+  console.log('📊 PAGAMENTOS brutos:', linhasPagamentoBrutas.length, '| normalizados:', db.pagamentosMensais.length);
 }
 
 // ============================================
-// AUXILIARES DE VÍNCULO
+// AUXILIARES
 // ============================================
 function encontrarProfessorPorNome(nome) {
   if (!nome) return null;
@@ -1852,50 +1765,23 @@ function getMediaAluno(aluno, curso) {
   return c > 0 ? soma / c : 0;
 }
 
-// ============================================
-// PAGAMENTOS — LÓGICA MENSAL ROBUSTA
-// ============================================
-
-/**
- * ✅ v3.2: busca pagamento do mês com fallback.
- * Ordem:
- *  1. db.pagamentosMensais (aluno + referência) — dado real da planilha
- *  2. Cria registro VIRTUAL a partir do aluno.mensalidade
- */
 function getPagamentoMes(aluno, refAnoMes) {
   if (!aluno || !refAnoMes) return null;
   const alvo = normalizarNome(aluno);
   const refNorm = normalizarReferencia(refAnoMes);
-
-  // 1) Procura no banco local (dados reais)
   const pg = db.pagamentosMensais.find(p => normalizarNome(p.aluno) === alvo && p.referencia === refNorm);
   if (pg) return pg;
-
-  // 2) Fallback: cria registro virtual a partir do aluno
   const al = encontrarAlunoPorNome(aluno);
   if (!al || !al.mensalidade || al.mensalidade <= 0) return null;
-
   const [ano, mes] = refNorm.split('-').map(Number);
   const venc = al.vencimento || 10;
   const hoje = new Date();
   const anoAtual = hoje.getFullYear();
   const mesAtual = hoje.getMonth() + 1;
   const diaAtual = hoje.getDate();
-
   let status = 'PENDENTE';
-  if (ano < anoAtual || (ano === anoAtual && mes < mesAtual) ||
-      (ano === anoAtual && mes === mesAtual && diaAtual > venc)) {
-    status = 'ATRASADO';
-  }
-  return {
-    aluno: al.nome,
-    valor: al.mensalidade,
-    vencimento: venc,
-    status: status,
-    dataPagamento: '',
-    referencia: refNorm,
-    _virtual: true
-  };
+  if (ano < anoAtual || (ano === anoAtual && mes < mesAtual) || (ano === anoAtual && mes === mesAtual && diaAtual > venc)) status = 'ATRASADO';
+  return { aluno: al.nome, valor: al.mensalidade, vencimento: venc, status, dataPagamento: '', referencia: refNorm, _virtual: true };
 }
 
 function getPagamentosAno(aluno, ano) {
@@ -1904,15 +1790,6 @@ function getPagamentosAno(aluno, ano) {
     const ref = `${ano}-${String(m).padStart(2,'0')}`;
     const pg = getPagamentoMes(aluno, ref);
     if (pg) resultado.push(pg);
-    else {
-      const al = encontrarAlunoPorNome(aluno);
-      if (al && al.mensalidade > 0) {
-        resultado.push({
-          aluno: al.nome, valor: al.mensalidade, vencimento: al.vencimento || 10,
-          status: 'PENDENTE', dataPagamento: '', referencia: ref, _virtual: true
-        });
-      }
-    }
   }
   return resultado;
 }
@@ -1921,14 +1798,9 @@ function getPagamentoAluno(nomeAluno) {
   if (!nomeAluno) return null;
   const alvo = normalizarNome(nomeAluno);
   const pgs = db.pagamentosMensais.filter(p => normalizarNome(p.aluno) === alvo);
-  if (pgs.length > 0) {
-    pgs.sort((a,b) => (b.referencia || '').localeCompare(a.referencia || ''));
-    return pgs[0];
-  }
+  if (pgs.length > 0) { pgs.sort((a,b) => (b.referencia || '').localeCompare(a.referencia || '')); return pgs[0]; }
   const al = encontrarAlunoPorNome(nomeAluno);
-  if (al && al.mensalidade > 0) {
-    return { aluno: al.nome, valor: al.mensalidade, vencimento: al.vencimento || 10, status: 'PENDENTE', dataPagamento: '', referencia: '' };
-  }
+  if (al && al.mensalidade > 0) return { aluno: al.nome, valor: al.mensalidade, vencimento: al.vencimento || 10, status: 'PENDENTE', dataPagamento: '', referencia: '' };
   return null;
 }
 
@@ -1951,25 +1823,17 @@ function processarAtrasos() {
     const mes = hoje.getMonth() + 1;
     const dia = hoje.getDate();
     const refAtual = `${ano}-${String(mes).padStart(2,'0')}`;
-
     escolaData.alunos.forEach(al => {
       if (al.status !== 'ATIVO' || !al.mensalidade) return;
       const venc = al.vencimento || 10;
       if (dia <= venc) return;
-
       const pg = db.pagamentosMensais.find(p => nomesIguais(p.aluno, al.nome) && p.referencia === refAtual);
       if (pg && pg.status === 'PAGO') return;
-
       const chaveNotif = `${al.nome}::${refAtual}`;
       if (notificacoesAtrasoGeradas.has(chaveNotif)) return;
       notificacoesAtrasoGeradas.add(chaveNotif);
-
-      const jaNotificado = db.notificacoes.some(n =>
-        n.tipo === 'atraso' && nomesIguais(n.aluno, al.nome) &&
-        (n.titulo || '').includes(MESES_NOMES[mes - 1]) && (n.titulo || '').includes(String(ano))
-      );
+      const jaNotificado = db.notificacoes.some(n => n.tipo === 'atraso' && nomesIguais(n.aluno, al.nome) && (n.titulo || '').includes(MESES_NOMES[mes - 1]) && (n.titulo || '').includes(String(ano)));
       if (jaNotificado) return;
-
       const novaNotif = {
         id: 'atraso_' + Date.now() + '_' + Math.random().toString(36).substr(2,6),
         aluno: al.nome, tipo: 'atraso',
@@ -1978,8 +1842,7 @@ function processarAtrasos() {
         curso: '', professor: 'SISTEMA', lida: false, data: getDataHoraAtual()
       };
       db.notificacoes.push(novaNotif);
-
-      try { enviarParaGAS('notificarAtraso', { aluno: al.nome, referencia: refAtual, valor: al.mensalidade, vencimento: venc }).catch(() => {}); } catch (err) { /* ignora */ }
+      try { enviarParaGAS('notificarAtraso', { aluno: al.nome, referencia: refAtual, valor: al.mensalidade, vencimento: venc }).catch(() => {}); } catch (err) {}
     });
   } catch (e) { console.warn('processarAtrasos:', e); }
 }
@@ -1998,7 +1861,7 @@ const cargoConfig = {
 };
 
 // ============================================
-// LOGIN
+// ✅ LOGIN POR PERFIL (com suporte a admin multi-perfil)
 // ============================================
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -2009,7 +1872,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   if (!perfil || !usuario || !senha) { alert('Preencha todos os campos.'); return; }
   loginProgress.init(); loginProgress.show(); btn.disabled = true;
   try {
-    loginProgress.set(15, 'Validando credenciais...', 'Consultando planilha de usuários.');
+    loginProgress.set(15, 'Validando credenciais...', 'Verificando usuário e perfil.');
     await sleep(200);
     const res = await enviarParaGAS('login', { usuario, senha, perfil });
     if (!res || !res.success) throw new Error((res && res.error) || 'Usuário ou senha inválidos.');
@@ -2018,12 +1881,16 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     loginProgress.set(65, 'Carregando dados...', 'Sincronizando planilha.');
     if (!escolaData.alunos.length && !escolaData.professores.length) await carregarDadosPlanilha();
     else await sleep(200);
+
+    // ✅ admin pode logar em qualquer perfil
+    const perfilEfetivo = res.perfilEfetivo || res.perfil;
+
     currentUser = {
-      perfil: res.perfil, nome: res.nome, usuario: res.usuario, token: res.token,
+      perfil: perfilEfetivo, nome: res.nome, usuario: res.usuario, token: res.token,
       expiraEm: Date.now() + INATIVIDADE_MS, _loginEm: Date.now(),
       professorData: null, cursos: [], alunoVinculado: res.alunoVinculado || ''
     };
-    if (res.perfil === 'professor') {
+    if (perfilEfetivo === 'professor') {
       const prof = encontrarProfessorPorNome(res.nome);
       if (prof) {
         currentUser.professorData = prof;
@@ -2031,7 +1898,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         if (currentUser.cursos.length) cursoSelecionado = currentUser.cursos[0];
       } else mostrarToast('⚠️ Professor "' + res.nome + '" não localizado.', 'error');
     }
-    if (res.perfil === 'aluno' && !currentUser.alunoVinculado) currentUser.alunoVinculado = res.nome;
+    if (perfilEfetivo === 'aluno' && !currentUser.alunoVinculado) currentUser.alunoVinculado = res.nome;
     registrarAtividade(); salvarSessao();
     loginProgress.set(85, 'Preparando painel...', 'Quase pronto!');
     await sleep(200);
@@ -2039,10 +1906,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     await sleep(350);
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('dashboard').classList.add('active');
-    document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[res.perfil].titulo}`;
-    document.getElementById('userDisplay').innerHTML = `👤 ${currentUser.nome} - ${cargoConfig[res.perfil].titulo}`;
+    document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[perfilEfetivo].titulo}`;
+    document.getElementById('userDisplay').innerHTML = `👤 ${currentUser.nome} - ${cargoConfig[perfilEfetivo].titulo}`;
     configurarNotificacoesPerfil();
-    await renderDashboard(res.perfil);
+    iniciarPollingNotificacoes();
+    await renderDashboard(perfilEfetivo);
     inactivityTimer.iniciar();
     btn.disabled = false;
     loginProgress.hide(600);
@@ -2078,6 +1946,7 @@ async function aplicarSessaoRestaurada() {
   document.getElementById('dashboardTitle').textContent = `📊 ${cargoConfig[perfil].titulo}`;
   document.getElementById('userDisplay').innerHTML = `👤 ${nome} - ${cargoConfig[perfil].titulo}`;
   configurarNotificacoesPerfil();
+  iniciarPollingNotificacoes();
   await renderDashboard(perfil);
   inactivityTimer.iniciar(); registrarAtividade();
   mostrarToast(`👋 Bem-vindo(a) de volta, ${nome.split(' ')[0]}!`, 'info');
@@ -2106,7 +1975,7 @@ async function renderDashboard(perfil) {
 }
 
 // ============================================
-// NOTIFICAÇÕES
+// ✅ NOTIFICAÇÕES + POPUP EM TEMPO REAL
 // ============================================
 function configurarNotificacoesPerfil() {
   const btn = document.getElementById('notifBtn');
@@ -2114,9 +1983,181 @@ function configurarNotificacoesPerfil() {
   if (currentUser.perfil === 'aluno') {
     btn.style.display = 'flex';
     renderNotificacoesAluno();
-    if (window.__notifInterval) clearInterval(window.__notifInterval);
-    window.__notifInterval = setInterval(() => { if (currentUser.perfil === 'aluno') renderNotificacoesAluno(); }, 60000);
   } else btn.style.display = 'none';
+}
+
+function iniciarPollingNotificacoes() {
+  if (notifPollInterval) clearInterval(notifPollInterval);
+  if (currentUser.perfil !== 'aluno') return;
+  notifPollInterval = setInterval(async () => {
+    if (currentUser.perfil !== 'aluno') return;
+    try {
+      await atualizarNotificacoesAluno();
+    } catch (e) { /* ignora */ }
+  }, 20000);
+}
+
+async function atualizarNotificacoesAluno() {
+  const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
+  if (!aluno) return;
+  // Busca notificações direto do GAS (fonte da verdade)
+  try {
+    const r = await enviarParaGAS('listarNotificacoes', { aluno });
+    if (r.success && Array.isArray(r.notificacoes)) {
+      // Detecta novas
+      const novasDoServidor = [];
+      r.notificacoes.forEach(n => {
+        const id = texto(n.id) || `notif_${normalizarNome(n.titulo)}_${n.data}`;
+        if (!popupIdsMostrados.has(id)) {
+          const jaNoDb = db.notificacoes.find(x => texto(x.id) === texto(n.id));
+          if (!jaNoDb) {
+            novasDoServidor.push({
+              id, aluno: texto(n.aluno).toUpperCase(),
+              tipo: texto(n.tipo || 'geral').toLowerCase(),
+              titulo: texto(n.titulo), descricao: texto(n.descricao),
+              curso: normalizarCursoId(texto(n.curso)),
+              professor: texto(n.professor).toUpperCase(),
+              lida: texto(n.lida).toUpperCase() === 'SIM',
+              data: texto(n.data) || getDataHoraAtual()
+            });
+          } else {
+            // Já existe: verifica se mudou
+            if (!popupIdsMostrados.has(texto(jaNoDb.id))) {
+              popupIdsMostrados.add(texto(jaNoDb.id));
+            }
+          }
+        }
+      });
+      // Adiciona novas ao db e mostra popup
+      novasDoServidor.forEach(n => {
+        db.notificacoes.push(n);
+        popupIdsMostrados.add(n.id);
+        mostrarPopupNotificacao(n);
+      });
+    }
+  } catch (e) { /* ignora */ }
+  // Busca mensagens novas
+  try {
+    const r = await enviarParaGAS('listarMensagens', { aluno });
+    if (r.success && Array.isArray(r.mensagens)) {
+      r.mensagens.forEach(m => {
+        const idMsg = texto(m.id) || `msg_${normalizarNome(m.assunto)}_${m.data}`;
+        if (!popupIdsMostrados.has('msg_' + idMsg)) {
+          const jaNoDb = db.mensagens.find(x => texto(x.id) === texto(m.id));
+          if (!jaNoDb) {
+            const novo = {
+              id: texto(m.id), aluno: texto(m.aluno).toUpperCase(),
+              curso: normalizarCursoId(texto(m.curso)),
+              professor: texto(m.professor).toUpperCase(),
+              assunto: texto(m.assunto), mensagem: texto(m.mensagem),
+              lida: false, data: texto(m.data) || getDataHoraAtual()
+            };
+            db.mensagens.push(novo);
+            popupIdsMostrados.add('msg_' + idMsg);
+            mostrarPopupNotificacao({
+              id: 'msg_' + idMsg,
+              tipo: 'mensagem',
+              titulo: 'Nova mensagem: ' + (novo.assunto || '(sem assunto)'),
+              descricao: (novo.mensagem || '').substring(0, 120),
+              data: novo.data
+            });
+          }
+        }
+      });
+    }
+  } catch (e) { /* ignora */ }
+  // Busca arquivos novos
+  try {
+    const r = await enviarParaGAS('listarArquivos', { aluno });
+    if (r.success && Array.isArray(r.arquivos)) {
+      r.arquivos.forEach(a => {
+        const idArq = texto(a.id) || `arq_${normalizarNome(a.nome)}_${a.data}`;
+        if (!popupIdsMostrados.has('arq_' + idArq)) {
+          const jaNoDb = db.arquivos.find(x => texto(x.id) === texto(a.id));
+          if (!jaNoDb) {
+            const novo = {
+              id: texto(a.id), aluno: texto(a.aluno).toUpperCase(),
+              curso: normalizarCursoId(texto(a.curso)),
+              professor: texto(a.professor).toUpperCase(),
+              nome: texto(a.nome), url: texto(a.url), fileId: texto(a.fileId),
+              mensagem: texto(a.mensagem), data: texto(a.data) || getDataHoraAtual()
+            };
+            db.arquivos.push(novo);
+            popupIdsMostrados.add('arq_' + idArq);
+            mostrarPopupNotificacao({
+              id: 'arq_' + idArq,
+              tipo: 'arquivo',
+              titulo: 'Novo arquivo: ' + (novo.nome || 'arquivo'),
+              descricao: novo.mensagem || ('Enviado pelo professor ' + (novo.professor || '-')),
+              data: novo.data
+            });
+          }
+        }
+      });
+    }
+  } catch (e) { /* ignora */ }
+  // Re-render
+  renderNotificacoesAluno();
+  if (dadosAluno) {
+    // Atualiza dados do aluno e re-renderiza (silencioso)
+    try {
+      const cursosIds = getCursosDoAluno(aluno);
+      dadosAluno.arquivos = db.arquivos.filter(a => nomesIguais(a.aluno, aluno));
+      dadosAluno.mensagens = db.mensagens.filter(m => nomesIguais(m.aluno, aluno));
+      dadosAluno.pagamentos = dadosAluno.pagamentos || { anos: [], porMes: {} };
+      dadosAluno.pagamentos.anos = Array.from(new Set([...(dadosAluno.pagamentos.anos || []), new Date().getFullYear()])).sort((a,b) => b - a);
+      dadosAluno.pagamentos.porMes = {};
+      dadosAluno.pagamentos.anos.forEach(ano => { dadosAluno.pagamentos.porMes[ano] = getPagamentosAno(aluno, ano); });
+      renderAluno();
+    } catch (e) {}
+  }
+}
+
+function mostrarPopupNotificacao(n) {
+  const container = document.getElementById('popupContainer');
+  if (!container) return;
+  const icones = { nota: '📝', arquivo: '📎', mensagem: '💬', geral: '🔔', pagamento: '💰', atraso: '⚠️' };
+  const popup = document.createElement('div');
+  popup.className = `popup-notif tipo-${n.tipo || 'geral'}`;
+  popup.innerHTML = `
+    <div class="popup-icon">${icones[n.tipo] || '🔔'}</div>
+    <div class="popup-body">
+      <div class="popup-title">${escapeHtml(n.titulo || 'Notificação')}</div>
+      <div class="popup-desc">${escapeHtml(n.descricao || '')}</div>
+      <div class="popup-time">${escapeHtml(n.data || getDataHoraAtual())}</div>
+    </div>
+    <button class="popup-close" aria-label="Fechar">×</button>
+  `;
+  container.appendChild(popup);
+  // Som suave (opcional, apenas 1 vez)
+  try { tocarSomNotificacao(); } catch (e) {}
+  // Anima entrada
+  requestAnimationFrame(() => popup.classList.add('show'));
+  popup.querySelector('.popup-close').addEventListener('click', () => {
+    popup.classList.remove('show');
+    setTimeout(() => popup.remove(), 350);
+  });
+  // Auto-close após 8s
+  setTimeout(() => {
+    if (popup.parentNode) {
+      popup.classList.remove('show');
+      setTimeout(() => popup.remove(), 350);
+    }
+  }, 8000);
+}
+
+function tocarSomNotificacao() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; o.type = 'sine';
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    o.start(); o.stop(ctx.currentTime + 0.4);
+  } catch (e) {}
 }
 
 function notificacoesDoAluno() {
@@ -2271,7 +2312,7 @@ function carregarAlunosSecretaria() {
   let alunos = escolaData.alunos;
   if (busca) alunos = alunos.filter(a => a.nome.toLowerCase().includes(busca));
   const tbody = document.getElementById('tabelaAlunosSecretaria');
-  if (alunos.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#718096;">Nenhum aluno.</td></tr>'; return; }
+  if (alunos.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhum aluno.</td></tr>'; return; }
   tbody.innerHTML = alunos.map(aluno => {
     const mat = db.matriculas.filter(m => nomesIguais(m.aluno, aluno.nome) && m.status === 'ATIVO');
     const cursos = mat.map(m => {
@@ -2290,7 +2331,6 @@ function carregarAlunosSecretaria() {
       <td style="font-size:0.85em;">${cursos}</td>
       <td>${valorTxt}<br>${statusPg}</td>
       <td><span class="status-badge ${aluno.status === 'ATIVO' ? 'concluido' : 'inativo'}">${aluno.status}</span></td>
-      <td><button onclick="abrirModalCadastroAluno()" class="btn btn-small btn-info" style="padding:2px 8px;" title="Ver detalhes">👁️</button></td>
     </tr>`;
   }).join('');
 }
@@ -2301,10 +2341,14 @@ function abrirModalCadastroAluno() {
   document.getElementById('formCadastroAluno').reset();
   document.getElementById('cadAlunoMensalidade').value = 0;
   document.getElementById('cadAlunoVencimento').value = 10;
+  // Sugere login automaticamente pelo nome? Deixa vazio para o secretário definir
+  document.getElementById('cadAlunoLogin').value = '';
+  document.getElementById('cadAlunoSenha').value = '';
   document.getElementById('cursosChecklist').innerHTML = CURSOS.map(c => `<label style="display:block; padding:4px 0;"><input type="checkbox" value="${c.id}" class="curso-checkbox"> ${c.nome}</label>`).join('');
   document.getElementById('modalCadastroAluno').classList.add('active');
 }
 
+// ✅ NOVO: form de cadastro cria aluno + matrícula + credenciais
 document.getElementById('formCadastroAluno').addEventListener('submit', async function(e) {
   e.preventDefault();
   const nome = document.getElementById('cadAlunoNome').value.trim().toUpperCase();
@@ -2313,33 +2357,62 @@ document.getElementById('formCadastroAluno').addEventListener('submit', async fu
   const contato = document.getElementById('cadAlunoContato').value.trim();
   const mensalidade = parseFloat(document.getElementById('cadAlunoMensalidade').value) || 0;
   const vencimento = parseInt(document.getElementById('cadAlunoVencimento').value) || 10;
+  const login = document.getElementById('cadAlunoLogin').value.trim().toLowerCase();
+  const senha = document.getElementById('cadAlunoSenha').value;
   const cursosSelecionados = Array.from(document.querySelectorAll('.curso-checkbox:checked')).map(cb => cb.value);
   if (!nome) { alert('Nome obrigatório.'); return; }
+  if (!login || !senha) { alert('Usuário e senha são obrigatórios para login do aluno.'); return; }
+  if (senha.length < 4) { alert('Senha precisa ter ao menos 4 caracteres.'); return; }
+  if (cursosSelecionados.length === 0) { alert('Selecione pelo menos 1 curso.'); return; }
+
   try {
     await executarComProgresso({
-      titulo: 'Cadastrando aluno...', subtitulo: `${nome} (${cursosSelecionados.length} matrícula(s))`,
-      etapas: [{pct:10,label:'Validando...'},{pct:30,label:'Salvando aluno...'},{pct:55,label:'Matriculando...'},{pct:80,label:'Atualizando...'},{pct:95,label:'Finalizando...'}],
+      titulo: 'Matriculando aluno...',
+      subtitulo: `${nome} (${cursosSelecionados.length} curso(s))`,
+      etapas: [
+        {pct:10,label:'Validando...'},
+        {pct:25,label:'Salvando aluno...'},
+        {pct:45,label:'Criando login...'},
+        {pct:65,label:'Gravando matrículas...'},
+        {pct:85,label:'Registrando pagamento...'},
+        {pct:95,label:'Finalizando...'}
+      ],
       executar: async () => {
-        const r = await enviarParaGAS('salvarAluno', { nome, dataNascimento, responsavel, contato, status: 'ATIVO', mensalidade, vencimento });
-        if (!r.success) throw new Error(r.error || 'Falha.');
+        // 1) salva aluno
+        const rAluno = await enviarParaGAS('salvarAluno', { nome, dataNascimento, responsavel, contato, status: 'ATIVO', mensalidade, vencimento });
+        if (!rAluno.success) throw new Error('Falha ao salvar aluno: ' + (rAluno.error || ''));
         escolaData.alunos.push({ nome, dataNascimento: formatarDataParaExibicao(dataNascimento), responsavel, contato, status: 'ATIVO', mensalidade, vencimento });
+
+        // 2) cria usuário do aluno (também cria aba individual)
+        const rUser = await enviarParaGAS('criarUsuarioAluno', { nome, usuario: login, senha });
+        if (!rUser.success) throw new Error('Falha ao criar login do aluno: ' + (rUser.error || ''));
+
+        // 3) matrículas
         for (const cursoId of cursosSelecionados) {
           const prof = getProfessorByCurso(cursoId);
           const mp = { aluno: nome, curso: cursoId, professor: prof ? prof.nome : '', dataMatricula: getDataAtualFormatada(), anoLetivo: String(new Date().getFullYear()), status: 'ATIVO', mensalidade };
           await enviarParaGAS('salvarMatricula', mp);
           db.matriculas.push(mp);
         }
+
+        // 4) pagamento inicial
         if (mensalidade > 0) {
           const ref = getAnoMesAtual();
           await enviarParaGAS('salvarPagamento', { aluno: nome, valor: mensalidade, vencimento, status: 'PENDENTE', referencia: ref });
           db.pagamentosMensais.push({ aluno: nome, valor: mensalidade, vencimento, status: 'PENDENTE', dataPagamento: '', referencia: ref });
         }
-        return { success: true };
+
+        return { success: true, usuario: login, senha };
       },
-      sucesso: `✅ ${nome} cadastrado!`
+      sucesso: `✅ ${nome} matriculado! Login: ${login}`
     });
-    fecharModal('modalCadastroAluno'); carregarAlunosSecretaria(); atualizarDashboardSecretaria();
-    setTimeout(() => carregarDadosPlanilha(), 1000);
+
+    // Feedback com credenciais
+    alert(`✅ Aluno matriculado com sucesso!\n\n📋 Nome: ${nome}\n🔐 Login: ${login}\n🔑 Senha: ${senha}\n\nO aluno deverá usar essas credenciais no perfil "🎓 Aluno".`);
+
+    fecharModal('modalCadastroAluno');
+    carregarAlunosSecretaria(); carregarUsuariosSecretaria(); atualizarDashboardSecretaria();
+    setTimeout(() => carregarDadosPlanilha(), 1200);
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 });
 
@@ -2419,7 +2492,7 @@ function abrirModalNovaMatricula() {
         aviso.textContent = `ℹ️ Valor já cadastrado para ${al.nome}: R$ ${al.mensalidade.toFixed(2)} (vencimento dia ${al.vencimento}). Pode ser ajustado.`;
       } else {
         campoMensalidade.value = 0;
-        aviso.textContent = `⚠️ ${al.nome} ainda não tem mensalidade cadastrada. Defina o valor abaixo — será gravado no cadastro do aluno.`;
+        aviso.textContent = `⚠️ ${al.nome} ainda não tem mensalidade cadastrada. Defina o valor abaixo.`;
       }
       campoVencimento.value = al.vencimento || 10;
     }
@@ -2438,10 +2511,7 @@ document.getElementById('formNovaMatricula').addEventListener('submit', async fu
   const prof = getProfessorByCurso(curso);
   const profNome = prof ? prof.nome : '';
   const alunoObj = encontrarAlunoPorNome(aluno);
-  const precisaAtualizarAluno = alunoObj && (
-    !alunoObj.mensalidade || alunoObj.mensalidade !== mensalidade ||
-    !alunoObj.vencimento || alunoObj.vencimento !== vencimento
-  );
+  const precisaAtualizarAluno = alunoObj && (!alunoObj.mensalidade || alunoObj.mensalidade !== mensalidade || !alunoObj.vencimento || alunoObj.vencimento !== vencimento);
   const payloadMat = { aluno, curso, professor: profNome, dataMatricula: getDataAtualFormatada(), anoLetivo: ano, status: 'ATIVO', mensalidade };
   const refMes = getAnoMesAtual();
   try {
@@ -2459,8 +2529,7 @@ document.getElementById('formNovaMatricula').addEventListener('submit', async fu
         db.matriculas.push(payloadMat);
         if (mensalidade > 0) {
           const rPg = await enviarParaGAS('salvarPagamento', { aluno, valor: mensalidade, vencimento, status: 'PENDENTE', referencia: refMes });
-          if (!rPg.success) { console.warn('Pagamento não registrado:', rPg.error); }
-          else {
+          if (rPg.success) {
             db.pagamentosMensais = db.pagamentosMensais.filter(p => !(nomesIguais(p.aluno, aluno) && p.referencia === refMes));
             db.pagamentosMensais.push({ aluno, valor: mensalidade, vencimento, status: 'PENDENTE', dataPagamento: '', referencia: refMes });
           }
@@ -2568,9 +2637,6 @@ function carregarFrequenciaSecretaria() {
   cont.innerHTML = html;
 }
 
-// ============================================
-// MENSALIDADES — SECRETARIA
-// ============================================
 function renderMensalidadesSecretaria() {
   const tbody = document.getElementById('tabelaMensalidadesSecretaria');
   if (!tbody) return;
@@ -2579,7 +2645,6 @@ function renderMensalidadesSecretaria() {
   const ref = normalizarReferencia(refInput ? refInput.value : getAnoMesAtual());
   const busca = (document.getElementById('buscaMensalidadeSecretaria')?.value || '').toLowerCase();
   const filtro = document.getElementById('filtroStatusMensalidade')?.value || '';
-
   const stats = document.getElementById('statsMensalidadesSecretaria');
   if (stats) {
     let pagos = 0, pendentes = 0, atrasados = 0, totalRecebido = 0, totalPend = 0, totalAtras = 0;
@@ -2599,10 +2664,8 @@ function renderMensalidadesSecretaria() {
       <div class="stat-card" style="border-left:4px solid #f56565;"><div class="stat-icon">⚠️</div><div class="stat-number">${atrasados}</div><div class="stat-label">Atrasados (R$ ${totalAtras.toFixed(0)})</div></div>
     `;
   }
-
   let alunos = escolaData.alunos.filter(a => a.status === 'ATIVO' && a.mensalidade > 0);
   if (busca) alunos = alunos.filter(a => a.nome.toLowerCase().includes(busca));
-
   const linhas = [];
   alunos.forEach(a => {
     const pg = getPagamentoMes(a.nome, ref);
@@ -2610,7 +2673,6 @@ function renderMensalidadesSecretaria() {
     if (filtro && pg.status !== filtro) return;
     linhas.push({ aluno: a, pg: pg });
   });
-
   if (linhas.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhum registro encontrado.</td></tr>'; return; }
   tbody.innerHTML = linhas.map(({ aluno, pg }) => `
     <tr>
@@ -2652,9 +2714,6 @@ function gerarRelatorioMensalidadesSecretaria() {
   </div>`;
 }
 
-// ============================================
-// USUÁRIOS (SECRETARIA)
-// ============================================
 async function carregarUsuariosSecretaria() {
   const tbody = document.getElementById('tabelaUsuariosSecretaria');
   if (!tbody) return;
@@ -2706,35 +2765,6 @@ document.getElementById('formCriarUsuario').addEventListener('submit', async fun
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 });
 
-function abrirModalCriarUsuarioAluno() {
-  const sel = document.getElementById('userAlunoNome');
-  sel.innerHTML = '<option value="">-- Selecione o aluno --</option>' + escolaData.alunos.map(a => `<option value="${a.nome}">${a.nome}</option>`).join('');
-  document.getElementById('formCriarUsuarioAluno').reset();
-  document.getElementById('modalCriarUsuarioAluno').classList.add('active');
-}
-
-document.getElementById('formCriarUsuarioAluno').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const nome = document.getElementById('userAlunoNome').value;
-  const usuario = document.getElementById('userAlunoLogin').value.trim().toLowerCase();
-  const senha = document.getElementById('userAlunoSenha').value;
-  if (!nome || !usuario || !senha) { alert('Preencha tudo.'); return; }
-  if (senha.length < 4) { alert('Senha min 4 caracteres.'); return; }
-  try {
-    await executarComProgresso({
-      titulo: 'Criando usuário do aluno...', subtitulo: `${nome} — criando aba individual`,
-      etapas: [{pct:15,label:'Validando...'},{pct:40,label:'Criando usuário...'},{pct:70,label:'Criando aba do aluno...'},{pct:90,label:'Sincronizando...'},{pct:95,label:'Final...'}],
-      executar: async () => {
-        const r = await enviarParaGAS('criarUsuarioAluno', { nome, usuario, senha });
-        if (!r.success) throw new Error(r.error || 'Falha.');
-        return { success: true, aba: r.abaAluno };
-      },
-      sucesso: `✅ Usuário do aluno criado! Aba: ${usuario}`
-    });
-    fecharModal('modalCriarUsuarioAluno'); carregarUsuariosSecretaria();
-  } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
-});
-
 async function resetarSenha(usuario) {
   const nova = prompt(`Nova senha para "${usuario}" (mínimo 4 caracteres):`);
   if (!nova) return;
@@ -2753,9 +2783,6 @@ async function resetarSenha(usuario) {
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 }
 
-// ============================================
-// RELATÓRIOS SECRETARIA
-// ============================================
 function gerarRelatorioAlunosSecretaria() {
   const out = document.getElementById('relatorioSecretariaOutput');
   out.innerHTML = `<div class="relatorio-content">
@@ -3000,9 +3027,6 @@ async function enviarRelatorioCoordenacao() {
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 }
 
-// ============================================
-// COMUNICAÇÃO DO PROFESSOR
-// ============================================
 function carregarDestinatariosComunicacao() {
   if (!cursoSelecionado) return;
   const alunos = getAlunosByCurso(cursoSelecionado);
@@ -3483,9 +3507,6 @@ function calcularPagamentos() {
   if (totalA === 0) mostrarToast('⚠️ Nenhuma aula encontrada no mês.', 'info');
 }
 
-// ============================================
-// ✅ v3.2: RENDER DE MENSALIDADES NO FINANCEIRO — ROBUSTO
-// ============================================
 function renderMensalidadesFinanceiro() {
   const stats = document.getElementById('statsMensalidadesFinanceiro');
   const tbody = document.getElementById('tabelaMensalidadesFinanceiro');
@@ -3495,24 +3516,19 @@ function renderMensalidadesFinanceiro() {
   const ref = normalizarReferencia(refInput ? refInput.value : getAnoMesAtual());
   const busca = (document.getElementById('buscaMensalidadeFinanceiro')?.value || '').toLowerCase();
   const filtro = (document.getElementById('filtroStatusMensalidadeFinanceiro')?.value || '').toUpperCase();
-
   let pagos = 0, pendentes = 0, atrasados = 0, tPago = 0, tPend = 0, tAtras = 0;
   const linhas = [];
-
   escolaData.alunos.forEach(a => {
     if (a.status !== 'ATIVO') return;
     const pg = getPagamentoMes(a.nome, ref);
     if (!pg) return;
-    // Contabiliza stats independentemente do filtro
     if (pg.status === 'PAGO') { pagos++; tPago += pg.valor; }
     else if (pg.status === 'ATRASADO') { atrasados++; tAtras += pg.valor; }
     else if (pg.status === 'PENDENTE') { pendentes++; tPend += pg.valor; }
-    // Aplica filtros de busca e status
     if (busca && !a.nome.toLowerCase().includes(busca)) return;
     if (filtro && pg.status !== filtro) return;
     linhas.push({ aluno: a, pg });
   });
-
   if (stats) {
     const [ano, mes] = ref.split('-');
     stats.innerHTML = `
@@ -3522,12 +3538,7 @@ function renderMensalidadesFinanceiro() {
       <div class="stat-card" style="border-left:4px solid #f56565;"><div class="stat-icon">⚠️</div><div class="stat-number">R$ ${tAtras.toFixed(0)}</div><div class="stat-label">Atrasado (${atrasados})</div></div>
     `;
   }
-
-  if (linhas.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhum registro encontrado para o mês.</td></tr>';
-    return;
-  }
-
+  if (linhas.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;">Nenhum registro encontrado para o mês.</td></tr>'; return; }
   tbody.innerHTML = linhas.map(({ aluno, pg }) => `
     <tr>
       <td><strong>${aluno.nome}</strong></td>
@@ -3601,9 +3612,6 @@ async function registrarPagamentoManual() {
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 }
 
-// ============================================
-// ✅ v3.2: DEBUG DO PAGAMENTOS (Financeiro)
-// ============================================
 function financeiroDebugPagamentos() {
   const out = document.getElementById('financeiroDebugOutput');
   if (!out) return;
@@ -3612,27 +3620,21 @@ function financeiroDebugPagamentos() {
   let html = '';
   html += `=== RESUMO ===\n`;
   html += `Linhas brutas na aba PAGAMENTOS: ${brutos.length}\n`;
-  html += `Registros normalizados (únicos por aluno+ref): ${normalizados.length}\n\n`;
+  html += `Registros normalizados: ${normalizados.length}\n\n`;
   html += `=== PRIMEIRAS 5 LINHAS BRUTAS ===\n`;
   brutos.slice(0, 5).forEach((p, i) => {
     html += `--- Linha ${i + 2} ---\n`;
-    html += `Aluno: ${JSON.stringify(getColuna(p, 'Aluno', 'Nome', 'Aluno'))}\n`;
-    html += `Valor: ${JSON.stringify(getColuna(p, 'Valor', 'Mensalidade'))}\n`;
+    html += `Aluno: ${JSON.stringify(getColuna(p, 'Aluno'))}\n`;
+    html += `Valor: ${JSON.stringify(getColuna(p, 'Valor'))}\n`;
     html += `Vencimento: ${JSON.stringify(getColuna(p, 'Vencimento'))}\n`;
     html += `Status: ${JSON.stringify(getColuna(p, 'Status'))}\n`;
-    html += `Data_Pagamento: ${JSON.stringify(getColuna(p, 'Data_Pagamento', 'DataPagamento'))}\n`;
+    html += `Data_Pagamento: ${JSON.stringify(getColuna(p, 'Data_Pagamento'))}\n`;
     html += `Referencia: ${JSON.stringify(getColuna(p, 'Referencia'))}\n\n`;
   });
   html += `=== PRIMEIROS 5 NORMALIZADOS ===\n`;
   normalizados.slice(0, 5).forEach(p => {
     html += `Aluno: ${p.aluno} | Valor: ${p.valor} | Venc: ${p.vencimento} | Status: ${p.status} | DataPg: ${p.dataPagamento} | Ref: ${p.referencia}\n`;
   });
-  if (normalizados.length === 0) {
-    html += `\n⚠️ NENHUM registro normalizado. Possíveis causas:\n`;
-    html += `1. Aba PAGAMENTOS não existe ou está vazia\n`;
-    html += `2. Cabeçalhos na linha 1 estão diferentes de: Aluno | Valor | Vencimento | Status | Data_Pagamento | Referencia\n`;
-    html += `3. Coluna "Aluno" está vazia em todas as linhas\n`;
-  }
   out.textContent = html;
 }
 
@@ -3667,7 +3669,6 @@ async function carregarDadosAluno() {
   try {
     const res = await enviarParaGAS('dadosAlunoCompleto', { nome: nomeReal });
     if (!res.success) {
-      // Fallback local
       const cursosIds = getCursosDoAluno(nomeReal);
       const matriculas = db.matriculas.filter(m => nomesIguais(m.aluno, nomeReal));
       const avals = db.avaliacoes.filter(a => nomesIguais(a.aluno, nomeReal));
@@ -3707,9 +3708,11 @@ async function carregarDadosAluno() {
     anosDisponiveis.add(new Date().getFullYear());
     dadosAluno.pagamentos.anos = Array.from(anosDisponiveis).sort((a,b) => b - a);
     dadosAluno.pagamentos.porMes = {};
-    dadosAluno.pagamentos.anos.forEach(ano => {
-      dadosAluno.pagamentos.porMes[ano] = getPagamentosAno(nomeReal, ano);
-    });
+    dadosAluno.pagamentos.anos.forEach(ano => { dadosAluno.pagamentos.porMes[ano] = getPagamentosAno(nomeReal, ano); });
+    // Marca notificações existentes como já mostradas
+    db.notificacoes.filter(n => nomesIguais(n.aluno, nomeReal)).forEach(n => popupIdsMostrados.add(texto(n.id)));
+    db.mensagens.filter(m => nomesIguais(m.aluno, nomeReal)).forEach(m => popupIdsMostrados.add('msg_' + texto(m.id)));
+    db.arquivos.filter(a => nomesIguais(a.aluno, nomeReal)).forEach(a => popupIdsMostrados.add('arq_' + texto(a.id)));
     renderAluno();
     renderNotificacoesAluno();
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
@@ -3731,7 +3734,6 @@ function renderAluno() {
   avaliacoes.forEach(a => { if (a.nota > 0) { somaM += a.nota; cntM++; } });
   const mediaG = cntM > 0 ? somaM / cntM : 0;
   const cursosAtivos = matriculas.filter(m => m.status === 'ATIVO').length;
-
   const refAtual = getAnoMesAtual();
   const pgAtual = pagamentos && pagamentos.porMes && pagamentos.porMes[parseInt(refAtual.split('-')[0])]
     ? pagamentos.porMes[parseInt(refAtual.split('-')[0])].find(p => p.referencia === refAtual)
@@ -4053,6 +4055,8 @@ async function adminRodarDiagnostico() {
   else resultados.push({ tipo:'warn', msg:'⚠️ Nenhum pagamento mensal carregado (verifique aba PAGAMENTOS).' });
   if (db.logs.length > 0) resultados.push({ tipo:'ok', msg:`✅ ${db.logs.length} logs carregados.` });
   else resultados.push({ tipo:'warn', msg:'⚠️ Nenhum log carregado (verifique aba LOGS).' });
+  if (db.usuarios.length > 0) resultados.push({ tipo:'ok', msg:`✅ ${db.usuarios.length} usuários carregados.` });
+  else resultados.push({ tipo:'warn', msg:'⚠️ Nenhum usuário carregado (verifique aba USUARIOS).' });
   cont.innerHTML = resultados.map(r => `<div class="admin-${r.tipo}">${r.msg}</div>`).join('');
 }
 
@@ -4079,10 +4083,6 @@ function adminGerarBugsAutomaticos() {
   db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => {
     const prof = getProfessorByCurso(m.curso);
     if (!prof) bugs.push({ tipo:'warn', msg:`⚠️ Curso "${labelCurso(m.curso)}" com matrícula ativa mas sem professor atribuído.` });
-  });
-  CURSOS.forEach(c => {
-    const al = getAlunosByCurso(c.id);
-    if (al.length === 0 && getProfessorByCurso(c.id)) bugs.push({ tipo:'info', msg:`ℹ️ Curso "${c.nome}" com professor mas sem alunos.` });
   });
   escolaData.alunos.filter(a => a.status === 'ATIVO').forEach(a => {
     const mats = db.matriculas.filter(m => nomesIguais(m.aluno, a.nome) && m.status === 'ATIVO');
@@ -4117,7 +4117,7 @@ document.addEventListener('click', e => { if (e.target.classList.contains('modal
 async function logout(manual = true, motivo = null) {
   const tk = currentUser.token;
   inactivityTimer.parar();
-  if (window.__notifInterval) { clearInterval(window.__notifInterval); window.__notifInterval = null; }
+  if (notifPollInterval) { clearInterval(notifPollInterval); notifPollInterval = null; }
   limparSessao();
   if (tk) { try { fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ acao: 'logout', payload: { token: tk } }) }).catch(() => {}); } catch (e) {} }
   document.getElementById('dashboard').classList.remove('active');
@@ -4125,8 +4125,11 @@ async function logout(manual = true, motivo = null) {
   document.getElementById('loginForm').reset();
   document.getElementById('notifBtn').style.display = 'none';
   const p = document.getElementById('notifPanel'); if (p) p.classList.remove('active');
+  // Remove popups pendentes
+  document.querySelectorAll('.popup-notif').forEach(el => el.remove());
   currentUser = { perfil:'', nome:'', usuario:'', professorData:null, cursos:[], token:null, expiraEm:0, alunoVinculado:'' };
   cursoSelecionado = null; dadosAluno = null; arquivoUploadSelecionado = null;
+  popupIdsMostrados.clear();
   loginProgress.init(); loginProgress.fill.style.width = '0%'; loginProgress.pct.textContent = '0%';
   loginProgress.el.classList.remove('active','done','error');
   document.getElementById('btnEntrar').disabled = false;
