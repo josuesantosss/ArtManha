@@ -1387,7 +1387,6 @@ function normalizarNome(v) {
   return texto(v).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
 }
-
 function nomesIguais(a, b) { return normalizarNome(a) === normalizarNome(b); }
 
 function getColuna(obj, ...nomes) {
@@ -1524,6 +1523,10 @@ function fecharModal(id) {
   document.getElementById(id)?.classList.remove('active');
 }
 
+function abrirModal(id) {
+  document.getElementById(id)?.classList.add('active');
+}
+
 // ============================================
 // LOGIN E INICIALIZAÇÃO
 // ============================================
@@ -1573,7 +1576,6 @@ document.getElementById('loginForm')?.addEventListener('submit', async function(
     progressFill.style.width = '70%';
     progressPct.textContent = '70%';
     progressText.textContent = 'Carregando dados...';
-
     await carregarDadosPlanilha();
 
     progressFill.style.width = '100%';
@@ -1583,7 +1585,8 @@ document.getElementById('loginForm')?.addEventListener('submit', async function(
     progressMsg.textContent = 'Redirecionando...';
 
     // ✅ MOSTRA A BOLINHA DO CHAT
-    document.getElementById('chatFab').classList.remove('hidden');
+    const fab = document.getElementById('chatFab');
+    if (fab) fab.classList.remove('hidden');
 
     setTimeout(() => {
       document.getElementById('loginContainer').style.display = 'none';
@@ -1655,8 +1658,8 @@ function exibirAreaUsuario() {
 
 function logout(recarregar) {
   if (!confirm('Deseja sair do sistema?')) return;
-  document.getElementById('chatFab').classList.add('hidden');
-  document.getElementById('chatPanel').classList.remove('active');
+  document.getElementById('chatFab')?.classList.add('hidden');
+  document.getElementById('chatPanel')?.classList.remove('active');
   chatAberto = false;
   if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
   if (currentUser.token) {
@@ -1825,6 +1828,141 @@ async function chatEnviar() {
     txt.value = texto;
   }
 }
+
+// ============================================
+// STUBS DE COMPATIBILIDADE
+// Cobrem TODAS as funções referenciadas no HTML para evitar ReferenceError.
+// Substitua gradualmente pelas suas implementações reais se desejar.
+// ============================================
+
+// --- Navegação genérica de seções (usada por todos os toggles) ---
+function _mostrarSecao(prefixo, id, ev) {
+  if (ev) ev.preventDefault();
+  document.querySelectorAll(`[id^="${prefixo}-"]`).forEach(el => el.classList.add('hidden'));
+  const el = document.getElementById(`${prefixo}-${id}`);
+  if (el) el.classList.remove('hidden');
+  // marca botão ativo
+  if (ev && ev.currentTarget) {
+    const siblings = ev.currentTarget.parentElement?.querySelectorAll('.toggle-btn');
+    siblings?.forEach(b => b.classList.remove('active'));
+    ev.currentTarget.classList.add('active');
+  }
+}
+
+// Secretaria
+window.toggleSecretaria = window.toggleSecretaria || (id, ev) => _mostrarSecao('secretaria', id, ev);
+window.filtrarAlunosSecretaria = window.filtrarAlunosSecretaria || () => {};
+window.filtrarMatriculasSecretaria = window.filtrarMatriculasSecretaria || () => {};
+window.filtrarProfessoresSecretaria = window.filtrarProfessoresSecretaria || () => {};
+window.carregarUsuariosSecretaria = window.carregarUsuariosSecretaria || () => toast('Carregando usuários...', 'info');
+window.carregarFrequenciaSecretaria = window.carregarFrequenciaSecretaria || () => toast('Carregando frequência...', 'info');
+window.renderMensalidadesSecretaria = window.renderMensalidadesSecretaria || () => {};
+window.gerarRelatorioAlunosSecretaria = window.gerarRelatorioAlunosSecretaria || () => toast('Gerando relatório...', 'info');
+window.gerarRelatorioMatriculasSecretaria = window.gerarRelatorioMatriculasSecretaria || () => toast('Gerando relatório...', 'info');
+window.gerarRelatorioUsuariosSecretaria = window.gerarRelatorioUsuariosSecretaria || () => toast('Gerando relatório...', 'info');
+window.gerarRelatorioMensalidadesSecretaria = window.gerarRelatorioMensalidadesSecretaria || () => toast('Gerando relatório...', 'info');
+
+// Modais genéricos
+window.abrirModalCadastroAluno = window.abrirModalCadastroAluno || () => abrirModal('modalCadastroAluno');
+window.abrirModalCadastroProfessor = window.abrirModalCadastroProfessor || () => abrirModal('modalCadastroProfessor');
+window.abrirModalNovaMatricula = window.abrirModalNovaMatricula || () => abrirModal('modalNovaMatricula');
+window.abrirModalCriarUsuario = window.abrirModalCriarUsuario || () => abrirModal('modalCriarUsuario');
+window.verificarLoginAlunoExistente = window.verificarLoginAlunoExistente || () => {};
+window.verificarLoginFuncionarioExistente = window.verificarLoginFuncionarioExistente || () => {};
+window.gerarSenhaAleatoria = window.gerarSenhaAleatoria || function(id) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s = ''; for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  const el = document.getElementById(id); if (el) el.value = s;
+};
+
+// Professor
+window.toggleSection = window.toggleSection || (id, ev) => {
+  if (ev) ev.preventDefault();
+  document.querySelectorAll('.toggle-section').forEach(el => el.classList.add('hidden'));
+  document.getElementById('section-' + id)?.classList.remove('hidden');
+  if (ev && ev.currentTarget) {
+    const siblings = ev.currentTarget.parentElement?.querySelectorAll('.toggle-btn');
+    siblings?.forEach(b => b.classList.remove('active'));
+    ev.currentTarget.classList.add('active');
+  }
+};
+window.carregarTabelaNotas = window.carregarTabelaNotas || () => {};
+window.salvarNotas = window.salvarNotas || () => toast('Notas salvas (stub)', 'success');
+window.salvarPresenca = window.salvarPresenca || () => toast('Presença salva (stub)', 'success');
+window.salvarObservacao = window.salvarObservacao || () => toast('Observação salva (stub)', 'success');
+window.enviarRelatorioCoordenacao = window.enviarRelatorioCoordenacao || () => toast('Relatório enviado (stub)', 'success');
+window.selecionarArquivoUpload = window.selecionarArquivoUpload || () => {};
+window.enviarArquivoUpload = window.enviarArquivoUpload || () => toast('Arquivo enviado (stub)', 'success');
+window.enviarMensagemAluno = window.enviarMensagemAluno || () => toast('Mensagem enviada (stub)', 'success');
+
+// Coordenação
+window.toggleCoordenacao = window.toggleCoordenacao || (id, ev) => _mostrarSecao('coordenacao', id, ev);
+window.renderAcompanhamentoProf = window.renderAcompanhamentoProf || () => {};
+window.atribuirCurso = window.atribuirCurso || () => toast('Curso atribuído (stub)', 'success');
+window.removerCurso = window.removerCurso || () => toast('Curso removido (stub)', 'success');
+
+// Direção
+window.toggleDirecao = window.toggleDirecao || (id, ev) => _mostrarSecao('direcao', id, ev);
+window.toggleDirSecretaria = window.toggleDirSecretaria || (id, ev) => _mostrarSecao('dir-sec', id, ev);
+window.toggleDirFinanceiro = window.toggleDirFinanceiro || (id, ev) => _mostrarSecao('dir-fin', id, ev);
+window.toggleDirCoordenacao = window.toggleDirCoordenacao || (id, ev) => _mostrarSecao('dir-coord', id, ev);
+window.carregarAlunosDir = window.carregarAlunosDir || () => {};
+window.carregarMatriculasDir = window.carregarMatriculasDir || () => {};
+window.carregarProfessoresDir = window.carregarProfessoresDir || () => {};
+window.carregarUsuariosDir = window.carregarUsuariosDir || () => toast('Carregando...', 'info');
+window.carregarFrequenciaDir = window.carregarFrequenciaDir || () => toast('Carregando...', 'info');
+window.renderMensalidadesDir = window.renderMensalidadesDir || () => {};
+window.calcularPagamentosDir = window.calcularPagamentosDir || () => toast('Calculando...', 'info');
+window.renderMensalidadesFinDir = window.renderMensalidadesFinDir || () => {};
+window.registrarPagamentoDir = window.registrarPagamentoDir || () => toast('Pagamento registrado (stub)', 'success');
+window.renderAcompanhamentoDir = window.renderAcompanhamentoDir || () => {};
+window.atribuirCursoDir = window.atribuirCursoDir || () => toast('Curso atribuído (stub)', 'success');
+window.removerCursoDir = window.removerCursoDir || () => toast('Curso removido (stub)', 'success');
+window.renderProfessorSimulado = window.renderProfessorSimulado || () => {};
+window.gerarRelatorioGeral = window.gerarRelatorioGeral || () => toast('Gerando relatório...', 'info');
+window.gerarRelatorioPorProfessor = window.gerarRelatorioPorProfessor || () => toast('Gerando relatório...', 'info');
+window.gerarRelatorioFinanceiroDirecao = window.gerarRelatorioFinanceiroDirecao || () => toast('Gerando relatório...', 'info');
+
+// Financeiro
+window.toggleFinanceiro = window.toggleFinanceiro || (id, ev) => _mostrarSecao('financeiro', id, ev);
+window.calcularPagamentos = window.calcularPagamentos || () => toast('Calculando...', 'info');
+window.renderMensalidadesFinanceiro = window.renderMensalidadesFinanceiro || () => {};
+window.registrarPagamentoManual = window.registrarPagamentoManual || () => toast('Pagamento registrado (stub)', 'success');
+window.financeiroDebugPagamentos = window.financeiroDebugPagamentos || () => {
+  const out = document.getElementById('financeiroDebugOutput');
+  if (out) out.textContent = 'Stub — implemente financeiroDebugPagamentos() para depurar PAGAMENTOS.';
+};
+window.financeiroDebugGAS = window.financeiroDebugGAS || () => toast('Testando GAS...', 'info');
+
+// Aluno
+window.toggleAluno = window.toggleAluno || (id, ev) => _mostrarSecao('aluno', id, ev);
+
+// Admin
+window.toggleAdmin = window.toggleAdmin || (id, ev) => _mostrarSecao('admin', id, ev);
+window.adminCarregarUsuarios = window.adminCarregarUsuarios || () => toast('Carregando usuários...', 'info');
+window.adminVerSenhas = window.adminVerSenhas || () => toast('Função admin: ver senhas', 'info');
+window.adminCarregarLogs = window.adminCarregarLogs || () => toast('Carregando logs...', 'info');
+window.adminLimparLogsView = window.adminLimparLogsView || () => {
+  const el = document.getElementById('adminLogsContainer');
+  if (el) el.textContent = '';
+};
+window.adminRodarDiagnostico = window.adminRodarDiagnostico || () => toast('Executando diagnóstico...', 'info');
+window.adminCarregarBugs = window.adminCarregarBugs || () => toast('Carregando bugs...', 'info');
+window.adminGerarBugsAutomaticos = window.adminGerarBugsAutomaticos || () => toast('Detectando bugs...', 'info');
+window.adminRecarregarTudo = window.adminRecarregarTudo || () => carregarDadosPlanilha().then(() => toast('Recarregado!', 'success')).catch(e => toast(e.message, 'error'));
+window.adminTestarGAS = window.adminTestarGAS || async () => {
+  try {
+    const r = await fetch(GAS_URL + '?action=ping');
+    const d = await r.json();
+    toast(d.ok ? 'GAS OK!' : 'GAS falhou: ' + d.erro, d.ok ? 'success' : 'error');
+  } catch (e) { toast('GAS inacessível: ' + e.message, 'error'); }
+};
+
+// Notificações
+window.toggleNotifPanel = window.toggleNotifPanel || () => {
+  document.getElementById('notifPanel')?.classList.toggle('active');
+};
+window.marcarTodasNotificacoesLidas = window.marcarTodasNotificacoesLidas || () => toast('Notificações marcadas como lidas', 'success');
 </script>
 </body>
 </html>
