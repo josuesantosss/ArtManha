@@ -245,6 +245,7 @@ tbody tr:hover { background: #f7fafc; }
 .login-existente-aviso.active { display: block; }
 .professor-checkboxes { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 15px; background: #f7fafc; }
 .professor-checkboxes label { display: block; padding: 4px 0; cursor: pointer; }
+
 </style>
 </head>
 <body>
@@ -268,6 +269,25 @@ tbody tr:hover { background: #f7fafc; }
 </div>
 
 <div id="popupContainer"></div>
+
+  <button id="chatFab" class="chat-fab" onclick="chatAlternar()" title="Chat">💬<span id="chatBadge" class="chat-badge hidden">0</span></button>
+<div id="chatPanel" class="chat-panel">
+  <div class="chat-top"><span>💬 Chat da Escola</span><button onclick="chatAlternar()">×</button></div>
+  <div class="chat-main">
+    <div class="chat-side">
+      <input type="text" id="chatBusca" placeholder="🔍 Buscar pessoa..." oninput="chatRenderLista()">
+      <div class="chat-contatos" id="chatContatos"></div>
+    </div>
+    <div class="chat-conv">
+      <div class="chat-conv-header"><button class="chat-voltar" onclick="chatVoltar()">←</button><span id="chatConvTitulo">🌐 Chat Geral</span></div>
+      <div class="chat-msgs" id="chatMsgs"></div>
+      <div class="chat-form">
+        <textarea id="chatTexto" maxlength="1000" placeholder="Digite uma mensagem..." onkeydown="chatTecla(event)"></textarea>
+        <button class="btn btn-secondary" onclick="chatEnviar()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="container">
   <div class="header">
@@ -5226,6 +5246,176 @@ async function logout(manual = true, motivo = null) {
   saveProgress.init(); saveProgress.hide(0);
   if (motivo) mostrarToast(motivo, 'info');
   else if (manual) mostrarToast('👋 Você saiu.', 'info');
+}
+
+// ============================================
+// CHAT
+// ============================================
+const chat = { contatos: [], msgs: [], ids: new Set(), conv: 'GERAL', since: 0, timer: null, ocupado: false, primeiraCarga: true, aberto: false };
+
+function chatMeuId() { return (currentUser.usuario || '').toLowerCase(); }
+function chatChave(m) { return m.para === 'GERAL' ? 'GERAL' : (m.de === chatMeuId() ? m.para : m.de); }
+function chatSeenKey() { return 'escolaMusica.chatSeen.' + chatMeuId(); }
+function chatLerSeen() { try { return JSON.parse(localStorage.getItem(chatSeenKey()) || '{}'); } catch (e) { return {}; } }
+function chatMarcarVisto(chave) {
+  try {
+    const s = chatLerSeen();
+    const ult = chat.msgs.filter(m => chatChave(m) === chave).reduce((mx, m) => Math.max(mx, m.ts), 0);
+    s[chave] = Math.max(ult, s[chave] || 0);
+    localStorage.setItem(chatSeenKey(), JSON.stringify(s));
+  } catch (e) {}
+}
+function chatNaoLidas(chave) {
+  const visto = chatLerSeen()[chave] || 0;
+  return chat.msgs.filter(m => chatChave(m) === chave && m.de !== chatMeuId() && m.ts > visto).length;
+}
+
+function iniciarChat() {
+  if (!currentUser.token || !currentUser.usuario) return;
+  pararChat();
+  document.getElementById('chatFab').classList.add('ativo');
+  chat.primeiraCarga = true; chat.since = 0; chat.msgs = []; chat.ids = new Set(); chat.conv = 'GERAL';
+  chatCarregarContatos().then(() => chatPoll());
+  chat.timer = setInterval(() => { if (!document.hidden) chatPoll(); }, 7000);
+}
+
+function pararChat() {
+  if (chat.timer) { clearInterval(chat.timer); chat.timer = null; }
+  const fab = document.getElementById('chatFab'); if (fab) fab.classList.remove('ativo');
+  const p = document.getElementById('chatPanel'); if (p) p.classList.remove('active', 'em-conversa');
+  chat.aberto = false;
+}
+
+async function chatCarregarContatos() {
+  try {
+    const r = await enviarParaGAS('listarUsuarios', {});
+    if (r.success) {
+      const eu = chatMeuId();
+      const vistos = new Set();
+      chat.contatos = (r.usuarios || []).filter(u => {
+        const id = String(u.usuario || '').toLowerCase();
+        if (!id || id === eu || vistos.has(id) || String(u.status || 'ATIVO').toUpperCase() !== 'ATIVO') return false;
+        vistos.add(id); return true;
+      }).map(u => ({ id: String(u.usuario).toLowerCase(), nome: u.nome, perfil: String(u.perfil || '').toLowerCase() }));
+    }
+  } catch (e) {}
+  chatRenderLista();
+}
+
+async function chatPoll() {
+  if (chat.ocupado || !currentUser.token) return;
+  chat.ocupado = true;
+  try {
+    const r = await enviarParaGAS('chatListar', { since: chat.since });
+    if (r && r.success && Array.isArray(r.mensagens)) {
+      const novas = [];
+      r.mensagens.forEach(m => {
+        if (chat.ids.has(m.id)) return;
+        chat.ids.add(m.id);
+        const msg = { id: m.id, ts: Number(m.ts) || 0, de: String(m.de).toLowerCase(), nome: m.nome, perfil: m.perfil, para: String(m.para).toLowerCase() === 'geral' ? 'GERAL' : String(m.para).toLowerCase(), texto: m.texto };
+        chat.msgs.push(msg); novas.push(msg);
+        if (msg.ts > chat.since) chat.since = msg.ts;
+      });
+      chat.msgs.sort((a, b) => a.ts - b.ts);
+      if (!chat.primeiraCarga) {
+        novas.filter(m => m.de !== chatMeuId() && !(chat.aberto && chat.conv === chatChave(m))).forEach(m => {
+          mostrarPopupNotificacao({ tipo: 'mensagem', titulo: (m.para === 'GERAL' ? '💬 Geral — ' : '💬 ') + m.nome, descricao: (m.texto || '').substring(0, 100), data: getDataHoraAtual() });
+        });
+      }
+      chat.primeiraCarga = false;
+      if (chat.aberto && chat.conv) chatMarcarVisto(chat.conv);
+      chatRenderTudo();
+    }
+  } catch (e) {}
+  chat.ocupado = false;
+}
+
+function chatAlternar() {
+  const p = document.getElementById('chatPanel');
+  chat.aberto = !chat.aberto;
+  p.classList.toggle('active', chat.aberto);
+  if (chat.aberto) { chatCarregarContatos(); chatMarcarVisto(chat.conv); chatRenderTudo(); chatPoll(); }
+}
+
+function chatAbrirConversa(chave) {
+  chat.conv = chave;
+  document.getElementById('chatPanel').classList.add('em-conversa');
+  chatMarcarVisto(chave);
+  chatRenderTudo();
+  const t = document.getElementById('chatTexto'); if (t) t.focus();
+}
+function chatVoltar() { document.getElementById('chatPanel').classList.remove('em-conversa'); }
+
+function chatRenderTudo() { chatRenderLista(); chatRenderMensagens(); chatRenderFab(); }
+
+function chatRenderFab() {
+  const badge = document.getElementById('chatBadge'); if (!badge) return;
+  let total = chatNaoLidas('GERAL');
+  chat.contatos.forEach(c => { total += chatNaoLidas(c.id); });
+  if (total > 0) { badge.textContent = total > 99 ? '99+' : total; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+
+function chatRenderLista() {
+  const cont = document.getElementById('chatContatos'); if (!cont) return;
+  const busca = normalizarNome(document.getElementById('chatBusca').value);
+  const ultimo = c => chat.msgs.filter(m => chatChave(m) === c).reduce((mx, m) => Math.max(mx, m.ts), 0);
+  const lista = chat.contatos
+    .filter(c => !busca || normalizarNome(c.nome).includes(busca))
+    .sort((a, b) => ultimo(b.id) - ultimo(a.id) || a.nome.localeCompare(b.nome));
+  const item = (chave, nome, sub) => {
+    const nl = chatNaoLidas(chave);
+    return `<div class="chat-contato ${chat.conv === chave ? 'sel' : ''}" onclick="chatAbrirConversa('${chave.replace(/'/g, "\\'")}')">
+      <div style="min-width:0;"><div class="nome">${escapeHtml(nome)}</div><div class="perfil">${escapeHtml(sub)}</div></div>
+      ${nl > 0 ? `<span class="nl">${nl}</span>` : ''}</div>`;
+  };
+  cont.innerHTML = item('GERAL', '🌐 Chat Geral', 'Todos os usuários') +
+    lista.map(c => item(c.id, c.nome, (cargoConfig[c.perfil] || {}).titulo || c.perfil)).join('');
+}
+
+function chatRenderMensagens() {
+  const cont = document.getElementById('chatMsgs'); if (!cont) return;
+  const tit = document.getElementById('chatConvTitulo');
+  const ct = chat.contatos.find(c => c.id === chat.conv);
+  tit.textContent = chat.conv === 'GERAL' ? '🌐 Chat Geral' : '👤 ' + (ct ? ct.nome : chat.conv);
+  const msgs = chat.msgs.filter(m => chatChave(m) === chat.conv);
+  if (msgs.length === 0) { cont.innerHTML = '<div class="chat-dia">Nenhuma mensagem ainda. Diga olá! 👋</div>'; return; }
+  let html = '', diaAnt = '';
+  msgs.forEach(m => {
+    const d = new Date(m.ts);
+    const dia = d.toLocaleDateString('pt-BR');
+    if (dia !== diaAnt) { html += `<div class="chat-dia">${dia === new Date().toLocaleDateString('pt-BR') ? 'Hoje' : dia}</div>`; diaAnt = dia; }
+    const minha = m.de === chatMeuId();
+    const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    html += `<div class="chat-bolha ${minha ? 'minha' : ''} ${m.pendente ? 'pendente' : ''}">
+      ${(!minha && chat.conv === 'GERAL') ? `<div class="autor">${escapeHtml(m.nome)} · ${escapeHtml((cargoConfig[m.perfil] || {}).titulo || m.perfil || '')}</div>` : ''}
+      ${escapeHtml(m.texto)}<div class="hora">${hora}${m.pendente ? ' ⏳' : ''}</div></div>`;
+  });
+  const noFim = cont.scrollTop + cont.clientHeight >= cont.scrollHeight - 60;
+  cont.innerHTML = html;
+  if (noFim || !cont.dataset.init) { cont.scrollTop = cont.scrollHeight; cont.dataset.init = '1'; }
+}
+
+function chatTecla(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatEnviar(); } }
+
+async function chatEnviar() {
+  const inp = document.getElementById('chatTexto');
+  const texto = inp.value.trim();
+  if (!texto) return;
+  const idLocal = 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+  const msg = { id: idLocal, ts: Date.now(), de: chatMeuId(), nome: currentUser.nome, perfil: currentUser.perfil, para: chat.conv, texto, pendente: true };
+  chat.ids.add(idLocal); chat.msgs.push(msg);
+  inp.value = '';
+  chatRenderTudo();
+  const cont = document.getElementById('chatMsgs'); cont.scrollTop = cont.scrollHeight;
+  const r = await enviarParaGAS('chatEnviar', { id: idLocal, para: msg.para, texto });
+  if (r && r.success) { msg.pendente = false; if (r.ts) { msg.ts = Number(r.ts); if (msg.ts > chat.since) chat.since = msg.ts; } }
+  else {
+    chat.msgs = chat.msgs.filter(m => m.id !== idLocal);
+    mostrarToast('❌ Mensagem não enviada: ' + ((r && r.error) || 'erro'), 'error');
+    inp.value = texto;
+  }
+  chatRenderTudo();
 }
 
 // ============================================
