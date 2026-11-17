@@ -122,7 +122,6 @@ tbody tr:hover { background: #f7fafc; }
 .professor-item .especialidade { color: #718096; font-size: 0.85em; margin: 4px 0; }
 .turmas-atribuidas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .turma-tag { background: #e9d8fd; color: #553c9a; padding: 3px 10px; border-radius: 12px; font-size: 0.8em; font-weight: 600; }
-.turma-tag.parceiro { background: #bee3f8; color: #2c5282; }
 .toast { position: fixed; bottom: 30px; right: 30px; background: #2d3748; color: white; padding: 15px 25px; border-radius: 10px; font-weight: 600; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: toastIn 0.3s ease; }
 .toast-success { background: #38a169; }
 .toast-error { background: #e53e3e; }
@@ -243,9 +242,169 @@ tbody tr:hover { background: #f7fafc; }
 .credenciais-box .campo-senha button { width: auto; padding: 10px 14px; font-size: 0.85em; }
 .login-existente-aviso { background: #fffaf0; border-left: 4px solid #ed8936; padding: 10px 14px; border-radius: 8px; font-size: 0.85em; color: #7b341e; margin-top: 10px; display: none; }
 .login-existente-aviso.active { display: block; }
-.professor-checkboxes { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 15px; background: #f7fafc; }
-.professor-checkboxes label { display: block; padding: 4px 0; cursor: pointer; }
 
+  /* ============ CHAT (bolinha + popup) ============ */
+.chat-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 1.6em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(102,126,234,0.45);
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.chat-fab:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 12px 30px rgba(102,126,234,0.6); }
+.chat-fab.hidden { display: none; }
+
+.chat-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: #f56565;
+  color: #fff;
+  font-size: 0.7em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+.chat-badge.hidden { display: none; }
+
+.chat-panel {
+  position: fixed;
+  bottom: 100px;
+  right: 24px;
+  width: 720px;
+  max-width: calc(100vw - 48px);
+  height: 520px;
+  max-height: calc(100vh - 140px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+  z-index: 11001;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: chatIn 0.25s ease;
+}
+.chat-panel.active { display: flex; }
+@keyframes chatIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.chat-top {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+}
+.chat-top button {
+  background: none; border: none; color: #fff; font-size: 1.4em;
+  cursor: pointer; line-height: 1; padding: 0;
+}
+
+.chat-main { display: flex; flex: 1; min-height: 0; }
+
+.chat-side {
+  width: 220px;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #f7fafc;
+}
+.chat-side input {
+  margin: 10px;
+  padding: 8px 10px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.85em;
+}
+.chat-contatos { flex: 1; overflow-y: auto; }
+.chat-contato {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #edf2f7;
+  font-size: 0.85em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.chat-contato:hover { background: #ebf8ff; }
+.chat-contato.ativo { background: #ebf8ff; font-weight: 700; }
+.chat-contato .chat-contato-nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-contato .chat-contato-badge {
+  background: #f56565; color: #fff; border-radius: 10px;
+  padding: 1px 7px; font-size: 0.72em; font-weight: 700;
+}
+
+.chat-conv { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.chat-conv-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 0.92em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chat-voltar { display: none; background: none; border: none; font-size: 1.1em; cursor: pointer; color: #4a5568; }
+
+.chat-msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  background: #f7fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chat-msg {
+  max-width: 78%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  line-height: 1.35;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.chat-msg.minha { align-self: flex-end; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border-bottom-right-radius: 3px; }
+.chat-msg.outra { align-self: flex-start; background: #fff; color: #2d3748; border: 1px solid #e2e8f0; border-bottom-left-radius: 3px; }
+.chat-msg .chat-msg-meta { display: block; font-size: 0.72em; opacity: 0.75; margin-top: 3px; }
+
+.chat-form { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #e2e8f0; background: #fff; }
+.chat-form textarea {
+  flex: 1; resize: none; height: 42px; padding: 10px 12px;
+  border: 2px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 0.88em;
+}
+.chat-form textarea:focus { outline: none; border-color: #667eea; }
+.chat-form button { width: auto; padding: 0 18px; }
+
+@media (max-width: 600px) {
+  .chat-panel { width: calc(100vw - 24px); right: 12px; bottom: 88px; height: calc(100vh - 120px); }
+  .chat-side { width: 100%; }
+  .chat-side.hidden-mobile { display: none; }
+  .chat-conv.hidden-mobile { display: none; }
+  .chat-voltar { display: inline-block; }
+}
 </style>
 </head>
 <body>
@@ -269,25 +428,6 @@ tbody tr:hover { background: #f7fafc; }
 </div>
 
 <div id="popupContainer"></div>
-
-  <button id="chatFab" class="chat-fab" onclick="chatAlternar()" title="Chat">💬<span id="chatBadge" class="chat-badge hidden">0</span></button>
-<div id="chatPanel" class="chat-panel">
-  <div class="chat-top"><span>💬 Chat da Escola</span><button onclick="chatAlternar()">×</button></div>
-  <div class="chat-main">
-    <div class="chat-side">
-      <input type="text" id="chatBusca" placeholder="🔍 Buscar pessoa..." oninput="chatRenderLista()">
-      <div class="chat-contatos" id="chatContatos"></div>
-    </div>
-    <div class="chat-conv">
-      <div class="chat-conv-header"><button class="chat-voltar" onclick="chatVoltar()">←</button><span id="chatConvTitulo">🌐 Chat Geral</span></div>
-      <div class="chat-msgs" id="chatMsgs"></div>
-      <div class="chat-form">
-        <textarea id="chatTexto" maxlength="1000" placeholder="Digite uma mensagem..." onkeydown="chatTecla(event)"></textarea>
-        <button class="btn btn-secondary" onclick="chatEnviar()">➤</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div class="container">
   <div class="header">
@@ -381,7 +521,7 @@ tbody tr:hover { background: #f7fafc; }
           <div class="form-group" style="flex:1; min-width:200px;"><label>Buscar Aluno</label><input type="text" id="buscaMatriculaSecretaria" placeholder="Nome..." oninput="filtrarMatriculasSecretaria()"></div>
           <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="abrirModalNovaMatricula()" class="btn btn-secondary">➕ Nova Matrícula</button></div>
         </div>
-        <div class="table-container"><table><thead><tr><th>Aluno</th><th>Curso</th><th>Professor(es)</th><th>Mensalidade</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaMatriculasSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
+        <div class="table-container"><table><thead><tr><th>Aluno</th><th>Curso</th><th>Professor</th><th>Mensalidade</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaMatriculasSecretaria"><tr><td colspan="7" style="text-align:center;color:#718096;">Carregando...</td></tr></tbody></table></div>
       </div>
 
       <div id="secretaria-professores" class="section-container hidden">
@@ -497,9 +637,6 @@ tbody tr:hover { background: #f7fafc; }
       <div class="modal-content">
         <span class="modal-close" onclick="fecharModal('modalCadastroProfessor')">&times;</span>
         <h2>👨‍🏫 Cadastro de Professor</h2>
-        <div style="background:#ebf8ff;border-left:4px solid #4299e1;padding:12px 15px;border-radius:8px;margin-bottom:15px;font-size:0.9em;color:#2c5282;">
-          ℹ️ Você pode cadastrar <b>dois professores para o mesmo curso</b>. Nesse caso, ambos aparecerão como professores responsáveis pela disciplina.
-        </div>
         <form id="formCadastroProfessor">
           <div class="form-row">
             <div class="form-group"><label>ID</label><input type="text" id="cadProfessorID" readonly style="background:#f7fafc;"></div>
@@ -515,11 +652,6 @@ tbody tr:hover { background: #f7fafc; }
               </select>
             </div>
             <div class="form-group"><label>Curso Principal *</label><select id="cadProfessorCurso" required><option value="">--</option></select></div>
-          </div>
-          <div class="form-group">
-            <label>Professor Parceiro (opcional — mesmo curso)</label>
-            <select id="cadProfessorParceiro"><option value="">-- Nenhum --</option></select>
-            <small style="color:#718096;font-size:0.85em;">Selecione outro professor que lecionará o mesmo curso principal.</small>
           </div>
           <div class="form-group"><label>Cursos Adicionais</label><div id="cadProfessorCursosExtras" class="cursos-checklist"></div></div>
           <div class="form-row">
@@ -544,7 +676,7 @@ tbody tr:hover { background: #f7fafc; }
             <div class="form-group"><label>Curso *</label><select id="matriculaCurso" required><option value="">--</option></select></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label>Professor *</label><select id="matriculaProfessor" required><option value="">--</option></select><small style="color:#718096;font-size:0.85em;">Preenchido pelo curso (pode haver mais de um)</small></div>
+            <div class="form-group"><label>Professor *</label><select id="matriculaProfessor" required><option value="">--</option></select><small style="color:#718096;font-size:0.85em;">Preenchido pelo curso</small></div>
             <div class="form-group"><label>Ano Letivo *</label><input type="number" id="matriculaAno" value="2026" required></div>
           </div>
           <div class="valor-mensalidade-box">
@@ -721,7 +853,7 @@ tbody tr:hover { background: #f7fafc; }
         <button class="toggle-btn" onclick="toggleCoordenacao('atribuicao', event)">📋 Atribuição</button>
         <button class="toggle-btn" onclick="toggleCoordenacao('receber', event)">📥 Relatórios</button>
       </div>
-      <div id="coordenacao-visao" class="section-container"><h3>📊 Visão Geral por Curso</h3><div class="table-container"><table><thead><tr><th>Curso</th><th>Professor(es)</th><th>Média</th><th>Presença</th><th>Alunos</th><th>Ações</th></tr></thead><tbody id="visaoGeralCursos"></tbody></table></div></div>
+      <div id="coordenacao-visao" class="section-container"><h3>📊 Visão Geral por Curso</h3><div class="table-container"><table><thead><tr><th>Curso</th><th>Professor</th><th>Média</th><th>Presença</th><th>Alunos</th><th>Ações</th></tr></thead><tbody id="visaoGeralCursos"></tbody></table></div></div>
       <div id="coordenacao-acompanhamento" class="section-container hidden">
         <h3>👨‍🏫 Acompanhamento de Professores</h3>
         <div class="form-row" style="margin-bottom: 20px;"><div class="form-group"><label>Professor</label><select id="selectProfAcompanhamento" onchange="renderAcompanhamentoProf()"><option value="">--</option></select></div></div>
@@ -788,7 +920,7 @@ tbody tr:hover { background: #f7fafc; }
             <div class="form-group" style="flex:1; min-width:200px;"><label>Buscar Aluno</label><input type="text" id="buscaMatriculaDir" placeholder="Nome..." oninput="carregarMatriculasDir()"></div>
             <div class="form-group" style="display:flex; align-items:flex-end;"><button onclick="abrirModalNovaMatricula()" class="btn btn-secondary btn-small">➕ Nova Matrícula</button></div>
           </div>
-          <div class="table-container"><table><thead><tr><th>Aluno</th><th>Curso</th><th>Professor(es)</th><th>Mensalidade</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaMatriculasDir"></tbody></table></div>
+          <div class="table-container"><table><thead><tr><th>Aluno</th><th>Curso</th><th>Professor</th><th>Mensalidade</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tabelaMatriculasDir"></tbody></table></div>
         </div>
 
         <div id="dir-sec-professores" class="section-container hidden">
@@ -913,7 +1045,7 @@ tbody tr:hover { background: #f7fafc; }
         </div>
         <div id="dir-coord-visao" class="section-container">
           <h4>📊 Visão Geral por Curso</h4>
-          <div class="table-container"><table><thead><tr><th>Curso</th><th>Professor(es)</th><th>Média</th><th>Presença</th><th>Alunos</th><th>Ações</th></tr></thead><tbody id="dirVisaoGeralCursos"></tbody></table></div>
+          <div class="table-container"><table><thead><tr><th>Curso</th><th>Professor</th><th>Média</th><th>Presença</th><th>Alunos</th><th>Ações</th></tr></thead><tbody id="dirVisaoGeralCursos"></tbody></table></div>
         </div>
         <div id="dir-coord-acompanhamento" class="section-container hidden">
           <h4>👨‍🏫 Acompanhamento de Professores</h4>
@@ -1850,14 +1982,12 @@ function atualizarBancoDados() {
     const email = texto(getColuna(p,'Email','E-mail'));
     const status = texto(getColuna(p,'Status') || 'ATIVO').toUpperCase();
     const dataCadastro = formatarDataExibicao(getColuna(p, 'Data_Cadastro'));
-    const parceiro = texto(getColuna(p, 'Professor_Parceiro', 'Parceiro')).toUpperCase();
-    if (!profMap[nome]) profMap[nome] = { id, nome, tipo, curso: cursoBruto, telefone, email, status, valorHora, dataCadastro, parceiro: parceiro || '' };
+    if (!profMap[nome]) profMap[nome] = { id, nome, tipo, curso: cursoBruto, telefone, email, status, valorHora, dataCadastro };
     else {
       if (cursoBruto && !profMap[nome].curso.split(',').map(c => c.trim()).includes(cursoBruto.trim())) {
         profMap[nome].curso = (profMap[nome].curso ? profMap[nome].curso + ',' : '') + cursoBruto;
       }
       if (tipo && !profMap[nome].tipo.includes(tipo)) profMap[nome].tipo += (profMap[nome].tipo ? ', ' : '') + tipo;
-      if (parceiro && !profMap[nome].parceiro) profMap[nome].parceiro = parceiro;
     }
   });
   escolaData.professores = Object.values(profMap);
@@ -1867,7 +1997,6 @@ function atualizarBancoDados() {
     aluno: texto(getColuna(m,'Aluno')).toUpperCase(),
     curso: normalizarCursoId(texto(getColuna(m,'Curso'))),
     professor: texto(getColuna(m,'Professor')).toUpperCase(),
-    professor2: texto(getColuna(m,'Professor2','Segundo_Professor')).toUpperCase(),
     dataMatricula: formatarDataExibicao(getColuna(m,'Data_Matricula','Data')),
     anoLetivo: texto(getColuna(m,'Ano_Letivo','Ano')),
     status: texto(getColuna(m,'Status') || 'ATIVO').toUpperCase(),
@@ -2054,49 +2183,18 @@ function getAlunosByCurso(curso) {
   return db.matriculas.filter(m => m.curso === curso && m.status === 'ATIVO').map(m => escolaData.alunos.find(a => nomesIguais(a.nome, m.aluno))).filter(Boolean);
 }
 
-// Retorna o primeiro professor do curso (compatibilidade)
 function getProfessorByCurso(curso) {
   if (!curso) return null;
   const alvo = normalizarCursoId(curso);
-  const profs = getProfessoresByCurso(alvo);
-  return profs.length > 0 ? profs[0] : null;
-}
-
-// Retorna TODOS os professores do curso (para exibição)
-function getProfessoresByCurso(curso) {
-  if (!curso) return [];
-  const alvo = normalizarCursoId(curso);
-  const encontrados = [];
-  escolaData.professores.forEach(p => {
-    const cursosProf = extrairCursosDoProfessor(p);
-    if (cursosProf.includes(alvo)) encontrados.push(p);
-  });
-  // Verificar professores vinculados a matrículas ativas
-  const nomesJa = new Set(encontrados.map(p => normalizarNome(p.nome)));
-  db.matriculas.filter(m => m.curso === alvo && m.status === 'ATIVO' && m.professor).forEach(m => {
-    if (!nomesJa.has(normalizarNome(m.professor))) {
-      const prof = escolaData.professores.find(p => nomesIguais(p.nome, m.professor));
-      if (prof) { encontrados.push(prof); nomesJa.add(normalizarNome(prof.nome)); }
-      else {
-        encontrados.push({ id: '', nome: m.professor, tipo: '', curso: alvo, telefone: '', email: '', status: 'ATIVO', valorHora: 0 });
-        nomesJa.add(normalizarNome(m.professor));
-      }
-    }
-  });
-  if (encontrados.length === 0) {
-    const mat = db.matriculas.find(m => m.curso === alvo && m.professor);
-    if (mat && mat.professor) {
-      const prof = escolaData.professores.find(p => nomesIguais(p.nome, mat.professor));
-      if (prof) encontrados.push(prof);
-    }
+  let prof = escolaData.professores.find(p => extrairCursosDoProfessor(p).includes(alvo));
+  if (prof) return prof;
+  const mat = db.matriculas.find(m => m.curso === alvo && m.professor);
+  if (mat && mat.professor) {
+    prof = escolaData.professores.find(p => nomesIguais(p.nome, mat.professor));
+    if (prof) return prof;
+    return { id: '', nome: mat.professor, tipo: '', curso: alvo, telefone: '', email: '', status: 'ATIVO', valorHora: 0 };
   }
-  return encontrados;
-}
-
-function labelProfessoresDoCurso(curso) {
-  const profs = getProfessoresByCurso(curso);
-  if (profs.length === 0) return 'Não atribuído';
-  return profs.map(p => p.nome).join(' / ');
+  return null;
 }
 
 function getNotaAluno(aluno, curso, bimestre) {
@@ -2317,6 +2415,7 @@ function renderDirecaoCompleta() {
   renderDirFinanceiro();
   renderDirCoordenacao();
   renderDirProfessorSelect();
+  // Preencher selects
   const selProfSim = document.getElementById('dirSelectProfessorSimular');
   if (selProfSim) {
     selProfSim.innerHTML = '<option value="">-- Selecione um professor --</option>' + escolaData.professores.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
@@ -2331,6 +2430,7 @@ function toggleDirecao(section, event) {
   if (event && event.target) event.target.classList.add('active');
 }
 
+// --- Direção: Secretaria ---
 function toggleDirSecretaria(section, event) {
   document.querySelectorAll('#direcao-secretaria > .section-container').forEach(el => el.classList.add('hidden'));
   const t = document.getElementById(`dir-sec-${section}`);
@@ -2389,8 +2489,8 @@ function carregarAlunosDir() {
   tbody.innerHTML = alunos.map(aluno => {
     const mat = db.matriculas.filter(m => nomesIguais(m.aluno, aluno.nome) && m.status === 'ATIVO');
     const cursos = mat.map(m => {
-      const profs = labelProfessoresDoCurso(m.curso);
-      return labelCurso(m.curso) + (profs && profs !== 'Não atribuído' ? ` (${profs})` : '');
+      const prof = m.professor || (getProfessorByCurso(m.curso)?.nome || '');
+      return labelCurso(m.curso) + (prof ? ` (${prof})` : '');
     }).join(', ') || 'Nenhum';
     const valorTxt = aluno.mensalidade ? `R$ ${aluno.mensalidade.toFixed(2)}` : '-';
     const refAtual = getAnoMesAtual();
@@ -2420,7 +2520,7 @@ function carregarMatriculasDir() {
   if (!tbody) return;
   if (mat.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhuma.</td></tr>'; return; }
   tbody.innerHTML = mat.map(m => {
-    const profNome = m.professor ? (m.professor2 ? m.professor + ' / ' + m.professor2 : m.professor) : labelProfessoresDoCurso(m.curso);
+    const profNome = m.professor || (getProfessorByCurso(m.curso)?.nome || '');
     const al = encontrarAlunoPorNome(m.aluno);
     const valorMsg = (m.mensalidade && m.mensalidade > 0) ? m.mensalidade : (al?.mensalidade || 0);
     const valorTxt = valorMsg > 0 ? `R$ ${valorMsg.toFixed(2)}` : '-';
@@ -2448,8 +2548,7 @@ function carregarProfessoresDir() {
     const nomes = cursos.length ? cursos.map(c => labelCurso(c)).join(', ') : '-';
     return `<tr>
       <td>${p.id || '-'}</td><td><strong>${p.nome}</strong></td><td>${p.tipo || '-'}</td>
-      <td style="font-size:0.85em;">${nomes}${p.parceiro ? '<br><span style="color:#2c5282;font-size:0.85em;">👥 Parceiro: ' + p.parceiro + '</span>' : ''}</td>
-      <td>${p.telefone || '-'}</td><td>${p.email || '-'}</td>
+      <td style="font-size:0.85em;">${nomes}</td><td>${p.telefone || '-'}</td><td>${p.email || '-'}</td>
       <td><span class="status-badge ${p.status === 'ATIVO' ? 'concluido' : 'inativo'}">${p.status}</span></td>
     </tr>`;
   }).join('');
@@ -2459,12 +2558,11 @@ function carregarCursosGridDir() {
   const cont = document.getElementById('cursosGridDir');
   if (!cont) return;
   cont.innerHTML = CURSOS.map(curso => {
-    const profs = getProfessoresByCurso(curso.id);
+    const prof = getProfessorByCurso(curso.id);
     const alunos = getAlunosByCurso(curso.id);
-    const nomesProfs = profs.length ? profs.map(p => p.nome).join(' / ') : 'Não atribuído';
     return `<div class="stat-card" style="border-left:4px solid #4299e1;">
       <div style="font-size:1.2em; margin-bottom:5px;">${curso.nome}</div>
-      <div style="color:#718096; font-size:0.85em; margin-bottom:8px;"><strong>Professor(es):</strong> ${nomesProfs}</div>
+      <div style="color:#718096; font-size:0.85em; margin-bottom:8px;"><strong>Professor:</strong> ${prof ? prof.nome : 'Não atribuído'}</div>
       <div style="color:#718096; font-size:0.85em;"><strong>Alunos:</strong> ${alunos.length}</div>
     </div>`;
   }).join('');
@@ -2566,6 +2664,7 @@ function renderMensalidadesDir() {
   `).join('');
 }
 
+// --- Direção: Financeiro ---
 function toggleDirFinanceiro(section, event) {
   document.querySelectorAll('#direcao-financeiro > .section-container').forEach(el => el.classList.add('hidden'));
   const t = document.getElementById(`dir-fin-${section}`);
@@ -2763,6 +2862,7 @@ async function salvarValorHoraDir(pid) {
   } catch (e) { mostrarToast('❌ ' + e.message, 'error'); }
 }
 
+// --- Direção: Coordenação ---
 function toggleDirCoordenacao(section, event) {
   document.querySelectorAll('#direcao-coordenacao > .section-container').forEach(el => el.classList.add('hidden'));
   const t = document.getElementById(`dir-coord-${section}`);
@@ -2787,8 +2887,7 @@ function renderVisaoCursosDir() {
   if (!tbody) return;
   tbody.innerHTML = CURSOS.map(c => {
     const alunos = getAlunosByCurso(c.id);
-    const profs = getProfessoresByCurso(c.id);
-    const nomesProfs = profs.length ? profs.map(p => p.nome).join(' / ') : 'Não atribuído';
+    const prof = getProfessorByCurso(c.id);
     const pres = db.presencas[c.id] || [];
     let totalP = 0, totalD = pres.length;
     alunos.forEach(a => { pres.forEach(p => { if (p.presentes.some(n => nomesIguais(n, a.nome))) totalP++; }); });
@@ -2798,11 +2897,11 @@ function renderVisaoCursosDir() {
     const media = cnt > 0 ? soma / cnt : 0;
     return `<tr>
       <td><strong>${c.nome}</strong></td>
-      <td>${nomesProfs}</td>
+      <td>${prof ? prof.nome : 'Não atribuído'}</td>
       <td>${media.toFixed(1)}</td>
       <td>${taxa.toFixed(1)}%</td>
       <td>${alunos.length}</td>
-      <td><button onclick="alert('Curso: ${c.nome}\\nProfessor(es): ${nomesProfs}\\nAlunos: ${alunos.length}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️</button></td>
+      <td><button onclick="alert('Curso: ${c.nome}\\nProfessor: ${prof ? prof.nome : '-'}\\nAlunos: ${alunos.length}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️</button></td>
     </tr>`;
   }).join('');
 }
@@ -2818,9 +2917,9 @@ function renderAcompanhamentoDir() {
   if (!profNome) { cont.innerHTML = '<p style="color:#718096;">Selecione.</p>'; return; }
   let aulas = [];
   for (const cid in db.presencas) {
-    const profsCurso = getProfessoresByCurso(cid);
+    const profCurso = getProfessorByCurso(cid);
     db.presencas[cid].forEach(a => {
-      if (nomesIguais(a.professor, profNome) || profsCurso.some(p => nomesIguais(p.nome, profNome))) {
+      if (nomesIguais(a.professor, profNome) || (profCurso && nomesIguais(profCurso.nome, profNome))) {
         aulas.push({ curso: cid, data: a.data, presentes: a.presentes, conteudo: a.conteudo || 'Sem conteúdo' });
       }
     });
@@ -2849,8 +2948,7 @@ function renderProfessoresAtribuidosDir() {
   if (!cont) return;
   cont.innerHTML = escolaData.professores.map(p => {
     const cursos = extrairCursosDoProfessor(p);
-    const parceiroInfo = p.parceiro ? `<div class="especialidade" style="color:#2c5282;">👥 Parceiro: ${p.parceiro}</div>` : '';
-    return `<div class="professor-item"><strong>${p.nome}</strong><div class="especialidade">${p.tipo || ''}</div>${parceiroInfo}<div class="turmas-atribuidas">${cursos.length ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum</span>'}</div></div>`;
+    return `<div class="professor-item"><strong>${p.nome}</strong><div class="especialidade">${p.tipo || ''}</div><div class="turmas-atribuidas">${cursos.length ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum</span>'}</div></div>`;
   }).join('');
 }
 
@@ -2907,6 +3005,7 @@ function renderRelatoriosRecebidosDir() {
   cont.innerHTML = db.relatorios.slice().reverse().map(r => `<div class="registro-item"><div class="data">📄 ${r.aluno} - ${labelCurso(r.curso)} - ${r.bimestre}º Bim — ${r.data}</div><div class="conteudo">${(r.relatorio||'').substring(0,150)}...</div><div style="font-size:0.85em;color:#718096;">Professor: ${r.professor}</div></div>`).join('');
 }
 
+// --- Direção: Professor ---
 function renderDirProfessorSelect() {
   const sel = document.getElementById('dirSelectProfessorSimular');
   if (!sel) return;
@@ -2934,6 +3033,7 @@ function renderProfessorSimulado() {
   });
   html += `</div>`;
 
+  // Notas
   const alunos = getAlunosByCurso(dirCursoSelecionado);
   html += `<div class="section-container" style="margin-top:0;"><h4>📊 Avaliações — ${labelCurso(dirCursoSelecionado)}</h4>`;
   html += `<div class="form-row" style="margin-bottom:15px;">
@@ -2957,6 +3057,7 @@ function renderProfessorSimulado() {
   html += `</tbody></table></div>`;
   html += `<div style="margin-top:15px;"><button onclick="salvarNotasDir()" class="btn btn-secondary btn-small">💾 Salvar Avaliações</button></div></div>`;
 
+  // Presenças
   html += `<div class="section-container"><h4>✅ Presenças — ${labelCurso(dirCursoSelecionado)}</h4>`;
   html += `<div class="form-row">
     <div class="form-group"><label>Data da Aula</label><input type="date" id="dirDataPresenca" value="${new Date().toISOString().split('T')[0]}"></div>
@@ -3075,12 +3176,13 @@ async function atualizarNotificacoesAluno() {
   try {
     const r = await enviarParaGAS('listarNotificacoes', { aluno });
     if (r.success && Array.isArray(r.notificacoes)) {
+      const novasDoServidor = [];
       r.notificacoes.forEach(n => {
         const id = texto(n.id) || `notif_${normalizarNome(n.titulo)}_${n.data}`;
         if (!popupIdsMostrados.has(id)) {
           const jaNoDb = db.notificacoes.find(x => texto(x.id) === texto(n.id));
           if (!jaNoDb) {
-            const nova = {
+            novasDoServidor.push({
               id, aluno: texto(n.aluno).toUpperCase(),
               tipo: texto(n.tipo || 'geral').toLowerCase(),
               titulo: texto(n.titulo), descricao: texto(n.descricao),
@@ -3088,19 +3190,16 @@ async function atualizarNotificacoesAluno() {
               professor: texto(n.professor).toUpperCase(),
               lida: texto(n.lida).toUpperCase() === 'SIM',
               data: formatarDataHoraExibicao(n.data) || getDataHoraAtual()
-            };
-            db.notificacoes.push(nova);
-            // Popup apenas para notificações que NÃO sejam de atraso
-            if (nova.tipo !== 'atraso') {
-              popupIdsMostrados.add(id);
-              mostrarPopupNotificacao(nova);
-            } else {
-              popupIdsMostrados.add(id);
-            }
+            });
           } else {
-            popupIdsMostrados.add(texto(jaNoDb.id));
+            if (!popupIdsMostrados.has(texto(jaNoDb.id))) popupIdsMostrados.add(texto(jaNoDb.id));
           }
         }
+      });
+      novasDoServidor.forEach(n => {
+        db.notificacoes.push(n);
+        popupIdsMostrados.add(n.id);
+        mostrarPopupNotificacao(n);
       });
     }
   } catch (e) { /* ignora */ }
@@ -3177,8 +3276,6 @@ async function atualizarNotificacoesAluno() {
 function mostrarPopupNotificacao(n) {
   const container = document.getElementById('popupContainer');
   if (!container) return;
-  // Notificações de atraso NÃO geram popup (apenas ícone)
-  if (n.tipo === 'atraso') return;
   const icones = { nota: '📝', arquivo: '📎', mensagem: '💬', geral: '🔔', pagamento: '💰', atraso: '⚠️' };
   const popup = document.createElement('div');
   popup.className = `popup-notif tipo-${n.tipo || 'geral'}`;
@@ -3376,8 +3473,8 @@ function carregarAlunosSecretaria() {
   tbody.innerHTML = alunos.map(aluno => {
     const mat = db.matriculas.filter(m => nomesIguais(m.aluno, aluno.nome) && m.status === 'ATIVO');
     const cursos = mat.map(m => {
-      const profs = labelProfessoresDoCurso(m.curso);
-      return labelCurso(m.curso) + (profs && profs !== 'Não atribuído' ? ` (${profs})` : '');
+      const prof = m.professor || (getProfessorByCurso(m.curso)?.nome || '');
+      return labelCurso(m.curso) + (prof ? ` (${prof})` : '');
     }).join(', ') || 'Nenhum';
     const valorTxt = aluno.mensalidade ? `R$ ${aluno.mensalidade.toFixed(2)}` : '-';
     const refAtual = getAnoMesAtual();
@@ -3447,10 +3544,8 @@ document.getElementById('formCadastroAluno').addEventListener('submit', async fu
         if (!rUser.success) throw new Error('Falha ao criar login do aluno: ' + (rUser.error || ''));
 
         for (const cursoId of cursosSelecionados) {
-          const profs = getProfessoresByCurso(cursoId);
-          const prof1 = profs.length > 0 ? profs[0].nome : '';
-          const prof2 = profs.length > 1 ? profs[1].nome : '';
-          const mp = { aluno: nome, curso: cursoId, professor: prof1, professor2: prof2, dataMatricula: getDataAtualFormatada(), anoLetivo: String(new Date().getFullYear()), status: 'ATIVO', mensalidade };
+          const prof = getProfessorByCurso(cursoId);
+          const mp = { aluno: nome, curso: cursoId, professor: prof ? prof.nome : '', dataMatricula: getDataAtualFormatada(), anoLetivo: String(new Date().getFullYear()), status: 'ATIVO', mensalidade };
           await enviarParaGAS('salvarMatricula', mp);
           db.matriculas.push(mp);
         }
@@ -3486,7 +3581,7 @@ function carregarMatriculasSecretaria() {
   const tbody = document.getElementById('tabelaMatriculasSecretaria');
   if (mat.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;">Nenhuma.</td></tr>'; return; }
   tbody.innerHTML = mat.map(m => {
-    const profNome = m.professor ? (m.professor2 ? m.professor + ' / ' + m.professor2 : m.professor) : labelProfessoresDoCurso(m.curso);
+    const profNome = m.professor || (getProfessorByCurso(m.curso)?.nome || '');
     const al = encontrarAlunoPorNome(m.aluno);
     const valorMsg = (m.mensalidade && m.mensalidade > 0) ? m.mensalidade : (al?.mensalidade || 0);
     const valorTxt = valorMsg > 0 ? `R$ ${valorMsg.toFixed(2)}` : '-';
@@ -3532,10 +3627,9 @@ function abrirModalNovaMatricula() {
   const selProf = document.getElementById('matriculaProfessor');
   selProf.innerHTML = '<option value="">-- Curso primeiro --</option>'; selProf.disabled = true;
   selCur.onchange = function() {
-    const profs = getProfessoresByCurso(this.value);
-    if (profs.length > 0) {
-      selProf.innerHTML = profs.map((p, i) => `<option value="${p.nome}" ${i===0?'selected':''}>${p.nome}${i===1?' (2º professor)':''}</option>`).join('');
-    } else selProf.innerHTML = '<option value="">⚠️ Sem professor</option>';
+    const prof = getProfessorByCurso(this.value);
+    if (prof) selProf.innerHTML = `<option value="${prof.nome}" selected>${prof.nome}</option>`;
+    else selProf.innerHTML = '<option value="">⚠️ Sem professor</option>';
     selProf.disabled = true;
   };
   const campoMensalidade = document.getElementById('matriculaMensalidade');
@@ -3568,12 +3662,11 @@ document.getElementById('formNovaMatricula').addEventListener('submit', async fu
   const mensalidade = parseFloat(document.getElementById('matriculaMensalidade').value) || 0;
   const vencimento = parseInt(document.getElementById('matriculaVencimento').value) || 10;
   if (!aluno || !curso) { alert('Preencha aluno e curso.'); return; }
-  const profs = getProfessoresByCurso(curso);
-  const prof1 = profs.length > 0 ? profs[0].nome : '';
-  const prof2 = profs.length > 1 ? profs[1].nome : '';
+  const prof = getProfessorByCurso(curso);
+  const profNome = prof ? prof.nome : '';
   const alunoObj = encontrarAlunoPorNome(aluno);
   const precisaAtualizarAluno = alunoObj && (!alunoObj.mensalidade || alunoObj.mensalidade !== mensalidade || !alunoObj.vencimento || alunoObj.vencimento !== vencimento);
-  const payloadMat = { aluno, curso, professor: prof1, professor2: prof2, dataMatricula: getDataAtualFormatada(), anoLetivo: ano, status: 'ATIVO', mensalidade };
+  const payloadMat = { aluno, curso, professor: profNome, dataMatricula: getDataAtualFormatada(), anoLetivo: ano, status: 'ATIVO', mensalidade };
   const refMes = getAnoMesAtual();
   try {
     await executarComProgresso({
@@ -3597,7 +3690,7 @@ document.getElementById('formNovaMatricula').addEventListener('submit', async fu
         }
         return { success: true };
       },
-      sucesso: `✅ Matrícula registrada${prof1 ? ' (Prof. ' + prof1 + (prof2 ? ' / ' + prof2 : '') + ')' : ''} — Mensalidade R$ ${mensalidade.toFixed(2)}`
+      sucesso: `✅ Matrícula registrada${profNome ? ' (Prof. ' + profNome + ')' : ''} — Mensalidade R$ ${mensalidade.toFixed(2)}`
     });
     fecharModal('modalNovaMatricula');
     carregarMatriculasSecretaria(); carregarAlunosSecretaria(); atualizarDashboardSecretaria();
@@ -3617,8 +3710,7 @@ function carregarProfessoresSecretaria() {
     const nomes = cursos.length ? cursos.map(c => labelCurso(c)).join(', ') : '-';
     return `<tr>
       <td>${p.id || '-'}</td><td><strong>${p.nome}</strong></td><td>${p.tipo || '-'}</td>
-      <td style="font-size:0.85em;">${nomes}${p.parceiro ? '<br><span style="color:#2c5282;font-size:0.85em;">👥 Parceiro: ' + p.parceiro + '</span>' : ''}</td>
-      <td>${p.telefone || '-'}</td><td>${p.email || '-'}</td>
+      <td style="font-size:0.85em;">${nomes}</td><td>${p.telefone || '-'}</td><td>${p.email || '-'}</td>
       <td><span class="status-badge ${p.status === 'ATIVO' ? 'concluido' : 'inativo'}">${p.status}</span></td>
     </tr>`;
   }).join('');
@@ -3632,11 +3724,6 @@ function abrirModalCadastroProfessor() {
   document.getElementById('cadProfessorID').value = id;
   document.getElementById('cadProfessorCurso').innerHTML = '<option value="">-- Selecione --</option>' + CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
   document.getElementById('cadProfessorCursosExtras').innerHTML = CURSOS.map(c => `<label style="display:block; padding:4px 0;"><input type="checkbox" value="${c.id}" class="prof-curso-extra"> ${c.nome}</label>`).join('');
-  
-  // Preencher select de professor parceiro
-  const selParceiro = document.getElementById('cadProfessorParceiro');
-  selParceiro.innerHTML = '<option value="">-- Nenhum --</option>' + escolaData.professores.map(p => `<option value="${p.nome}">${p.nome}</option>`).join('');
-  
   document.getElementById('modalCadastroProfessor').classList.add('active');
 }
 
@@ -3646,24 +3733,23 @@ document.getElementById('formCadastroProfessor').addEventListener('submit', asyn
   const nome = document.getElementById('cadProfessorNome').value.trim().toUpperCase();
   const tipo = document.getElementById('cadProfessorTipo').value;
   const cursoPrincipal = document.getElementById('cadProfessorCurso').value;
-  const parceiro = document.getElementById('cadProfessorParceiro').value;
   const extras = Array.from(document.querySelectorAll('.prof-curso-extra:checked')).map(cb => cb.value);
   const telefone = document.getElementById('cadProfessorTelefone').value.trim();
   const email = document.getElementById('cadProfessorEmail').value.trim();
   if (!nome || !tipo || !cursoPrincipal || !telefone) { alert('Preencha obrigatórios.'); return; }
   const todosCursos = [...new Set([cursoPrincipal, ...extras])];
-  const payload = { id, nome, tipo, curso: todosCursos.join(','), telefone, email, parceiro: parceiro || '' };
+  const payload = { id, nome, tipo, curso: todosCursos.join(','), telefone, email };
   try {
     await executarComProgresso({
-      titulo: 'Cadastrando professor...', subtitulo: `${nome} (${todosCursos.length} curso(s))${parceiro ? ' — Parceiro: ' + parceiro : ''}`,
+      titulo: 'Cadastrando professor...', subtitulo: `${nome} (${todosCursos.length} curso(s))`,
       etapas: [{pct:15,label:'Validando...'},{pct:50,label:'Gravando...'},{pct:80,label:'Painel...'},{pct:95,label:'Final...'}],
       executar: async () => {
         const r = await enviarParaGAS('salvarProfessor', payload);
         if (!r.success) throw new Error(r.error || 'Falha.');
-        escolaData.professores.push({ id, nome, tipo, curso: todosCursos.join(','), telefone, email, status: 'ATIVO', valorHora: 0, parceiro: parceiro || '' });
+        escolaData.professores.push({ id, nome, tipo, curso: todosCursos.join(','), telefone, email, status: 'ATIVO' });
         return { success: true };
       },
-      sucesso: `✅ Professor ${nome} cadastrado!${parceiro ? ' Parceiro: ' + parceiro : ''}`
+      sucesso: `✅ Professor ${nome} cadastrado!`
     });
     fecharModal('modalCadastroProfessor'); carregarProfessoresSecretaria(); atualizarDashboardSecretaria();
     carregarProfessoresDir(); renderDirSecStats();
@@ -3673,12 +3759,11 @@ document.getElementById('formCadastroProfessor').addEventListener('submit', asyn
 
 function carregarCursosGrid() {
   document.getElementById('cursosGrid').innerHTML = CURSOS.map(curso => {
-    const profs = getProfessoresByCurso(curso.id);
+    const prof = getProfessorByCurso(curso.id);
     const alunos = getAlunosByCurso(curso.id);
-    const nomesProfs = profs.length ? profs.map(p => p.nome).join(' / ') : 'Não atribuído';
     return `<div class="stat-card" style="border-left:4px solid #4299e1;">
       <div style="font-size:1.2em; margin-bottom:5px;">${curso.nome}</div>
-      <div style="color:#718096; font-size:0.85em; margin-bottom:8px;"><strong>Professor(es):</strong> ${nomesProfs}</div>
+      <div style="color:#718096; font-size:0.85em; margin-bottom:8px;"><strong>Professor:</strong> ${prof ? prof.nome : 'Não atribuído'}</div>
       <div style="color:#718096; font-size:0.85em;"><strong>Alunos:</strong> ${alunos.length}</div>
     </div>`;
   }).join('');
@@ -4293,8 +4378,7 @@ function renderVisaoCursos() {
   const tbody = document.getElementById('visaoGeralCursos');
   tbody.innerHTML = CURSOS.map(c => {
     const alunos = getAlunosByCurso(c.id);
-    const profs = getProfessoresByCurso(c.id);
-    const nomesProfs = profs.length ? profs.map(p => p.nome).join(' / ') : 'Não atribuído';
+    const prof = getProfessorByCurso(c.id);
     const pres = db.presencas[c.id] || [];
     let totalP = 0, totalD = pres.length;
     alunos.forEach(a => { pres.forEach(p => { if (p.presentes.some(n => nomesIguais(n, a.nome))) totalP++; }); });
@@ -4304,11 +4388,11 @@ function renderVisaoCursos() {
     const media = cnt > 0 ? soma / cnt : 0;
     return `<tr>
       <td><strong>${c.nome}</strong></td>
-      <td>${nomesProfs}</td>
+      <td>${prof ? prof.nome : 'Não atribuído'}</td>
       <td>${media.toFixed(1)}</td>
       <td>${taxa.toFixed(1)}%</td>
       <td>${alunos.length}</td>
-      <td><button onclick="alert('Curso: ${c.nome}\\nProfessor(es): ${nomesProfs}\\nAlunos: ${alunos.length}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️</button></td>
+      <td><button onclick="alert('Curso: ${c.nome}\\nProfessor: ${prof ? prof.nome : '-'}\\nAlunos: ${alunos.length}')" class="btn btn-small btn-secondary" style="padding:4px 8px;font-size:12px;">👁️</button></td>
     </tr>`;
   }).join('');
 }
@@ -4324,9 +4408,9 @@ function renderAcompanhamentoProf() {
   if (!profNome) { cont.innerHTML = '<p style="color:#718096;">Selecione.</p>'; return; }
   let aulas = [];
   for (const cid in db.presencas) {
-    const profsCurso = getProfessoresByCurso(cid);
+    const profCurso = getProfessorByCurso(cid);
     db.presencas[cid].forEach(a => {
-      if (nomesIguais(a.professor, profNome) || profsCurso.some(p => nomesIguais(p.nome, profNome))) {
+      if (nomesIguais(a.professor, profNome) || (profCurso && nomesIguais(profCurso.nome, profNome))) {
         aulas.push({ curso: cid, data: a.data, presentes: a.presentes, conteudo: a.conteudo || 'Sem conteúdo' });
       }
     });
@@ -4355,8 +4439,7 @@ function renderProfessoresAtribuidos() {
   if (!cont) return;
   cont.innerHTML = escolaData.professores.map(p => {
     const cursos = extrairCursosDoProfessor(p);
-    const parceiroInfo = p.parceiro ? `<div class="especialidade" style="color:#2c5282;">👥 Parceiro: ${p.parceiro}</div>` : '';
-    return `<div class="professor-item"><strong>${p.nome}</strong><div class="especialidade">${p.tipo || ''}</div>${parceiroInfo}<div class="turmas-atribuidas">${cursos.length ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum</span>'}</div></div>`;
+    return `<div class="professor-item"><strong>${p.nome}</strong><div class="especialidade">${p.tipo || ''}</div><div class="turmas-atribuidas">${cursos.length ? cursos.map(c => `<span class="turma-tag">${labelCurso(c)}</span>`).join('') : '<span style="color:#a0aec0;">Nenhum</span>'}</div></div>`;
   }).join('');
 }
 
@@ -4452,14 +4535,13 @@ function gerarRelatorioGeral() {
     <div class="info-line"><strong>Matrículas:</strong> ${matAtivas.length}</div>
     <div class="info-line"><strong>Professores:</strong> ${escolaData.professores.length}</div>
     <table style="margin-top:15px;width:100%;border-collapse:collapse;">
-      <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Curso</th><th style="padding:8px;border:1px solid #e2e8f0;">Alunos</th><th style="padding:8px;border:1px solid #e2e8f0;">Professor(es)</th><th style="padding:8px;border:1px solid #e2e8f0;">Média</th></tr></thead>
+      <thead><tr style="background:#f7fafc;"><th style="padding:8px;border:1px solid #e2e8f0;">Curso</th><th style="padding:8px;border:1px solid #e2e8f0;">Alunos</th><th style="padding:8px;border:1px solid #e2e8f0;">Professor</th><th style="padding:8px;border:1px solid #e2e8f0;">Média</th></tr></thead>
       <tbody>${CURSOS.map(c => {
         const al = getAlunosByCurso(c.id);
-        const profs = getProfessoresByCurso(c.id);
-        const nomesProfs = profs.length ? profs.map(p => p.nome).join(' / ') : '-';
+        const pr = getProfessorByCurso(c.id);
         let s2 = 0, c2 = 0;
         al.forEach(a => { const m = getMediaAluno(a.nome, c.id); if (m > 0) { s2 += m; c2++; } });
-        return `<tr><td style="padding:8px;border:1px solid #e2e8f0;">${c.nome}</td><td style="padding:8px;border:1px solid #e2e8f0;">${al.length}</td><td style="padding:8px;border:1px solid #e2e8f0;">${nomesProfs}</td><td style="padding:8px;border:1px solid #e2e8f0;">${c2 > 0 ? (s2/c2).toFixed(1) : '0.0'}</td></tr>`;
+        return `<tr><td style="padding:8px;border:1px solid #e2e8f0;">${c.nome}</td><td style="padding:8px;border:1px solid #e2e8f0;">${al.length}</td><td style="padding:8px;border:1px solid #e2e8f0;">${pr ? pr.nome : '-'}</td><td style="padding:8px;border:1px solid #e2e8f0;">${c2 > 0 ? (s2/c2).toFixed(1) : '0.0'}</td></tr>`;
       }).join('')}</tbody>
     </table>
   </div>`;
@@ -4469,8 +4551,7 @@ function gerarRelatorioPorProfessor() {
   const cont = document.getElementById('relatorioConsolidado');
   cont.innerHTML = `<div class="relatorio-content"><h4>📊 Por Professor</h4><div style="margin-top:15px;">${escolaData.professores.map(p => {
     const cursos = extrairCursosDoProfessor(p);
-    const parceiroInfo = p.parceiro ? `<p style="color:#2c5282;font-size:0.9em;">👥 Parceiro: ${p.parceiro}</p>` : '';
-    return `<div style="margin-bottom:15px;padding:10px;background:#f7fafc;border-radius:8px;"><h5>${p.nome} (${p.tipo||'-'})</h5>${parceiroInfo}<p style="color:#718096;font-size:0.9em;">Cursos: ${cursos.map(c => labelCurso(c)).join(', ') || 'Nenhum'}</p><p style="color:#718096;font-size:0.9em;">Telefone: ${p.telefone||'-'}</p></div>`;
+    return `<div style="margin-bottom:15px;padding:10px;background:#f7fafc;border-radius:8px;"><h5>${p.nome} (${p.tipo||'-'})</h5><p style="color:#718096;font-size:0.9em;">Cursos: ${cursos.map(c => labelCurso(c)).join(', ') || 'Nenhum'}</p><p style="color:#718096;font-size:0.9em;">Telefone: ${p.telefone||'-'}</p></div>`;
   }).join('')}</div></div>`;
 }
 
@@ -5192,8 +5273,8 @@ function adminGerarBugsAutomaticos() {
     if (a.status === 'ATIVO' && (!a.mensalidade || a.mensalidade === 0)) bugs.push({ tipo:'warn', msg:`⚠️ Aluno "${a.nome}" sem valor de mensalidade cadastrado.` });
   });
   db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => {
-    const profs = getProfessoresByCurso(m.curso);
-    if (profs.length === 0) bugs.push({ tipo:'warn', msg:`⚠️ Curso "${labelCurso(m.curso)}" com matrícula ativa mas sem professor atribuído.` });
+    const prof = getProfessorByCurso(m.curso);
+    if (!prof) bugs.push({ tipo:'warn', msg:`⚠️ Curso "${labelCurso(m.curso)}" com matrícula ativa mas sem professor atribuído.` });
   });
   escolaData.alunos.filter(a => a.status === 'ATIVO').forEach(a => {
     const mats = db.matriculas.filter(m => nomesIguais(m.aluno, a.nome) && m.status === 'ATIVO');
@@ -5249,176 +5330,6 @@ async function logout(manual = true, motivo = null) {
 }
 
 // ============================================
-// CHAT
-// ============================================
-const chat = { contatos: [], msgs: [], ids: new Set(), conv: 'GERAL', since: 0, timer: null, ocupado: false, primeiraCarga: true, aberto: false };
-
-function chatMeuId() { return (currentUser.usuario || '').toLowerCase(); }
-function chatChave(m) { return m.para === 'GERAL' ? 'GERAL' : (m.de === chatMeuId() ? m.para : m.de); }
-function chatSeenKey() { return 'escolaMusica.chatSeen.' + chatMeuId(); }
-function chatLerSeen() { try { return JSON.parse(localStorage.getItem(chatSeenKey()) || '{}'); } catch (e) { return {}; } }
-function chatMarcarVisto(chave) {
-  try {
-    const s = chatLerSeen();
-    const ult = chat.msgs.filter(m => chatChave(m) === chave).reduce((mx, m) => Math.max(mx, m.ts), 0);
-    s[chave] = Math.max(ult, s[chave] || 0);
-    localStorage.setItem(chatSeenKey(), JSON.stringify(s));
-  } catch (e) {}
-}
-function chatNaoLidas(chave) {
-  const visto = chatLerSeen()[chave] || 0;
-  return chat.msgs.filter(m => chatChave(m) === chave && m.de !== chatMeuId() && m.ts > visto).length;
-}
-
-function iniciarChat() {
-  if (!currentUser.token || !currentUser.usuario) return;
-  pararChat();
-  document.getElementById('chatFab').classList.add('ativo');
-  chat.primeiraCarga = true; chat.since = 0; chat.msgs = []; chat.ids = new Set(); chat.conv = 'GERAL';
-  chatCarregarContatos().then(() => chatPoll());
-  chat.timer = setInterval(() => { if (!document.hidden) chatPoll(); }, 7000);
-}
-
-function pararChat() {
-  if (chat.timer) { clearInterval(chat.timer); chat.timer = null; }
-  const fab = document.getElementById('chatFab'); if (fab) fab.classList.remove('ativo');
-  const p = document.getElementById('chatPanel'); if (p) p.classList.remove('active', 'em-conversa');
-  chat.aberto = false;
-}
-
-async function chatCarregarContatos() {
-  try {
-    const r = await enviarParaGAS('listarUsuarios', {});
-    if (r.success) {
-      const eu = chatMeuId();
-      const vistos = new Set();
-      chat.contatos = (r.usuarios || []).filter(u => {
-        const id = String(u.usuario || '').toLowerCase();
-        if (!id || id === eu || vistos.has(id) || String(u.status || 'ATIVO').toUpperCase() !== 'ATIVO') return false;
-        vistos.add(id); return true;
-      }).map(u => ({ id: String(u.usuario).toLowerCase(), nome: u.nome, perfil: String(u.perfil || '').toLowerCase() }));
-    }
-  } catch (e) {}
-  chatRenderLista();
-}
-
-async function chatPoll() {
-  if (chat.ocupado || !currentUser.token) return;
-  chat.ocupado = true;
-  try {
-    const r = await enviarParaGAS('chatListar', { since: chat.since });
-    if (r && r.success && Array.isArray(r.mensagens)) {
-      const novas = [];
-      r.mensagens.forEach(m => {
-        if (chat.ids.has(m.id)) return;
-        chat.ids.add(m.id);
-        const msg = { id: m.id, ts: Number(m.ts) || 0, de: String(m.de).toLowerCase(), nome: m.nome, perfil: m.perfil, para: String(m.para).toLowerCase() === 'geral' ? 'GERAL' : String(m.para).toLowerCase(), texto: m.texto };
-        chat.msgs.push(msg); novas.push(msg);
-        if (msg.ts > chat.since) chat.since = msg.ts;
-      });
-      chat.msgs.sort((a, b) => a.ts - b.ts);
-      if (!chat.primeiraCarga) {
-        novas.filter(m => m.de !== chatMeuId() && !(chat.aberto && chat.conv === chatChave(m))).forEach(m => {
-          mostrarPopupNotificacao({ tipo: 'mensagem', titulo: (m.para === 'GERAL' ? '💬 Geral — ' : '💬 ') + m.nome, descricao: (m.texto || '').substring(0, 100), data: getDataHoraAtual() });
-        });
-      }
-      chat.primeiraCarga = false;
-      if (chat.aberto && chat.conv) chatMarcarVisto(chat.conv);
-      chatRenderTudo();
-    }
-  } catch (e) {}
-  chat.ocupado = false;
-}
-
-function chatAlternar() {
-  const p = document.getElementById('chatPanel');
-  chat.aberto = !chat.aberto;
-  p.classList.toggle('active', chat.aberto);
-  if (chat.aberto) { chatCarregarContatos(); chatMarcarVisto(chat.conv); chatRenderTudo(); chatPoll(); }
-}
-
-function chatAbrirConversa(chave) {
-  chat.conv = chave;
-  document.getElementById('chatPanel').classList.add('em-conversa');
-  chatMarcarVisto(chave);
-  chatRenderTudo();
-  const t = document.getElementById('chatTexto'); if (t) t.focus();
-}
-function chatVoltar() { document.getElementById('chatPanel').classList.remove('em-conversa'); }
-
-function chatRenderTudo() { chatRenderLista(); chatRenderMensagens(); chatRenderFab(); }
-
-function chatRenderFab() {
-  const badge = document.getElementById('chatBadge'); if (!badge) return;
-  let total = chatNaoLidas('GERAL');
-  chat.contatos.forEach(c => { total += chatNaoLidas(c.id); });
-  if (total > 0) { badge.textContent = total > 99 ? '99+' : total; badge.classList.remove('hidden'); }
-  else badge.classList.add('hidden');
-}
-
-function chatRenderLista() {
-  const cont = document.getElementById('chatContatos'); if (!cont) return;
-  const busca = normalizarNome(document.getElementById('chatBusca').value);
-  const ultimo = c => chat.msgs.filter(m => chatChave(m) === c).reduce((mx, m) => Math.max(mx, m.ts), 0);
-  const lista = chat.contatos
-    .filter(c => !busca || normalizarNome(c.nome).includes(busca))
-    .sort((a, b) => ultimo(b.id) - ultimo(a.id) || a.nome.localeCompare(b.nome));
-  const item = (chave, nome, sub) => {
-    const nl = chatNaoLidas(chave);
-    return `<div class="chat-contato ${chat.conv === chave ? 'sel' : ''}" onclick="chatAbrirConversa('${chave.replace(/'/g, "\\'")}')">
-      <div style="min-width:0;"><div class="nome">${escapeHtml(nome)}</div><div class="perfil">${escapeHtml(sub)}</div></div>
-      ${nl > 0 ? `<span class="nl">${nl}</span>` : ''}</div>`;
-  };
-  cont.innerHTML = item('GERAL', '🌐 Chat Geral', 'Todos os usuários') +
-    lista.map(c => item(c.id, c.nome, (cargoConfig[c.perfil] || {}).titulo || c.perfil)).join('');
-}
-
-function chatRenderMensagens() {
-  const cont = document.getElementById('chatMsgs'); if (!cont) return;
-  const tit = document.getElementById('chatConvTitulo');
-  const ct = chat.contatos.find(c => c.id === chat.conv);
-  tit.textContent = chat.conv === 'GERAL' ? '🌐 Chat Geral' : '👤 ' + (ct ? ct.nome : chat.conv);
-  const msgs = chat.msgs.filter(m => chatChave(m) === chat.conv);
-  if (msgs.length === 0) { cont.innerHTML = '<div class="chat-dia">Nenhuma mensagem ainda. Diga olá! 👋</div>'; return; }
-  let html = '', diaAnt = '';
-  msgs.forEach(m => {
-    const d = new Date(m.ts);
-    const dia = d.toLocaleDateString('pt-BR');
-    if (dia !== diaAnt) { html += `<div class="chat-dia">${dia === new Date().toLocaleDateString('pt-BR') ? 'Hoje' : dia}</div>`; diaAnt = dia; }
-    const minha = m.de === chatMeuId();
-    const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    html += `<div class="chat-bolha ${minha ? 'minha' : ''} ${m.pendente ? 'pendente' : ''}">
-      ${(!minha && chat.conv === 'GERAL') ? `<div class="autor">${escapeHtml(m.nome)} · ${escapeHtml((cargoConfig[m.perfil] || {}).titulo || m.perfil || '')}</div>` : ''}
-      ${escapeHtml(m.texto)}<div class="hora">${hora}${m.pendente ? ' ⏳' : ''}</div></div>`;
-  });
-  const noFim = cont.scrollTop + cont.clientHeight >= cont.scrollHeight - 60;
-  cont.innerHTML = html;
-  if (noFim || !cont.dataset.init) { cont.scrollTop = cont.scrollHeight; cont.dataset.init = '1'; }
-}
-
-function chatTecla(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatEnviar(); } }
-
-async function chatEnviar() {
-  const inp = document.getElementById('chatTexto');
-  const texto = inp.value.trim();
-  if (!texto) return;
-  const idLocal = 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-  const msg = { id: idLocal, ts: Date.now(), de: chatMeuId(), nome: currentUser.nome, perfil: currentUser.perfil, para: chat.conv, texto, pendente: true };
-  chat.ids.add(idLocal); chat.msgs.push(msg);
-  inp.value = '';
-  chatRenderTudo();
-  const cont = document.getElementById('chatMsgs'); cont.scrollTop = cont.scrollHeight;
-  const r = await enviarParaGAS('chatEnviar', { id: idLocal, para: msg.para, texto });
-  if (r && r.success) { msg.pendente = false; if (r.ts) { msg.ts = Number(r.ts); if (msg.ts > chat.since) chat.since = msg.ts; } }
-  else {
-    chat.msgs = chat.msgs.filter(m => m.id !== idLocal);
-    mostrarToast('❌ Mensagem não enviada: ' + ((r && r.error) || 'erro'), 'error');
-    inp.value = texto;
-  }
-  chatRenderTudo();
-}
-
-// ============================================
 // INICIALIZAÇÃO
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -5445,6 +5356,158 @@ document.addEventListener('DOMContentLoaded', function() {
 
   setTimeout(() => { carregarDadosPlanilha(); }, 300);
 });
+
+// ============================================
+// CHAT
+// ============================================
+let chatAberto = false;
+let chatConversaAtual = '__GERAL__'; // '__GERAL__' ou nome do usuário
+let chatMensagensCache = [];
+let chatContatosCache = [];
+let chatPollInterval = null;
+
+function chatAlternar() {
+  chatAberto = !chatAberto;
+  const panel = document.getElementById('chatPanel');
+  if (!panel) return;
+  panel.classList.toggle('active', chatAberto);
+  if (chatAberto) {
+    chatCarregarContatos();
+    chatCarregarMensagens(chatConversaAtual);
+    if (!chatPollInterval) {
+      chatPollInterval = setInterval(() => {
+        if (chatAberto) {
+          chatCarregarMensagens(chatConversaAtual, true);
+          chatCarregarContatos(true);
+        }
+      }, 5000);
+    }
+  }
+}
+
+function chatVoltar() {
+  chatConversaAtual = '__GERAL__';
+  chatAtualizarTituloConversa();
+  chatCarregarMensagens('__GERAL__');
+}
+
+function chatAtualizarTituloConversa() {
+  const titulo = document.getElementById('chatConvTitulo');
+  if (!titulo) return;
+  if (chatConversaAtual === '__GERAL__') titulo.textContent = '🌐 Chat Geral';
+  else titulo.textContent = '💬 ' + chatConversaAtual;
+}
+
+async function chatCarregarContatos(silencioso) {
+  try {
+    const resp = await fetch(GAS_URL + '?action=chatListarContatos&token=' + encodeURIComponent(currentUser.token || ''));
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.erro || 'Falha');
+    chatContatosCache = data.contatos || [];
+    chatRenderLista();
+  } catch (e) {
+    if (!silencioso) console.warn('Chat contatos:', e);
+  }
+}
+
+function chatRenderLista() {
+  const container = document.getElementById('chatContatos');
+  if (!container) return;
+  const busca = (document.getElementById('chatBusca')?.value || '').toLowerCase().trim();
+
+  let html = `<div class="chat-contato ${chatConversaAtual === '__GERAL__' ? 'ativo' : ''}" onclick="chatAbrirConversa('__GERAL__')">
+    <span class="chat-contato-nome">🌐 Chat Geral</span>
+  </div>`;
+
+  chatContatosCache
+    .filter(c => !busca || (c.nome || '').toLowerCase().includes(busca))
+    .forEach(c => {
+      const ativo = chatConversaAtual === c.usuario ? 'ativo' : '';
+      const badge = c.naoLidas > 0 ? `<span class="chat-contato-badge">${c.naoLidas}</span>` : '';
+      html += `<div class="chat-contato ${ativo}" onclick="chatAbrirConversa('${escapeHtml(c.usuario)}')">
+        <span class="chat-contato-nome">${escapeHtml(c.nome || c.usuario)}</span>${badge}
+      </div>`;
+    });
+
+  container.innerHTML = html;
+}
+
+function chatAbrirConversa(usuario) {
+  chatConversaAtual = usuario;
+  chatAtualizarTituloConversa();
+  chatCarregarMensagens(usuario);
+  chatRenderLista();
+  document.querySelector('.chat-side')?.classList.add('hidden-mobile');
+  document.querySelector('.chat-conv')?.classList.remove('hidden-mobile');
+}
+
+async function chatCarregarMensagens(conversa, silencioso) {
+  try {
+    const destino = conversa === '__GERAL__' ? '' : conversa;
+    const resp = await fetch(GAS_URL + '?action=chatListarMensagens&token=' + encodeURIComponent(currentUser.token || '') + '&destino=' + encodeURIComponent(destino));
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.erro || 'Falha');
+    chatMensagensCache = data.mensagens || [];
+    chatRenderMensagens();
+  } catch (e) {
+    if (!silencioso) {
+      const box = document.getElementById('chatMsgs');
+      if (box) box.innerHTML = '<div style="color:#e53e3e;text-align:center;padding:20px;">Erro ao carregar mensagens.</div>';
+    }
+  }
+}
+
+function chatRenderMensagens() {
+  const box = document.getElementById('chatMsgs');
+  if (!box) return;
+  if (!chatMensagensCache.length) {
+    box.innerHTML = '<div style="color:#a0aec0;text-align:center;padding:20px;font-size:0.85em;">Nenhuma mensagem ainda. Diga olá! 👋</div>';
+    return;
+  }
+  const meuUser = currentUser.usuario;
+  box.innerHTML = chatMensagensCache.map(m => {
+    const minha = m.remetente === meuUser;
+    return `<div class="chat-msg ${minha ? 'minha' : 'outra'}">
+      ${!minha ? `<strong style="font-size:0.85em;">${escapeHtml(m.remetenteNome || m.remetente)}</strong><br>` : ''}
+      ${escapeHtml(m.texto)}
+      <span class="chat-msg-meta">${formatarDataHoraExibicao(m.dataHora)}</span>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function chatTecla(ev) {
+  if (ev.key === 'Enter' && !ev.shiftKey) {
+    ev.preventDefault();
+    chatEnviar();
+  }
+}
+
+async function chatEnviar() {
+  const txt = document.getElementById('chatTexto');
+  const texto = (txt?.value || '').trim();
+  if (!texto) return;
+  const destino = chatConversaAtual === '__GERAL__' ? '' : chatConversaAtual;
+  try {
+    txt.value = '';
+    const resp = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'chatEnviarMensagem',
+        token: currentUser.token,
+        destino,
+        texto
+      })
+    });
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.erro || 'Falha ao enviar');
+    chatCarregarMensagens(chatConversaAtual, true);
+  } catch (e) {
+    toast('Erro ao enviar: ' + e.message, 'error');
+    txt.value = texto;
+  }
+}
 </script>
 </body>
 </html>
