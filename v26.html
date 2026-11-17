@@ -1315,12 +1315,11 @@ tbody tr:hover { background: #f7fafc; }
     </div>
   </div>
 </div>
-  
 <script>
 // ============================================
 // CONFIGURAÇÃO
 // ============================================
-const SHEET_CONFIG = {
+var SHEET_CONFIG = {
   sheetId: '1FRtD7cbV2tvK2og4NDkyWi8V_hziyERNZoSh20gG980',
   abas: {
     alunos: 'ALUNOS', matriculas: 'MATRICULAS', professores: 'PROFESSORES',
@@ -1331,9 +1330,9 @@ const SHEET_CONFIG = {
   }
 };
 
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
 
-const CURSOS = [
+var CURSOS = [
   { id: 'piano', nome: '🎹 Piano', tipo: 'Instrumento' },
   { id: 'teclado', nome: '🎹 Teclado', tipo: 'Instrumento' },
   { id: 'orgaoA', nome: '🎹 Órgão A', tipo: 'Instrumento' },
@@ -1357,26 +1356,26 @@ const CURSOS = [
   { id: 'teoria-musical2', nome: '🎼 Teoria Musical 2', tipo: 'Teoria Musical 2' },
   { id: 'musicalizacao-infantil', nome: '🎵 Musicalização Infantil', tipo: 'Musicalização' }
 ];
-const CURSOS_MAP = {};
-CURSOS.forEach(c => { CURSOS_MAP[c.id] = c; });
-const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var CURSOS_MAP = {};
+for (var _i = 0; _i < CURSOS.length; _i++) { CURSOS_MAP[CURSOS[_i].id] = CURSOS[_i]; }
+var MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 // ============================================
 // ESTADO
 // ============================================
-let dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], logs: [], usuarios: [] };
-let escolaData = { alunos: [], professores: [], cursos: CURSOS };
-let db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], pagamentosMensais: [], logs: [], usuarios: [] };
-let currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
-let cursoSelecionado = null;
-let dadosAluno = null;
-let arquivoUploadSelecionado = null;
-let anoSelecionadoAluno = new Date().getFullYear();
-let notificacoesAtrasoGeradas = new Set();
-let popupIdsMostrados = new Set();
-let notifPollInterval = null;
-let dirProfSimulado = null;
-let dirCursoSelecionado = null;
+var dadosPlanilha = { alunos: [], matriculas: [], professores: [], avaliacoes: [], presencas: [], conteudos: [], observacoes: [], relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], logs: [], usuarios: [] };
+var escolaData = { alunos: [], professores: [], cursos: CURSOS };
+var db = { matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {}, relatorios: [], notificacoes: [], arquivos: [], mensagens: [], pagamentos: [], pagamentosMensais: [], logs: [], usuarios: [] };
+var currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
+var cursoSelecionado = null;
+var dadosAluno = null;
+var arquivoUploadSelecionado = null;
+var anoSelecionadoAluno = new Date().getFullYear();
+var notificacoesAtrasoGeradas = new Set();
+var popupIdsMostrados = new Set();
+var notifPollInterval = null;
+var dirProfSimulado = null;
+var dirCursoSelecionado = null;
 
 // ============================================
 // HELPERS
@@ -1389,14 +1388,15 @@ function normalizarNome(v) {
 }
 function nomesIguais(a, b) { return normalizarNome(a) === normalizarNome(b); }
 
-function getColuna(obj, ...nomes) {
+function getColuna(obj) {
   if (!obj) return '';
-  const chaves = Object.keys(obj);
-  for (const nome of nomes) {
-    const alvo = String(nome).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_\-]+/g, '');
-    for (const chave of chaves) {
-      const chaveNorm = String(chave).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_\-]+/g, '');
-      if (chaveNorm === alvo) return obj[chave];
+  var nomes = Array.prototype.slice.call(arguments, 1);
+  var chaves = Object.keys(obj);
+  for (var n = 0; n < nomes.length; n++) {
+    var alvo = String(nomes[n]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_\-]+/g, '');
+    for (var c = 0; c < chaves.length; c++) {
+      var chaveNorm = String(chaves[c]).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_\-]+/g, '');
+      if (chaveNorm === alvo) return obj[chaves[c]];
     }
   }
   return '';
@@ -1405,50 +1405,50 @@ function getColuna(obj, ...nomes) {
 function normalizarValor(raw) {
   if (raw === null || raw === undefined || raw === '') return 0;
   if (typeof raw === 'number') return isFinite(raw) ? raw : 0;
-  let str = String(raw).trim();
+  var str = String(raw).trim();
   if (!str) return 0;
   str = str.replace(/R\$\s*/gi, '').replace(/[^\d.,\-]/g, '');
   if (!str) return 0;
   if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) str = str.replace(/\./g, '').replace(',', '.');
   else if (/^-?\d+(,\d+)$/.test(str)) str = str.replace(',', '.');
   else if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(str)) str = str.replace(/,/g, '');
-  const n = parseFloat(str);
+  var n = parseFloat(str);
   return isNaN(n) ? 0 : n;
 }
 
 function formatarDataExibicao(valor) {
   if (valor === null || valor === undefined || valor === '') return '';
   if (valor instanceof Date && !isNaN(valor.getTime())) {
-    return `${String(valor.getDate()).padStart(2,'0')}/${String(valor.getMonth()+1).padStart(2,'0')}/${valor.getFullYear()}`;
+    return String(valor.getDate()).padStart(2,'0') + '/' + String(valor.getMonth()+1).padStart(2,'0') + '/' + valor.getFullYear();
   }
-  let str = String(valor).trim();
+  var str = String(valor).trim();
   if (!str) return '';
-  const mDdMmAaaa = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
-  if (mDdMmAaaa) return `${String(mDdMmAaaa[1]).padStart(2,'0')}/${String(mDdMmAaaa[2]).padStart(2,'0')}/${mDdMmAaaa[3]}`;
-  const mIso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (mIso) return `${mIso[3]}/${mIso[2]}/${mIso[1]}`;
-  const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
-  if (mGviz) return `${String(parseInt(mGviz[3],10)).padStart(2,'0')}/${String(parseInt(mGviz[2],10)+1).padStart(2,'0')}/${parseInt(mGviz[1],10)}`;
-  const d = new Date(str);
-  if (!isNaN(d.getTime())) return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-  const num = Number(str);
+  var mDdMmAaaa = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  if (mDdMmAaaa) return String(mDdMmAaaa[1]).padStart(2,'0') + '/' + String(mDdMmAaaa[2]).padStart(2,'0') + '/' + mDdMmAaaa[3];
+  var mIso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (mIso) return mIso[3] + '/' + mIso[2] + '/' + mIso[1];
+  var mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
+  if (mGviz) return String(parseInt(mGviz[3],10)).padStart(2,'0') + '/' + String(parseInt(mGviz[2],10)+1).padStart(2,'0') + '/' + parseInt(mGviz[1],10);
+  var d = new Date(str);
+  if (!isNaN(d.getTime())) return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+  var num = Number(str);
   if (!isNaN(num) && num > 20000 && num < 80000) {
-    const base = new Date(1899, 11, 30);
-    const dt = new Date(base.getTime() + num * 24 * 60 * 60 * 1000);
-    return `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
+    var base = new Date(1899, 11, 30);
+    var dt = new Date(base.getTime() + num * 24 * 60 * 60 * 1000);
+    return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
   }
   return str;
 }
 
 function formatarDataHoraExibicao(valor) {
   if (valor === null || valor === undefined || valor === '') return '';
-  let dt = null;
+  var dt = null;
   if (valor instanceof Date && !isNaN(valor.getTime())) {
     dt = valor;
   } else {
-    const str = String(valor).trim();
+    var str = String(valor).trim();
     if (!str) return '';
-    const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+)(?:,(\d+))?)?\)/);
+    var mGviz = str.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+)(?:,(\d+))?)?\)/);
     if (mGviz) {
       dt = new Date(
         parseInt(mGviz[1],10),
@@ -1459,49 +1459,49 @@ function formatarDataHoraExibicao(valor) {
         mGviz[6] ? parseInt(mGviz[6],10) : 0
       );
     } else {
-      const d = new Date(str);
+      var d = new Date(str);
       if (!isNaN(d.getTime())) dt = d;
     }
   }
   if (!dt) return formatarDataExibicao(valor);
-  const dataFmt = `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`;
-  const temHora = dt.getHours() !== 0 || dt.getMinutes() !== 0 || dt.getSeconds() !== 0;
+  var dataFmt = String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
+  var temHora = dt.getHours() !== 0 || dt.getMinutes() !== 0 || dt.getSeconds() !== 0;
   if (!temHora) return dataFmt;
-  const horaFmt = `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}:${String(dt.getSeconds()).padStart(2,'0')}`;
-  return `${dataFmt} - ${horaFmt}`;
+  var horaFmt = String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0') + ':' + String(dt.getSeconds()).padStart(2,'0');
+  return dataFmt + ' - ' + horaFmt;
 }
 
 function mesRefAtual() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
 
 function normalizarReferencia(raw) {
   if (raw === null || raw === undefined || raw === '') return mesRefAtual();
-  if (raw instanceof Date && !isNaN(raw.getTime())) return `${raw.getFullYear()}-${String(raw.getMonth()+1).padStart(2,'0')}`;
-  let str = String(raw).trim();
+  if (raw instanceof Date && !isNaN(raw.getTime())) return raw.getFullYear() + '-' + String(raw.getMonth()+1).padStart(2,'0');
+  var str = String(raw).trim();
   if (!str) return mesRefAtual();
-  const mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
-  if (mGviz) return `${parseInt(mGviz[1],10)}-${String(parseInt(mGviz[2],10)+1).padStart(2,'0')}`;
-  let m = str.match(/^(\d{4})-(\d{1,2})(?:-\d{1,2})?/);
-  if (m) return `${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
+  var mGviz = str.match(/^Date\((\d+),(\d+),(\d+)/);
+  if (mGviz) return parseInt(mGviz[1],10) + '-' + String(parseInt(mGviz[2],10)+1).padStart(2,'0');
+  var m = str.match(/^(\d{4})-(\d{1,2})(?:-\d{1,2})?/);
+  if (m) return m[1] + '-' + String(parseInt(m[2],10)).padStart(2,'0');
   m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[3]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
+  if (m) return m[3] + '-' + String(parseInt(m[2],10)).padStart(2,'0');
   m = str.match(/^(\d{1,2})[-\/](\d{4})$/);
-  if (m) return `${m[2]}-${String(parseInt(m[1],10)).padStart(2,'0')}`;
-  const d = new Date(str);
-  if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  if (m) return m[2] + '-' + String(parseInt(m[1],10)).padStart(2,'0');
+  var d = new Date(str);
+  if (!isNaN(d.getTime())) return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
   return mesRefAtual();
 }
 
 function normalizarStatusPagamento(raw) {
   if (raw === null || raw === undefined) return 'PENDENTE';
-  const s = String(raw).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  var s = String(raw).trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   if (!s) return 'PENDENTE';
-  if (s.includes('PAG')) return 'PAGO';
-  if (s.includes('ATRAS')) return 'ATRASADO';
-  if (s.includes('ISENT')) return 'ISENTO';
-  if (s.includes('PEND')) return 'PENDENTE';
+  if (s.indexOf('PAG') >= 0) return 'PAGO';
+  if (s.indexOf('ATRAS') >= 0) return 'ATRASADO';
+  if (s.indexOf('ISENT') >= 0) return 'ISENTO';
+  if (s.indexOf('PEND') >= 0) return 'PENDENTE';
   return 'PENDENTE';
 }
 
@@ -1512,36 +1512,46 @@ function escapeHtml(s) {
 }
 
 function toast(msg, tipo) {
-  const t = document.createElement('div');
+  var t = document.createElement('div');
   t.className = 'toast ' + (tipo === 'error' ? 'toast-error' : tipo === 'success' ? 'toast-success' : 'toast-info');
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
+  setTimeout(function() { t.remove(); }, 3500);
 }
 
 function fecharModal(id) {
-  document.getElementById(id)?.classList.remove('active');
+  var el = document.getElementById(id);
+  if (el) el.classList.remove('active');
 }
 
 function abrirModal(id) {
-  document.getElementById(id)?.classList.add('active');
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
 }
 
 // ============================================
 // LOGIN E INICIALIZAÇÃO
 // ============================================
-document.getElementById('loginForm')?.addEventListener('submit', async function(ev) {
-  ev.preventDefault();
-  const perfil = document.getElementById('loginPerfil').value.trim();
-  const usuario = document.getElementById('loginUsuario').value.trim();
-  const senha = document.getElementById('loginSenha').value;
+(function() {
+  var form = document.getElementById('loginForm');
+  if (!form) return;
+  form.addEventListener('submit', function(ev) {
+    ev.preventDefault();
+    fazerLogin();
+  });
+})();
+
+function fazerLogin() {
+  var perfil = document.getElementById('loginPerfil').value.trim();
+  var usuario = document.getElementById('loginUsuario').value.trim();
+  var senha = document.getElementById('loginSenha').value;
   if (!perfil || !usuario || !senha) return;
 
-  const progress = document.getElementById('loginProgress');
-  const progressFill = document.getElementById('loginProgressFill');
-  const progressPct = document.getElementById('loginProgressPct');
-  const progressMsg = document.getElementById('loginProgressMsg');
-  const progressText = document.getElementById('loginProgressText');
+  var progress = document.getElementById('loginProgress');
+  var progressFill = document.getElementById('loginProgressFill');
+  var progressPct = document.getElementById('loginProgressPct');
+  var progressMsg = document.getElementById('loginProgressMsg');
+  var progressText = document.getElementById('loginProgressText');
 
   progress.classList.add('active');
   progress.classList.remove('done', 'error');
@@ -1551,16 +1561,18 @@ document.getElementById('loginForm')?.addEventListener('submit', async function(
   progressMsg.textContent = '';
   document.getElementById('btnEntrar').disabled = true;
 
-  try {
-    progressFill.style.width = '40%';
-    progressPct.textContent = '40%';
-    const resp = await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'login', usuario, senha, perfil })
-    });
-    const data = await resp.json();
+  fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'login', usuario: usuario, senha: senha, perfil: perfil })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
     if (!data.ok) throw new Error(data.erro || 'Falha no login');
+
+    progressFill.style.width = '50%';
+    progressPct.textContent = '50%';
+    progressText.textContent = 'Carregando dados...';
 
     currentUser = {
       perfil: data.perfil,
@@ -1573,75 +1585,67 @@ document.getElementById('loginForm')?.addEventListener('submit', async function(
       cursos: []
     };
 
-    progressFill.style.width = '70%';
-    progressPct.textContent = '70%';
-    progressText.textContent = 'Carregando dados...';
-    await carregarDadosPlanilha();
-
+    return carregarDadosPlanilha();
+  })
+  .then(function() {
     progressFill.style.width = '100%';
     progressPct.textContent = '100%';
     progress.classList.add('done');
     progressText.textContent = 'Conectado!';
     progressMsg.textContent = 'Redirecionando...';
 
-    // ✅ MOSTRA A BOLINHA DO CHAT
-    const fab = document.getElementById('chatFab');
+    var fab = document.getElementById('chatFab');
     if (fab) fab.classList.remove('hidden');
 
-    setTimeout(() => {
+    setTimeout(function() {
       document.getElementById('loginContainer').style.display = 'none';
       document.getElementById('dashboard').classList.add('active');
       progress.classList.remove('active');
       document.getElementById('btnEntrar').disabled = false;
       exibirAreaUsuario();
     }, 400);
-
-  } catch (e) {
+  })
+  .catch(function(e) {
     progressFill.style.width = '100%';
     progressPct.textContent = '100%';
     progress.classList.add('error');
     progressText.textContent = 'Erro';
     progressMsg.textContent = e.message;
     document.getElementById('btnEntrar').disabled = false;
-    setTimeout(() => progress.classList.remove('active'), 3000);
-  }
-});
+    setTimeout(function() { progress.classList.remove('active'); }, 3000);
+  });
+}
 
-async function carregarDadosPlanilha() {
-  try {
-    const resp = await fetch(GAS_URL + '?action=carregarTudo');
-    const data = await resp.json();
-    if (!data.ok) throw new Error(data.erro || 'Falha');
-    const d = data.dados || {};
-    dadosPlanilha = {
-      alunos: d.alunos || [],
-      matriculas: d.matriculas || [],
-      professores: d.professores || [],
-      avaliacoes: d.avaliacoes || [],
-      presencas: d.presencas || [],
-      conteudos: d.conteudos || [],
-      observacoes: d.observacoes || [],
-      relatorios: d.relatorios || [],
-      notificacoes: d.notificacoes || [],
-      arquivos: d.arquivos || [],
-      mensagens: d.mensagens || [],
-      pagamentos: d.pagamentos || [],
-      logs: d.logs || [],
-      usuarios: d.usuarios || []
-    };
-    const st = document.getElementById('syncStatus');
-    if (st) { st.className = 'sync-status synced'; st.textContent = '✅ Sincronizado'; }
-  } catch (e) {
-    const st = document.getElementById('syncStatus');
-    if (st) { st.className = 'sync-status error'; st.textContent = '❌ Erro ao carregar'; }
-    throw e;
-  }
+function carregarDadosPlanilha() {
+  return fetch(GAS_URL + '?action=carregarTudo')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) throw new Error(data.erro || 'Falha');
+      var d = data.dados || {};
+      dadosPlanilha = {
+        alunos: d.alunos || [], matriculas: d.matriculas || [], professores: d.professores || [],
+        avaliacoes: d.avaliacoes || [], presencas: d.presencas || [], conteudos: d.conteudos || [],
+        observacoes: d.observacoes || [], relatorios: d.relatorios || [], notificacoes: d.notificacoes || [],
+        arquivos: d.arquivos || [], mensagens: d.mensagens || [], pagamentos: d.pagamentos || [],
+        logs: d.logs || [], usuarios: d.usuarios || []
+      };
+      var st = document.getElementById('syncStatus');
+      if (st) { st.className = 'sync-status synced'; st.textContent = '✅ Sincronizado'; }
+    })
+    .catch(function(e) {
+      var st = document.getElementById('syncStatus');
+      if (st) { st.className = 'sync-status error'; st.textContent = '❌ Erro ao carregar'; }
+      throw e;
+    });
 }
 
 function exibirAreaUsuario() {
-  const areas = ['secretariaArea','professorArea','coordenadorArea','direcaoArea','financeiroArea','alunoArea','adminArea'];
-  areas.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-  const mapa = {
+  var areas = ['secretariaArea','professorArea','coordenadorArea','direcaoArea','financeiroArea','alunoArea','adminArea'];
+  for (var i = 0; i < areas.length; i++) {
+    var el = document.getElementById(areas[i]);
+    if (el) el.classList.add('hidden');
+  }
+  var mapa = {
     secretaria: 'secretariaArea',
     professor: 'professorArea',
     coordenacao: 'coordenadorArea',
@@ -1650,16 +1654,21 @@ function exibirAreaUsuario() {
     aluno: 'alunoArea',
     admin: 'adminArea'
   };
-  const idArea = mapa[currentUser.perfil];
-  if (idArea) document.getElementById(idArea)?.classList.remove('hidden');
-  document.getElementById('userDisplay').textContent = `${currentUser.nome} (${currentUser.perfil})`;
+  var idArea = mapa[currentUser.perfil];
+  if (idArea) {
+    var elArea = document.getElementById(idArea);
+    if (elArea) elArea.classList.remove('hidden');
+  }
+  document.getElementById('userDisplay').textContent = currentUser.nome + ' (' + currentUser.perfil + ')';
   document.getElementById('dashboardTitle').textContent = '📊 Painel de Controle';
 }
 
 function logout(recarregar) {
   if (!confirm('Deseja sair do sistema?')) return;
-  document.getElementById('chatFab')?.classList.add('hidden');
-  document.getElementById('chatPanel')?.classList.remove('active');
+  var fab = document.getElementById('chatFab');
+  if (fab) fab.classList.add('hidden');
+  var panel = document.getElementById('chatPanel');
+  if (panel) panel.classList.remove('active');
   chatAberto = false;
   if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
   if (currentUser.token) {
@@ -1667,7 +1676,7 @@ function logout(recarregar) {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: 'logout', token: currentUser.token })
-    }).catch(() => {});
+    }).catch(function() {});
   }
   currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
   document.getElementById('dashboard').classList.remove('active');
@@ -1678,22 +1687,22 @@ function logout(recarregar) {
 // ============================================
 // CHAT
 // ============================================
-let chatAberto = false;
-let chatConversaAtual = '__GERAL__';
-let chatMensagensCache = [];
-let chatContatosCache = [];
-let chatPollInterval = null;
+var chatAberto = false;
+var chatConversaAtual = '__GERAL__';
+var chatMensagensCache = [];
+var chatContatosCache = [];
+var chatPollInterval = null;
 
 function chatAlternar() {
   chatAberto = !chatAberto;
-  const panel = document.getElementById('chatPanel');
+  var panel = document.getElementById('chatPanel');
   if (!panel) return;
   panel.classList.toggle('active', chatAberto);
   if (chatAberto) {
     chatCarregarContatos();
     chatCarregarMensagens(chatConversaAtual);
     if (!chatPollInterval) {
-      chatPollInterval = setInterval(() => {
+      chatPollInterval = setInterval(function() {
         if (chatAberto) {
           chatCarregarMensagens(chatConversaAtual, true);
           chatCarregarContatos(true);
@@ -1707,47 +1716,49 @@ function chatVoltar() {
   chatConversaAtual = '__GERAL__';
   chatAtualizarTituloConversa();
   chatCarregarMensagens('__GERAL__');
-  document.querySelector('.chat-side')?.classList.remove('hidden-mobile');
-  document.querySelector('.chat-conv')?.classList.add('hidden-mobile');
+  var side = document.querySelector('.chat-side');
+  var conv = document.querySelector('.chat-conv');
+  if (side) side.classList.remove('hidden-mobile');
+  if (conv) conv.classList.add('hidden-mobile');
 }
 
 function chatAtualizarTituloConversa() {
-  const titulo = document.getElementById('chatConvTitulo');
+  var titulo = document.getElementById('chatConvTitulo');
   if (!titulo) return;
   if (chatConversaAtual === '__GERAL__') titulo.textContent = '🌐 Chat Geral';
   else titulo.textContent = '💬 ' + chatConversaAtual;
 }
 
-async function chatCarregarContatos(silencioso) {
-  try {
-    const resp = await fetch(GAS_URL + '?action=chatListarContatos&token=' + encodeURIComponent(currentUser.token || ''));
-    const data = await resp.json();
-    if (!data.ok) throw new Error(data.erro || 'Falha');
-    chatContatosCache = data.contatos || [];
-    chatRenderLista();
-  } catch (e) {
-    if (!silencioso) console.warn('Chat contatos:', e);
-  }
+function chatCarregarContatos(silencioso) {
+  return fetch(GAS_URL + '?action=chatListarContatos&token=' + encodeURIComponent(currentUser.token || ''))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) throw new Error(data.erro || 'Falha');
+      chatContatosCache = data.contatos || [];
+      chatRenderLista();
+    })
+    .catch(function(e) {
+      if (!silencioso) console.warn('Chat contatos:', e);
+    });
 }
 
 function chatRenderLista() {
-  const container = document.getElementById('chatContatos');
+  var container = document.getElementById('chatContatos');
   if (!container) return;
-  const busca = (document.getElementById('chatBusca')?.value || '').toLowerCase().trim();
+  var buscaEl = document.getElementById('chatBusca');
+  var busca = buscaEl ? buscaEl.value.toLowerCase().trim() : '';
 
-  let html = `<div class="chat-contato ${chatConversaAtual === '__GERAL__' ? 'ativo' : ''}" onclick="chatAbrirConversa('__GERAL__')">
-    <span class="chat-contato-nome">🌐 Chat Geral</span>
-  </div>`;
+  var html = '<div class="chat-contato ' + (chatConversaAtual === '__GERAL__' ? 'ativo' : '') + '" onclick="chatAbrirConversa(\'__GERAL__\')">' +
+    '<span class="chat-contato-nome">🌐 Chat Geral</span></div>';
 
-  chatContatosCache
-    .filter(c => !busca || (c.nome || '').toLowerCase().includes(busca))
-    .forEach(c => {
-      const ativo = chatConversaAtual === c.usuario ? 'ativo' : '';
-      const badge = c.naoLidas > 0 ? `<span class="chat-contato-badge">${c.naoLidas}</span>` : '';
-      html += `<div class="chat-contato ${ativo}" onclick="chatAbrirConversa('${escapeHtml(c.usuario)}')">
-        <span class="chat-contato-nome">${escapeHtml(c.nome || c.usuario)}</span>${badge}
-      </div>`;
-    });
+  for (var i = 0; i < chatContatosCache.length; i++) {
+    var c = chatContatosCache[i];
+    if (busca && (c.nome || '').toLowerCase().indexOf(busca) === -1) continue;
+    var ativo = chatConversaAtual === c.usuario ? 'ativo' : '';
+    var badge = c.naoLidas > 0 ? '<span class="chat-contato-badge">' + c.naoLidas + '</span>' : '';
+    html += '<div class="chat-contato ' + ativo + '" onclick="chatAbrirConversa(\'' + escapeHtml(c.usuario) + '\')">' +
+      '<span class="chat-contato-nome">' + escapeHtml(c.nome || c.usuario) + '</span>' + badge + '</div>';
+  }
 
   container.innerHTML = html;
 }
@@ -1757,42 +1768,47 @@ function chatAbrirConversa(usuario) {
   chatAtualizarTituloConversa();
   chatCarregarMensagens(usuario);
   chatRenderLista();
-  document.querySelector('.chat-side')?.classList.add('hidden-mobile');
-  document.querySelector('.chat-conv')?.classList.remove('hidden-mobile');
+  var side = document.querySelector('.chat-side');
+  var conv = document.querySelector('.chat-conv');
+  if (side) side.classList.add('hidden-mobile');
+  if (conv) conv.classList.remove('hidden-mobile');
 }
 
-async function chatCarregarMensagens(conversa, silencioso) {
-  try {
-    const destino = conversa === '__GERAL__' ? '' : conversa;
-    const resp = await fetch(GAS_URL + '?action=chatListarMensagens&token=' + encodeURIComponent(currentUser.token || '') + '&destino=' + encodeURIComponent(destino));
-    const data = await resp.json();
-    if (!data.ok) throw new Error(data.erro || 'Falha');
-    chatMensagensCache = data.mensagens || [];
-    chatRenderMensagens();
-  } catch (e) {
-    if (!silencioso) {
-      const box = document.getElementById('chatMsgs');
-      if (box) box.innerHTML = '<div style="color:#e53e3e;text-align:center;padding:20px;">Erro ao carregar mensagens.</div>';
-    }
-  }
+function chatCarregarMensagens(conversa, silencioso) {
+  var destino = conversa === '__GERAL__' ? '' : conversa;
+  return fetch(GAS_URL + '?action=chatListarMensagens&token=' + encodeURIComponent(currentUser.token || '') + '&destino=' + encodeURIComponent(destino))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) throw new Error(data.erro || 'Falha');
+      chatMensagensCache = data.mensagens || [];
+      chatRenderMensagens();
+    })
+    .catch(function(e) {
+      if (!silencioso) {
+        var box = document.getElementById('chatMsgs');
+        if (box) box.innerHTML = '<div style="color:#e53e3e;text-align:center;padding:20px;">Erro ao carregar mensagens.</div>';
+      }
+    });
 }
 
 function chatRenderMensagens() {
-  const box = document.getElementById('chatMsgs');
+  var box = document.getElementById('chatMsgs');
   if (!box) return;
   if (!chatMensagensCache.length) {
     box.innerHTML = '<div style="color:#a0aec0;text-align:center;padding:20px;font-size:0.85em;">Nenhuma mensagem ainda. Diga olá! 👋</div>';
     return;
   }
-  const meuUser = currentUser.usuario;
-  box.innerHTML = chatMensagensCache.map(m => {
-    const minha = m.remetente === meuUser;
-    return `<div class="chat-msg ${minha ? 'minha' : 'outra'}">
-      ${!minha ? `<strong style="font-size:0.85em;">${escapeHtml(m.remetenteNome || m.remetente)}</strong><br>` : ''}
-      ${escapeHtml(m.texto)}
-      <span class="chat-msg-meta">${formatarDataHoraExibicao(m.dataHora)}</span>
-    </div>`;
-  }).join('');
+  var meuUser = currentUser.usuario;
+  var html = '';
+  for (var i = 0; i < chatMensagensCache.length; i++) {
+    var m = chatMensagensCache[i];
+    var minha = m.remetente === meuUser;
+    html += '<div class="chat-msg ' + (minha ? 'minha' : 'outra') + '">' +
+      (!minha ? '<strong style="font-size:0.85em;">' + escapeHtml(m.remetenteNome || m.remetente) + '</strong><br>' : '') +
+      escapeHtml(m.texto) +
+      '<span class="chat-msg-meta">' + formatarDataHoraExibicao(m.dataHora) + '</span></div>';
+  }
+  box.innerHTML = html;
   box.scrollTop = box.scrollHeight;
 }
 
@@ -1803,166 +1819,169 @@ function chatTecla(ev) {
   }
 }
 
-async function chatEnviar() {
-  const txt = document.getElementById('chatTexto');
-  const texto = (txt?.value || '').trim();
+function chatEnviar() {
+  var txt = document.getElementById('chatTexto');
+  var texto = txt ? txt.value.trim() : '';
   if (!texto) return;
-  const destino = chatConversaAtual === '__GERAL__' ? '' : chatConversaAtual;
-  try {
-    txt.value = '';
-    const resp = await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'chatEnviarMensagem',
-        token: currentUser.token,
-        destino,
-        texto
-      })
-    });
-    const data = await resp.json();
+  var destino = chatConversaAtual === '__GERAL__' ? '' : chatConversaAtual;
+  txt.value = '';
+  fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'chatEnviarMensagem', token: currentUser.token, destino: destino, texto: texto })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
     if (!data.ok) throw new Error(data.erro || 'Falha ao enviar');
     chatCarregarMensagens(chatConversaAtual, true);
-  } catch (e) {
+  })
+  .catch(function(e) {
     toast('Erro ao enviar: ' + e.message, 'error');
     txt.value = texto;
-  }
+  });
 }
 
 // ============================================
-// STUBS DE COMPATIBILIDADE
-// Cobrem TODAS as funções referenciadas no HTML para evitar ReferenceError.
-// Substitua gradualmente pelas suas implementações reais se desejar.
+// STUBS DE COMPATIBILIDADE (versão sem arrow functions)
 // ============================================
+function _stub(name, fn) {
+  if (typeof window[name] !== 'function') {
+    window[name] = fn;
+  }
+}
 
-// --- Navegação genérica de seções (usada por todos os toggles) ---
 function _mostrarSecao(prefixo, id, ev) {
   if (ev) ev.preventDefault();
-  document.querySelectorAll(`[id^="${prefixo}-"]`).forEach(el => el.classList.add('hidden'));
-  const el = document.getElementById(`${prefixo}-${id}`);
+  var els = document.querySelectorAll('[id^="' + prefixo + '-"]');
+  for (var i = 0; i < els.length; i++) els[i].classList.add('hidden');
+  var el = document.getElementById(prefixo + '-' + id);
   if (el) el.classList.remove('hidden');
-  // marca botão ativo
   if (ev && ev.currentTarget) {
-    const siblings = ev.currentTarget.parentElement?.querySelectorAll('.toggle-btn');
-    siblings?.forEach(b => b.classList.remove('active'));
+    var siblings = ev.currentTarget.parentElement ? ev.currentTarget.parentElement.querySelectorAll('.toggle-btn') : [];
+    for (var j = 0; j < siblings.length; j++) siblings[j].classList.remove('active');
     ev.currentTarget.classList.add('active');
   }
 }
 
 // Secretaria
-window.toggleSecretaria = window.toggleSecretaria || (id, ev) => _mostrarSecao('secretaria', id, ev);
-window.filtrarAlunosSecretaria = window.filtrarAlunosSecretaria || () => {};
-window.filtrarMatriculasSecretaria = window.filtrarMatriculasSecretaria || () => {};
-window.filtrarProfessoresSecretaria = window.filtrarProfessoresSecretaria || () => {};
-window.carregarUsuariosSecretaria = window.carregarUsuariosSecretaria || () => toast('Carregando usuários...', 'info');
-window.carregarFrequenciaSecretaria = window.carregarFrequenciaSecretaria || () => toast('Carregando frequência...', 'info');
-window.renderMensalidadesSecretaria = window.renderMensalidadesSecretaria || () => {};
-window.gerarRelatorioAlunosSecretaria = window.gerarRelatorioAlunosSecretaria || () => toast('Gerando relatório...', 'info');
-window.gerarRelatorioMatriculasSecretaria = window.gerarRelatorioMatriculasSecretaria || () => toast('Gerando relatório...', 'info');
-window.gerarRelatorioUsuariosSecretaria = window.gerarRelatorioUsuariosSecretaria || () => toast('Gerando relatório...', 'info');
-window.gerarRelatorioMensalidadesSecretaria = window.gerarRelatorioMensalidadesSecretaria || () => toast('Gerando relatório...', 'info');
+_stub('toggleSecretaria', function(id, ev) { _mostrarSecao('secretaria', id, ev); });
+_stub('filtrarAlunosSecretaria', function() {});
+_stub('filtrarMatriculasSecretaria', function() {});
+_stub('filtrarProfessoresSecretaria', function() {});
+_stub('carregarUsuariosSecretaria', function() { toast('Carregando usuários...', 'info'); });
+_stub('carregarFrequenciaSecretaria', function() { toast('Carregando frequência...', 'info'); });
+_stub('renderMensalidadesSecretaria', function() {});
+_stub('gerarRelatorioAlunosSecretaria', function() { toast('Gerando...', 'info'); });
+_stub('gerarRelatorioMatriculasSecretaria', function() { toast('Gerando...', 'info'); });
+_stub('gerarRelatorioUsuariosSecretaria', function() { toast('Gerando...', 'info'); });
+_stub('gerarRelatorioMensalidadesSecretaria', function() { toast('Gerando...', 'info'); });
 
-// Modais genéricos
-window.abrirModalCadastroAluno = window.abrirModalCadastroAluno || () => abrirModal('modalCadastroAluno');
-window.abrirModalCadastroProfessor = window.abrirModalCadastroProfessor || () => abrirModal('modalCadastroProfessor');
-window.abrirModalNovaMatricula = window.abrirModalNovaMatricula || () => abrirModal('modalNovaMatricula');
-window.abrirModalCriarUsuario = window.abrirModalCriarUsuario || () => abrirModal('modalCriarUsuario');
-window.verificarLoginAlunoExistente = window.verificarLoginAlunoExistente || () => {};
-window.verificarLoginFuncionarioExistente = window.verificarLoginFuncionarioExistente || () => {};
-window.gerarSenhaAleatoria = window.gerarSenhaAleatoria || function(id) {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let s = ''; for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  const el = document.getElementById(id); if (el) el.value = s;
-};
+// Modais
+_stub('abrirModalCadastroAluno', function() { abrirModal('modalCadastroAluno'); });
+_stub('abrirModalCadastroProfessor', function() { abrirModal('modalCadastroProfessor'); });
+_stub('abrirModalNovaMatricula', function() { abrirModal('modalNovaMatricula'); });
+_stub('abrirModalCriarUsuario', function() { abrirModal('modalCriarUsuario'); });
+_stub('verificarLoginAlunoExistente', function() {});
+_stub('verificarLoginFuncionarioExistente', function() {});
+_stub('gerarSenhaAleatoria', function(id) {
+  var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  var s = '';
+  for (var i = 0; i < 8; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+  var el = document.getElementById(id);
+  if (el) el.value = s;
+});
 
 // Professor
-window.toggleSection = window.toggleSection || (id, ev) => {
+_stub('toggleSection', function(id, ev) {
   if (ev) ev.preventDefault();
-  document.querySelectorAll('.toggle-section').forEach(el => el.classList.add('hidden'));
-  document.getElementById('section-' + id)?.classList.remove('hidden');
+  var els = document.querySelectorAll('.toggle-section');
+  for (var i = 0; i < els.length; i++) els[i].classList.add('hidden');
+  var el = document.getElementById('section-' + id);
+  if (el) el.classList.remove('hidden');
   if (ev && ev.currentTarget) {
-    const siblings = ev.currentTarget.parentElement?.querySelectorAll('.toggle-btn');
-    siblings?.forEach(b => b.classList.remove('active'));
+    var siblings = ev.currentTarget.parentElement ? ev.currentTarget.parentElement.querySelectorAll('.toggle-btn') : [];
+    for (var j = 0; j < siblings.length; j++) siblings[j].classList.remove('active');
     ev.currentTarget.classList.add('active');
   }
-};
-window.carregarTabelaNotas = window.carregarTabelaNotas || () => {};
-window.salvarNotas = window.salvarNotas || () => toast('Notas salvas (stub)', 'success');
-window.salvarPresenca = window.salvarPresenca || () => toast('Presença salva (stub)', 'success');
-window.salvarObservacao = window.salvarObservacao || () => toast('Observação salva (stub)', 'success');
-window.enviarRelatorioCoordenacao = window.enviarRelatorioCoordenacao || () => toast('Relatório enviado (stub)', 'success');
-window.selecionarArquivoUpload = window.selecionarArquivoUpload || () => {};
-window.enviarArquivoUpload = window.enviarArquivoUpload || () => toast('Arquivo enviado (stub)', 'success');
-window.enviarMensagemAluno = window.enviarMensagemAluno || () => toast('Mensagem enviada (stub)', 'success');
+});
+_stub('carregarTabelaNotas', function() {});
+_stub('salvarNotas', function() { toast('Notas salvas', 'success'); });
+_stub('salvarPresenca', function() { toast('Presença salva', 'success'); });
+_stub('salvarObservacao', function() { toast('Observação salva', 'success'); });
+_stub('enviarRelatorioCoordenacao', function() { toast('Relatório enviado', 'success'); });
+_stub('selecionarArquivoUpload', function() {});
+_stub('enviarArquivoUpload', function() { toast('Arquivo enviado', 'success'); });
+_stub('enviarMensagemAluno', function() { toast('Mensagem enviada', 'success'); });
 
 // Coordenação
-window.toggleCoordenacao = window.toggleCoordenacao || (id, ev) => _mostrarSecao('coordenacao', id, ev);
-window.renderAcompanhamentoProf = window.renderAcompanhamentoProf || () => {};
-window.atribuirCurso = window.atribuirCurso || () => toast('Curso atribuído (stub)', 'success');
-window.removerCurso = window.removerCurso || () => toast('Curso removido (stub)', 'success');
+_stub('toggleCoordenacao', function(id, ev) { _mostrarSecao('coordenacao', id, ev); });
+_stub('renderAcompanhamentoProf', function() {});
+_stub('atribuirCurso', function() { toast('Curso atribuído', 'success'); });
+_stub('removerCurso', function() { toast('Curso removido', 'success'); });
 
 // Direção
-window.toggleDirecao = window.toggleDirecao || (id, ev) => _mostrarSecao('direcao', id, ev);
-window.toggleDirSecretaria = window.toggleDirSecretaria || (id, ev) => _mostrarSecao('dir-sec', id, ev);
-window.toggleDirFinanceiro = window.toggleDirFinanceiro || (id, ev) => _mostrarSecao('dir-fin', id, ev);
-window.toggleDirCoordenacao = window.toggleDirCoordenacao || (id, ev) => _mostrarSecao('dir-coord', id, ev);
-window.carregarAlunosDir = window.carregarAlunosDir || () => {};
-window.carregarMatriculasDir = window.carregarMatriculasDir || () => {};
-window.carregarProfessoresDir = window.carregarProfessoresDir || () => {};
-window.carregarUsuariosDir = window.carregarUsuariosDir || () => toast('Carregando...', 'info');
-window.carregarFrequenciaDir = window.carregarFrequenciaDir || () => toast('Carregando...', 'info');
-window.renderMensalidadesDir = window.renderMensalidadesDir || () => {};
-window.calcularPagamentosDir = window.calcularPagamentosDir || () => toast('Calculando...', 'info');
-window.renderMensalidadesFinDir = window.renderMensalidadesFinDir || () => {};
-window.registrarPagamentoDir = window.registrarPagamentoDir || () => toast('Pagamento registrado (stub)', 'success');
-window.renderAcompanhamentoDir = window.renderAcompanhamentoDir || () => {};
-window.atribuirCursoDir = window.atribuirCursoDir || () => toast('Curso atribuído (stub)', 'success');
-window.removerCursoDir = window.removerCursoDir || () => toast('Curso removido (stub)', 'success');
-window.renderProfessorSimulado = window.renderProfessorSimulado || () => {};
-window.gerarRelatorioGeral = window.gerarRelatorioGeral || () => toast('Gerando relatório...', 'info');
-window.gerarRelatorioPorProfessor = window.gerarRelatorioPorProfessor || () => toast('Gerando relatório...', 'info');
-window.gerarRelatorioFinanceiroDirecao = window.gerarRelatorioFinanceiroDirecao || () => toast('Gerando relatório...', 'info');
+_stub('toggleDirecao', function(id, ev) { _mostrarSecao('direcao', id, ev); });
+_stub('toggleDirSecretaria', function(id, ev) { _mostrarSecao('dir-sec', id, ev); });
+_stub('toggleDirFinanceiro', function(id, ev) { _mostrarSecao('dir-fin', id, ev); });
+_stub('toggleDirCoordenacao', function(id, ev) { _mostrarSecao('dir-coord', id, ev); });
+_stub('carregarAlunosDir', function() {});
+_stub('carregarMatriculasDir', function() {});
+_stub('carregarProfessoresDir', function() {});
+_stub('carregarUsuariosDir', function() { toast('Carregando...', 'info'); });
+_stub('carregarFrequenciaDir', function() { toast('Carregando...', 'info'); });
+_stub('renderMensalidadesDir', function() {});
+_stub('calcularPagamentosDir', function() { toast('Calculando...', 'info'); });
+_stub('renderMensalidadesFinDir', function() {});
+_stub('registrarPagamentoDir', function() { toast('Pagamento registrado', 'success'); });
+_stub('renderAcompanhamentoDir', function() {});
+_stub('atribuirCursoDir', function() { toast('Curso atribuído', 'success'); });
+_stub('removerCursoDir', function() { toast('Curso removido', 'success'); });
+_stub('renderProfessorSimulado', function() {});
+_stub('gerarRelatorioGeral', function() { toast('Gerando...', 'info'); });
+_stub('gerarRelatorioPorProfessor', function() { toast('Gerando...', 'info'); });
+_stub('gerarRelatorioFinanceiroDirecao', function() { toast('Gerando...', 'info'); });
 
 // Financeiro
-window.toggleFinanceiro = window.toggleFinanceiro || (id, ev) => _mostrarSecao('financeiro', id, ev);
-window.calcularPagamentos = window.calcularPagamentos || () => toast('Calculando...', 'info');
-window.renderMensalidadesFinanceiro = window.renderMensalidadesFinanceiro || () => {};
-window.registrarPagamentoManual = window.registrarPagamentoManual || () => toast('Pagamento registrado (stub)', 'success');
-window.financeiroDebugPagamentos = window.financeiroDebugPagamentos || () => {
-  const out = document.getElementById('financeiroDebugOutput');
-  if (out) out.textContent = 'Stub — implemente financeiroDebugPagamentos() para depurar PAGAMENTOS.';
-};
-window.financeiroDebugGAS = window.financeiroDebugGAS || () => toast('Testando GAS...', 'info');
+_stub('toggleFinanceiro', function(id, ev) { _mostrarSecao('financeiro', id, ev); });
+_stub('calcularPagamentos', function() { toast('Calculando...', 'info'); });
+_stub('renderMensalidadesFinanceiro', function() {});
+_stub('registrarPagamentoManual', function() { toast('Pagamento registrado', 'success'); });
+_stub('financeiroDebugPagamentos', function() {
+  var out = document.getElementById('financeiroDebugOutput');
+  if (out) out.textContent = 'Stub — implemente financeiroDebugPagamentos().';
+});
+_stub('financeiroDebugGAS', function() { toast('Testando GAS...', 'info'); });
 
 // Aluno
-window.toggleAluno = window.toggleAluno || (id, ev) => _mostrarSecao('aluno', id, ev);
+_stub('toggleAluno', function(id, ev) { _mostrarSecao('aluno', id, ev); });
 
 // Admin
-window.toggleAdmin = window.toggleAdmin || (id, ev) => _mostrarSecao('admin', id, ev);
-window.adminCarregarUsuarios = window.adminCarregarUsuarios || () => toast('Carregando usuários...', 'info');
-window.adminVerSenhas = window.adminVerSenhas || () => toast('Função admin: ver senhas', 'info');
-window.adminCarregarLogs = window.adminCarregarLogs || () => toast('Carregando logs...', 'info');
-window.adminLimparLogsView = window.adminLimparLogsView || () => {
-  const el = document.getElementById('adminLogsContainer');
+_stub('toggleAdmin', function(id, ev) { _mostrarSecao('admin', id, ev); });
+_stub('adminCarregarUsuarios', function() { toast('Carregando...', 'info'); });
+_stub('adminVerSenhas', function() { toast('Admin: ver senhas', 'info'); });
+_stub('adminCarregarLogs', function() { toast('Carregando logs...', 'info'); });
+_stub('adminLimparLogsView', function() {
+  var el = document.getElementById('adminLogsContainer');
   if (el) el.textContent = '';
-};
-window.adminRodarDiagnostico = window.adminRodarDiagnostico || () => toast('Executando diagnóstico...', 'info');
-window.adminCarregarBugs = window.adminCarregarBugs || () => toast('Carregando bugs...', 'info');
-window.adminGerarBugsAutomaticos = window.adminGerarBugsAutomaticos || () => toast('Detectando bugs...', 'info');
-window.adminRecarregarTudo = window.adminRecarregarTudo || () => carregarDadosPlanilha().then(() => toast('Recarregado!', 'success')).catch(e => toast(e.message, 'error'));
-window.adminTestarGAS = window.adminTestarGAS || async () => {
-  try {
-    const r = await fetch(GAS_URL + '?action=ping');
-    const d = await r.json();
-    toast(d.ok ? 'GAS OK!' : 'GAS falhou: ' + d.erro, d.ok ? 'success' : 'error');
-  } catch (e) { toast('GAS inacessível: ' + e.message, 'error'); }
-};
+});
+_stub('adminRodarDiagnostico', function() { toast('Diagnóstico...', 'info'); });
+_stub('adminCarregarBugs', function() { toast('Carregando bugs...', 'info'); });
+_stub('adminGerarBugsAutomaticos', function() { toast('Detectando bugs...', 'info'); });
+_stub('adminRecarregarTudo', function() {
+  carregarDadosPlanilha().then(function() { toast('Recarregado!', 'success'); }).catch(function(e) { toast(e.message, 'error'); });
+});
+_stub('adminTestarGAS', function() {
+  fetch(GAS_URL + '?action=ping').then(function(r) { return r.json(); }).then(function(d) {
+    toast(d.ok ? 'GAS OK!' : 'Falhou: ' + d.erro, d.ok ? 'success' : 'error');
+  }).catch(function(e) { toast('GAS inacessível: ' + e.message, 'error'); });
+});
 
 // Notificações
-window.toggleNotifPanel = window.toggleNotifPanel || () => {
-  document.getElementById('notifPanel')?.classList.toggle('active');
-};
-window.marcarTodasNotificacoesLidas = window.marcarTodasNotificacoesLidas || () => toast('Notificações marcadas como lidas', 'success');
+_stub('toggleNotifPanel', function() {
+  var p = document.getElementById('notifPanel');
+  if (p) p.classList.toggle('active');
+});
+_stub('marcarTodasNotificacoesLidas', function() { toast('Notificações marcadas', 'success'); });
 </script>
 </body>
 </html>
