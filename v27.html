@@ -5530,7 +5530,7 @@ async function chatEnviar() {
   }
 }
 
-/* ================== CHAT FRONTEND ================== */
+/* ================== CHAT FRONTEND (Integrado via fetch/enviarParaGAS) ================== */
 const CHAT = {
   aberto: false,
   contatoAtual: null,
@@ -5544,8 +5544,8 @@ const CHAT = {
   enviando: false
 };
 
-const CHAT_POLL_MSG_MS = 15000;    // 15s — mensagens (quando conversa aberta)
-const CHAT_POLL_CONT_MS = 30000;   // 30s — contatos (para badge)
+const CHAT_POLL_MSG_MS = 10000;
+const CHAT_POLL_CONT_MS = 25000;
 
 function escapeHtmlChat(s) {
   return String(s == null ? '' : s)
@@ -5553,28 +5553,16 @@ function escapeHtmlChat(s) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-/* --- Inicialização. Chame logo após o login bem-sucedido --- */
 function chatInit(usuario, perfil, nome) {
-  // se não passarem nada, tenta detectar por globais comuns
-  if (!usuario) {
-    const cand = ['currentUser','usuarioAtual','usuarioLogado','loggedUser','userInfo'];
-    for (const k of cand) {
-      const v = window[k];
-      if (v && typeof v === 'object') {
-        usuario = v.usuario || v.login || v.user;
-        perfil  = v.perfil  || v.role;
-        nome    = v.nome    || v.name || usuario;
-        if (usuario && perfil) break;
-      }
-    }
+  if (!usuario && currentUser && currentUser.usuario) {
+    usuario = currentUser.usuario;
+    perfil  = currentUser.perfil;
+    nome    = currentUser.nome || usuario;
   }
-  if (!usuario || !perfil) {
-    console.warn('[CHAT] chatInit: usuário/perfil ausentes.');
-    return;
-  }
+  if (!usuario || !perfil) return;
 
-  CHAT.usuario = String(usuario).trim();
-  CHAT.perfil  = String(perfil).trim();
+  CHAT.usuario = String(usuario).trim().toLowerCase();
+  CHAT.perfil  = String(perfil).trim().toLowerCase();
   CHAT.nome    = String(nome || usuario).trim();
   CHAT.contatoAtual = null;
   CHAT.mensagens = [];
@@ -5586,78 +5574,18 @@ function chatInit(usuario, perfil, nome) {
   iniciarPollingChat();
 }
 
-/* =====================================================
-   AUTO-INIT DO CHAT
-   Detecta login concluído e chama chatInit() sozinho.
-   Não precisa mexer em mais nada no seu código.
-   ===================================================== */
 (function chatAutoInitBoot() {
-  let tentativas = 0;
-  const MAX = 240; // 240 * 500ms = 2 minutos tentando
-
-  const timer = setInterval(() => {
-    tentativas++;
-
-    // Já inicializado? Para.
-    if (typeof CHAT !== 'undefined' && CHAT.usuario) {
-      clearInterval(timer);
-      return;
-    }
-    if (tentativas > MAX) {
-      clearInterval(timer);
-      console.warn('[CHAT auto-init] Desisti após 2min. Chame chatInit() manualmente.');
-      return;
-    }
-
-    // Detecta se o dashboard está visível (login concluído)
+  setInterval(() => {
     const dash = document.getElementById('dashboard');
-    if (!dash) return;
-    const dashVisible = !dash.classList.contains('hidden') &&
-                        getComputedStyle(dash).display !== 'none';
-    if (!dashVisible) return;
-
-    // Tenta extrair usuário/perfil de várias fontes
-    const perfil =
-      (document.getElementById('loginPerfil')  && document.getElementById('loginPerfil').value)  ||
-      (window.currentUser && (window.currentUser.perfil || window.currentUser.role))            ||
-      (window.usuarioLogado && (window.usuarioLogado.perfil || window.usuarioLogado.role))      ||
-      '';
-
-    const usuario =
-      (document.getElementById('loginUsuario') && document.getElementById('loginUsuario').value) ||
-      (window.currentUser && (window.currentUser.usuario || window.currentUser.login || window.currentUser.user)) ||
-      (window.usuarioLogado && (window.usuarioLogado.usuario || window.usuarioLogado.login))    ||
-      '';
-
-    const nome =
-      (window.currentUser  && (window.currentUser.nome  || window.currentUser.name))            ||
-      (window.usuarioLogado && (window.usuarioLogado.nome || window.usuarioLogado.name))        ||
-      usuario;
-
-    if (!usuario || !perfil) {
-      // Dashboard visível mas não conseguiu extrair. Tenta ler do userDisplay.
-      const ud = (document.getElementById('userDisplay') && document.getElementById('userDisplay').textContent || '').trim();
-      // userDisplay normalmente tem algo como "João Silva (Professor)" — não dá pra separar confiável.
-      // Só registra aviso uma vez.
-      if (tentativas === 4) {
-        console.warn('[CHAT auto-init] Dashboard visível, mas usuário/perfil não detectados.',
-                     'userDisplay =', ud,
-                     '| Defina window.currentUser = {usuario, perfil, nome} no login, ou chame chatInit() manualmente.');
-      }
-      return;
+    const dashVisible = dash && dash.classList.contains('active');
+    if (dashVisible && currentUser && currentUser.usuario && !CHAT.usuario) {
+      chatInit(currentUser.usuario, currentUser.perfil, currentUser.nome);
+    } else if (!dashVisible && CHAT.usuario) {
+      chatLogout();
     }
-
-    console.log('[CHAT auto-init] Inicializando com:', { usuario, perfil, nome });
-    if (typeof chatInit === 'function') {
-      chatInit(usuario, perfil, nome);
-    }
-    clearInterval(timer);
-  }, 500);
+  }, 800);
 })();
 
-  
-
-/* --- Finalização. Chame ao sair/logout --- */
 function chatLogout() {
   CHAT.aberto = false;
   CHAT.contatoAtual = null;
@@ -5676,7 +5604,10 @@ function chatLogout() {
 }
 
 function chatToggle() {
-  if (!CHAT.usuario) { alert('Chat indisponível. Faça login novamente.'); return; }
+  if (!CHAT.usuario && currentUser && currentUser.usuario) {
+    chatInit(currentUser.usuario, currentUser.perfil, currentUser.nome);
+  }
+  if (!CHAT.usuario) { mostrarToast('⚠️ Faça login para usar o chat.', 'error'); return; }
   CHAT.aberto = !CHAT.aberto;
   const panel = document.getElementById('chatPanel');
   if (!panel) return;
@@ -5687,18 +5618,20 @@ function chatToggle() {
   }
 }
 
-/* --------- Contatos --------- */
-function carregarContatosChat() {
+async function carregarContatosChat() {
   if (!CHAT.usuario) return;
-  google.script.run
-    .withSuccessHandler(res => {
-      if (!res || !res.ok) { console.error('[CHAT] contatos:', res && res.erro); return; }
-      CHAT.contatos = res.contatos || [];
-      renderContatosChat();
-      atualizarBadgeChat(res.totalNaoLidas || 0);
-    })
-    .withFailureHandler(err => console.error('[CHAT] contatos falhou:', err))
-    .carregarContatosChat({ usuario: CHAT.usuario, perfil: CHAT.perfil });
+  try {
+    const res = await enviarParaGAS('carregarContatosChat', {
+      usuario: CHAT.usuario,
+      perfil: CHAT.perfil
+    });
+    if (!res || !res.ok) return;
+    CHAT.contatos = res.contatos || [];
+    renderContatosChat();
+    atualizarBadgeChat(res.totalNaoLidas || 0);
+  } catch (err) {
+    console.error('[CHAT] contatos falhou:', err);
+  }
 }
 
 function renderContatosChat() {
@@ -5707,8 +5640,8 @@ function renderContatosChat() {
   const busca = (document.getElementById('chatBuscaContato')?.value || '').toLowerCase();
 
   const filtrados = CHAT.contatos.filter(c => {
-    const nome   = (c.nome || c.usuario || '').toLowerCase();
-    const user   = (c.usuario || '').toLowerCase();
+    const nome = (c.nome || c.usuario || '').toLowerCase();
+    const user = (c.usuario || '').toLowerCase();
     return nome.includes(busca) || user.includes(busca);
   });
 
@@ -5762,24 +5695,23 @@ function chatAbrirContato(contato) {
   setTimeout(() => document.getElementById('chatInputMsg')?.focus(), 150);
 }
 
-/* --------- Mensagens --------- */
-function carregarMensagensChat(marcarLidas) {
+async function carregarMensagensChat(marcarLidas) {
   if (!CHAT.usuario || !CHAT.contatoAtual) return;
-  google.script.run
-    .withSuccessHandler(res => {
-      if (!res || !res.ok) { console.error('[CHAT] msgs:', res && res.erro); return; }
-      CHAT.mensagens = res.mensagens || [];
-      renderMensagensChat();
-      if (marcarLidas) carregarContatosChat();
-    })
-    .withFailureHandler(err => console.error('[CHAT] msgs falhou:', err))
-    .carregarMensagensChat({
+  try {
+    const res = await enviarParaGAS('carregarMensagensChat', {
       usuario: CHAT.usuario,
       perfil:  CHAT.perfil,
       contatoUsuario: CHAT.contatoAtual.usuario,
       contatoPerfil:  CHAT.contatoAtual.perfil,
       marcarLidas: !!marcarLidas
     });
+    if (!res || !res.ok) return;
+    CHAT.mensagens = res.mensagens || [];
+    renderMensagensChat();
+    if (marcarLidas) carregarContatosChat();
+  } catch (err) {
+    console.error('[CHAT] msgs falhou:', err);
+  }
 }
 
 function renderMensagensChat() {
@@ -5813,7 +5745,7 @@ function renderMensagensChat() {
   if (estavaNoFim) box.scrollTop = box.scrollHeight;
 }
 
-function enviarMensagemChatSubmit(ev) {
+async function enviarMensagemChatSubmit(ev) {
   if (ev) ev.preventDefault();
   if (CHAT.enviando) return;
   if (!CHAT.usuario || !CHAT.contatoAtual) return;
@@ -5826,9 +5758,8 @@ function enviarMensagemChatSubmit(ev) {
   CHAT.enviando = true;
   if (btnEnviar) btnEnviar.disabled = true;
 
-  // otimista
   const tempId = 'temp-' + Date.now();
-  const tempMsg = {
+  CHAT.mensagens.push({
     id: tempId,
     timestamp: new Date().toISOString(),
     deUsuario: CHAT.usuario,
@@ -5838,34 +5769,12 @@ function enviarMensagemChatSubmit(ev) {
     mensagem: txt,
     lida: false,
     minha: true
-  };
-  CHAT.mensagens.push(tempMsg);
+  });
   renderMensagensChat();
   input.value = '';
 
-  google.script.run
-    .withSuccessHandler(res => {
-      CHAT.enviando = false;
-      if (btnEnviar) btnEnviar.disabled = false;
-      if (!res || !res.ok) {
-        alert('❌ Erro ao enviar: ' + (res && res.erro || 'desconhecido'));
-        CHAT.mensagens = CHAT.mensagens.filter(m => m.id !== tempId);
-        renderMensagensChat();
-        input.value = txt;
-        return;
-      }
-      carregarMensagensChat(false);
-      carregarContatosChat();
-    })
-    .withFailureHandler(err => {
-      CHAT.enviando = false;
-      if (btnEnviar) btnEnviar.disabled = false;
-      alert('❌ Falha de conexão: ' + err);
-      CHAT.mensagens = CHAT.mensagens.filter(m => m.id !== tempId);
-      renderMensagensChat();
-      input.value = txt;
-    })
-    .enviarMensagemChat({
+  try {
+    const res = await enviarParaGAS('enviarMensagemChat', {
       deUsuario: CHAT.usuario,
       dePerfil:  CHAT.perfil,
       deNome:    CHAT.nome || CHAT.usuario,
@@ -5874,9 +5783,26 @@ function enviarMensagemChatSubmit(ev) {
       paraNome:    CHAT.contatoAtual.nome || CHAT.contatoAtual.usuario,
       mensagem:    txt
     });
+    if (!res || !res.ok) {
+      mostrarToast('❌ Erro ao enviar: ' + ((res && (res.erro || res.error)) || 'desconhecido'), 'error');
+      CHAT.mensagens = CHAT.mensagens.filter(m => m.id !== tempId);
+      renderMensagensChat();
+      input.value = txt;
+    } else {
+      await carregarMensagensChat(false);
+      carregarContatosChat();
+    }
+  } catch (err) {
+    mostrarToast('❌ Falha de conexão: ' + err.message, 'error');
+    CHAT.mensagens = CHAT.mensagens.filter(m => m.id !== tempId);
+    renderMensagensChat();
+    input.value = txt;
+  } finally {
+    CHAT.enviando = false;
+    if (btnEnviar) btnEnviar.disabled = false;
+  }
 }
 
-/* --------- Badge / Polling --------- */
 function atualizarBadgeChat(n) {
   const badge = document.getElementById('chatFloatBadge');
   if (!badge) return;
