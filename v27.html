@@ -5586,6 +5586,77 @@ function chatInit(usuario, perfil, nome) {
   iniciarPollingChat();
 }
 
+/* =====================================================
+   AUTO-INIT DO CHAT
+   Detecta login concluído e chama chatInit() sozinho.
+   Não precisa mexer em mais nada no seu código.
+   ===================================================== */
+(function chatAutoInitBoot() {
+  let tentativas = 0;
+  const MAX = 240; // 240 * 500ms = 2 minutos tentando
+
+  const timer = setInterval(() => {
+    tentativas++;
+
+    // Já inicializado? Para.
+    if (typeof CHAT !== 'undefined' && CHAT.usuario) {
+      clearInterval(timer);
+      return;
+    }
+    if (tentativas > MAX) {
+      clearInterval(timer);
+      console.warn('[CHAT auto-init] Desisti após 2min. Chame chatInit() manualmente.');
+      return;
+    }
+
+    // Detecta se o dashboard está visível (login concluído)
+    const dash = document.getElementById('dashboard');
+    if (!dash) return;
+    const dashVisible = !dash.classList.contains('hidden') &&
+                        getComputedStyle(dash).display !== 'none';
+    if (!dashVisible) return;
+
+    // Tenta extrair usuário/perfil de várias fontes
+    const perfil =
+      (document.getElementById('loginPerfil')  && document.getElementById('loginPerfil').value)  ||
+      (window.currentUser && (window.currentUser.perfil || window.currentUser.role))            ||
+      (window.usuarioLogado && (window.usuarioLogado.perfil || window.usuarioLogado.role))      ||
+      '';
+
+    const usuario =
+      (document.getElementById('loginUsuario') && document.getElementById('loginUsuario').value) ||
+      (window.currentUser && (window.currentUser.usuario || window.currentUser.login || window.currentUser.user)) ||
+      (window.usuarioLogado && (window.usuarioLogado.usuario || window.usuarioLogado.login))    ||
+      '';
+
+    const nome =
+      (window.currentUser  && (window.currentUser.nome  || window.currentUser.name))            ||
+      (window.usuarioLogado && (window.usuarioLogado.nome || window.usuarioLogado.name))        ||
+      usuario;
+
+    if (!usuario || !perfil) {
+      // Dashboard visível mas não conseguiu extrair. Tenta ler do userDisplay.
+      const ud = (document.getElementById('userDisplay') && document.getElementById('userDisplay').textContent || '').trim();
+      // userDisplay normalmente tem algo como "João Silva (Professor)" — não dá pra separar confiável.
+      // Só registra aviso uma vez.
+      if (tentativas === 4) {
+        console.warn('[CHAT auto-init] Dashboard visível, mas usuário/perfil não detectados.',
+                     'userDisplay =', ud,
+                     '| Defina window.currentUser = {usuario, perfil, nome} no login, ou chame chatInit() manualmente.');
+      }
+      return;
+    }
+
+    console.log('[CHAT auto-init] Inicializando com:', { usuario, perfil, nome });
+    if (typeof chatInit === 'function') {
+      chatInit(usuario, perfil, nome);
+    }
+    clearInterval(timer);
+  }, 500);
+})();
+
+  
+
 /* --- Finalização. Chame ao sair/logout --- */
 function chatLogout() {
   CHAT.aberto = false;
