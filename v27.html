@@ -5618,19 +5618,74 @@ function chatToggle() {
   }
 }
 
+function obterContatosFallbackLocal() {
+  const meuUser = (CHAT.usuario || '').toLowerCase();
+  const meuPerfil = (CHAT.perfil || '').toLowerCase();
+  const prioridade = { admin:10, direcao:9, coordenacao:8, secretaria:7, financeiro:6, professor:5, aluno:1 };
+  const mapa = {};
+
+  const listaUsuarios = (db && Array.isArray(db.usuarios)) ? db.usuarios : [];
+  listaUsuarios.forEach(u => {
+    if (!u.usuario || (u.status && u.status !== 'ATIVO')) return;
+    const uLow = u.usuario.toLowerCase();
+    const pLow = (u.perfil || '').toLowerCase();
+    if (uLow === meuUser) return;
+    if (meuPerfil === 'aluno' && pLow === 'aluno') return;
+    const peso = prioridade[pLow] || 0;
+    if (!mapa[uLow] || peso > (mapa[uLow]._peso || 0)) {
+      mapa[uLow] = { usuario: uLow, nome: u.nome || uLow, perfil: pLow, naoLidas: 0, _peso: peso };
+    }
+  });
+
+  return Object.values(mapa).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+}
+
 async function carregarContatosChat() {
   if (!CHAT.usuario) return;
+
+  // 1) Preenche imediatamente com os usuários já carregados da planilha (se houver)
+  const locais = obterContatosFallbackLocal();
+  if (!CHAT.contatos.length && locais.length) {
+    CHAT.contatos = locais;
+    renderContatosChat();
+  }
+
+  // 2) Consulta o GAS (que também traz a contagem de mensagens não lidas e lê a aba USUARIOS)
   try {
     const res = await enviarParaGAS('carregarContatosChat', {
       usuario: CHAT.usuario,
       perfil: CHAT.perfil
     });
-    if (!res || !res.ok) return;
-    CHAT.contatos = res.contatos || [];
-    renderContatosChat();
-    atualizarBadgeChat(res.totalNaoLidas || 0);
+
+    if (res && res.ok && Array.isArray(res.contatos) && res.contatos.length > 0) {
+      CHAT.contatos = res.contatos;
+      renderContatosChat();
+      atualizarBadgeChat(res.totalNaoLidas || 0);
+      return;
+    }
+
+    // 3) Se a rota carregarContatosChat ainda não foi publicada no GAS, usa a rota listarUsuarios já existente
+    const resUsuarios = await enviarParaGAS('listarUsuarios', {});
+    if (resUsuarios && resUsuarios.success && Array.isArray(resUsuarios.usuarios)) {
+      db.usuarios = resUsuarios.usuarios.map(u => ({
+        id: texto(u.id),
+        nome: texto(u.nome).toUpperCase(),
+        perfil: texto(u.perfil).toLowerCase(),
+        usuario: texto(u.usuario).toLowerCase(),
+        status: texto(u.status || 'ATIVO').toUpperCase(),
+        alunoVinculado: texto(u.alunoVinculado).toUpperCase(),
+        dataCriacao: formatarDataHoraExibicao(u.dataCriacao)
+      })).filter(u => u.usuario);
+
+      CHAT.contatos = obterContatosFallbackLocal();
+      renderContatosChat();
+    }
   } catch (err) {
-    console.error('[CHAT] contatos falhou:', err);
+    console.error('[CHAT] contatos falhou, mantendo lista local:', err);
+    if (!CHAT.contatos.length && locais.length) {
+      CHAT.contatos = locais;
+      renderContatosChat();
+    }
   }
 }
 
