@@ -242,6 +242,200 @@ tbody tr:hover { background: #f7fafc; }
 .credenciais-box .campo-senha button { width: auto; padding: 10px 14px; font-size: 0.85em; }
 .login-existente-aviso { background: #fffaf0; border-left: 4px solid #ed8936; padding: 10px 14px; border-radius: 8px; font-size: 0.85em; color: #7b341e; margin-top: 10px; display: none; }
 .login-existente-aviso.active { display: block; }
+
+  /* ================= CHAT ================= */
+.chat-float-btn{
+  position:fixed; right:22px; bottom:22px; width:60px; height:60px;
+  border-radius:50%; border:none; background:linear-gradient(135deg,#4299e1,#3182ce);
+  color:#fff; font-size:26px; cursor:pointer; z-index:9998;
+  box-shadow:0 6px 20px rgba(66,153,225,.45);
+  display:flex; align-items:center; justify-content:center;
+  transition:transform .15s, box-shadow .15s;
+}
+.chat-float-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 26px rgba(66,153,225,.6); }
+.chat-float-badge{
+  position:absolute; top:-4px; right:-4px; min-width:22px; height:22px;
+  padding:0 6px; border-radius:11px; background:#f56565; color:#fff;
+  font-size:12px; font-weight:700; display:flex; align-items:center;
+  justify-content:center; border:2px solid #fff;
+}
+
+.chat-panel{
+  position:fixed; right:22px; bottom:92px; width:780px; max-width:calc(100vw - 24px);
+  height:560px; max-height:calc(100vh - 120px);
+  background:#fff; border-radius:16px; overflow:hidden; z-index:9999;
+  box-shadow:0 20px 60px rgba(0,0,0,.28); display:none;
+  border:1px solid #e2e8f0;
+}
+.chat-panel.open{ display:flex; flex-direction:column; }
+
+.chat-panel-header{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 18px; background:linear-gradient(135deg,#2b6cb0,#4299e1); color:#fff;
+}
+.chat-panel-header h3{ margin:0; font-size:1.05rem; }
+.chat-close-btn{
+  background:rgba(255,255,255,.2); border:none; color:#fff; width:32px; height:32px;
+  border-radius:8px; cursor:pointer; font-size:16px;
+}
+.chat-close-btn:hover{ background:rgba(255,255,255,.35); }
+
+.chat-panel-body{ display:flex; flex:1; min-height:0; }
+
+.chat-sidebar{
+  width:270px; border-right:1px solid #e2e8f0; display:flex; flex-direction:column;
+  background:#f7fafc; min-height:0;
+}
+.chat-sidebar-header{ padding:10px; border-bottom:1px solid #e2e8f0; }
+.chat-sidebar-header input{
+  width:100%; padding:9px 12px; border:1px solid #cbd5e0; border-radius:8px;
+  font-size:0.9em; outline:none; box-sizing:border-box;
+}
+.chat-sidebar-header input:focus{ border-color:#4299e1; box-shadow:0 0 0 3px rgba(66,153,225,.15); }
+
+.chat-contatos-lista{ flex:1; overflow-y:auto; padding:6px; }
+.chat-contato{
+  display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px;
+  cursor:pointer; transition:background .12s; margin-bottom:2px;
+}
+.chat-contato:hover{ background:#edf2f7; }
+.chat-contato.active{ background:#bee3f8; }
+.chat-avatar{
+  width:36px; height:36px; border-radius:50%; background:#4299e1; color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:700;
+  flex-shrink:0; font-size:0.95em;
+}
+.chat-avatar-header{ width:40px; height:40px; background:#2b6cb0; }
+.chat-contato-info{ flex:1; min-width:0; }
+.chat-contato-nome{
+  font-weight:600; font-size:0.9em; color:#2d3748;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.chat-contato-perfil{ font-size:0.75em; color:#718096; text-transform:capitalize; }
+.chat-badge{
+  background:#f56565; color:#fff; font-size:11px; font-weight:700;
+  min-width:20px; height:20px; border-radius:10px; padding:0 6px;
+  display:flex; align-items:center; justify-content:center;
+}
+
+.chat-conversa-area{ flex:1; display:flex; flex-direction:column; min-width:0; }
+.chat-vazio{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:#a0aec0; text-align:center; padding:20px;
+}
+.chat-vazio-icon{ font-size:56px; margin-bottom:10px; opacity:.5; }
+.chat-vazio-msg{ padding:20px; text-align:center; color:#a0aec0; font-size:0.9em; }
+
+.chat-conversa{ flex:1; display:flex; flex-direction:column; min-height:0; }
+.chat-conversa-header{
+  display:flex; align-items:center; gap:10px; padding:10px 16px;
+  border-bottom:1px solid #e2e8f0; background:#fff;
+}
+.chat-com-titulo{ font-weight:700; color:#2d3748; font-size:0.95em; }
+.chat-com-subtitulo{ font-size:0.78em; color:#718096; text-transform:capitalize; }
+
+.chat-mensagens{
+  flex:1; overflow-y:auto; padding:14px 16px; background:#f7fafc;
+  display:flex; flex-direction:column; gap:6px;
+}
+.chat-dia{
+  align-self:center; background:#e2e8f0; color:#4a5568;
+  font-size:11px; font-weight:600; padding:3px 10px; border-radius:10px;
+  margin:6px 0;
+}
+.chat-msg{ display:flex; flex-direction:column; max-width:75%; }
+.chat-msg.deles{ align-self:flex-start; }
+.chat-msg.minha{ align-self:flex-end; align-items:flex-end; }
+.chat-msg-bolha{
+  padding:9px 13px; border-radius:14px; font-size:0.9em; line-height:1.35;
+  word-wrap:break-word; white-space:pre-wrap;
+}
+.chat-msg.deles .chat-msg-bolha{ background:#fff; color:#2d3748; border-bottom-left-radius:4px; border:1px solid #e2e8f0; }
+.chat-msg.minha .chat-msg-bolha{ background:#4299e1; color:#fff; border-bottom-right-radius:4px; }
+.chat-msg-hora{ font-size:0.68em; color:#a0aec0; margin-top:2px; }
+
+.chat-form-envio{
+  display:flex; gap:8px; padding:10px; border-top:1px solid #e2e8f0; background:#fff;
+}
+.chat-form-envio input{
+  flex:1; padding:10px 14px; border:1px solid #cbd5e0; border-radius:22px;
+  font-size:0.92em; outline:none;
+}
+.chat-form-envio input:focus{ border-color:#4299e1; box-shadow:0 0 0 3px rgba(66,153,225,.15); }
+.chat-btn-enviar{
+  width:42px; height:42px; border-radius:50%; border:none;
+  background:linear-gradient(135deg,#4299e1,#2b6cb0); color:#fff;
+  cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;
+}
+.chat-btn-enviar:hover{ filter:brightness(1.08); }
+.chat-btn-enviar:disabled{ opacity:.5; cursor:not-allowed; }
+
+@media (max-width:720px){
+  .chat-panel{
+    right:0; bottom:0; width:100vw; height:100vh; max-width:100vw; max-height:100vh;
+    border-radius:0;
+  }
+  .chat-sidebar{ width:180px; }
+  .chat-msg{ max-width:85%; }
+}
+
+.chat-contato.tem-nao-lida {
+  background: #ebf8ff !important;
+  border-left: 4px solid #e53e3e !important;
+}
+.chat-contato-nome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.9em;
+  color: #2d3748;
+}
+.chat-contato-nome .nome-txt {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chat-contato.tem-nao-lida .chat-contato-nome {
+  font-weight: 700;
+  color: #c53030;
+}
+.chat-contato-perfil {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  font-size: 0.75em;
+  color: #718096;
+  text-transform: capitalize;
+  margin-top: 2px;
+}
+.chat-unread-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.05em;
+  animation: pulseUnread 1.2s infinite;
+}
+.chat-perfil-unread-tag {
+  background: #fed7d7;
+  color: #c53030;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 0.92em;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+@keyframes pulseUnread {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.22); opacity: 0.8; }
+}
+
+
 </style>
 </head>
 <body>
@@ -1122,6 +1316,52 @@ tbody tr:hover { background: #f7fafc; }
           <button onclick="adminRecarregarTudo()" class="btn btn-info btn-small">🔄 Recarregar Todos os Dados</button>
           <button onclick="adminTestarGAS()" class="btn btn-warning btn-small">📡 Testar GAS</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CHAT FLUTUANTE ============ -->
+<button id="chatFloatBtn" class="chat-float-btn" onclick="chatToggle()" title="Chat Interno" style="display:none;">
+  💬
+  <span id="chatFloatBadge" class="chat-float-badge" style="display:none;">0</span>
+</button>
+
+<div id="chatPanel" class="chat-panel">
+  <div class="chat-panel-header">
+    <h3>💬 Chat Interno</h3>
+    <button class="chat-close-btn" onclick="chatToggle()" title="Fechar">✕</button>
+  </div>
+  <div class="chat-panel-body">
+    <div class="chat-sidebar">
+      <div class="chat-sidebar-header">
+        <input type="text" id="chatBuscaContato" placeholder="🔎 Buscar contato..."
+               oninput="renderContatosChat()" autocomplete="off">
+      </div>
+      <div id="chatContatosLista" class="chat-contatos-lista">
+        <div class="chat-vazio-msg">Carregando contatos...</div>
+      </div>
+    </div>
+    <div class="chat-conversa-area">
+      <div id="chatVazio" class="chat-vazio">
+        <div class="chat-vazio-icon">💬</div>
+        <p>Selecione um contato para começar a conversar</p>
+        <small>Alunos não podem conversar entre si.</small>
+      </div>
+      <div id="chatConversa" class="chat-conversa" style="display:none;">
+        <div class="chat-conversa-header">
+          <div class="chat-avatar chat-avatar-header" id="chatComAvatar">?</div>
+          <div>
+            <div id="chatComTitulo" class="chat-com-titulo">-</div>
+            <div id="chatComSubtitulo" class="chat-com-subtitulo">-</div>
+          </div>
+        </div>
+        <div id="chatMensagens" class="chat-mensagens"></div>
+        <form id="chatFormEnvio" onsubmit="enviarMensagemChatSubmit(event)" class="chat-form-envio">
+          <input type="text" id="chatInputMsg" placeholder="Digite uma mensagem..."
+                 autocomplete="off" maxlength="2000" required>
+          <button type="submit" class="chat-btn-enviar" title="Enviar">➤</button>
+        </form>
       </div>
     </div>
   </div>
@@ -5193,6 +5433,765 @@ document.addEventListener('DOMContentLoaded', function() {
 
   setTimeout(() => { carregarDadosPlanilha(); }, 300);
 });
+
+// ============================================
+// CHAT
+// ============================================
+let chatAberto = false;
+let chatConversaAtual = '__GERAL__'; // '__GERAL__' ou nome do usuário
+let chatMensagensCache = [];
+let chatContatosCache = [];
+let chatPollInterval = null;
+
+function chatAlternar() {
+  chatAberto = !chatAberto;
+  const panel = document.getElementById('chatPanel');
+  if (!panel) return;
+  panel.classList.toggle('active', chatAberto);
+  if (chatAberto) {
+    chatCarregarContatos();
+    chatCarregarMensagens(chatConversaAtual);
+    if (!chatPollInterval) {
+      chatPollInterval = setInterval(() => {
+        if (chatAberto) {
+          chatCarregarMensagens(chatConversaAtual, true);
+          chatCarregarContatos(true);
+        }
+      }, 5000);
+    }
+  }
+}
+
+function chatVoltar() {
+  chatConversaAtual = '__GERAL__';
+  chatAtualizarTituloConversa();
+  chatCarregarMensagens('__GERAL__');
+}
+
+function chatAtualizarTituloConversa() {
+  const titulo = document.getElementById('chatConvTitulo');
+  if (!titulo) return;
+  if (chatConversaAtual === '__GERAL__') titulo.textContent = '🌐 Chat Geral';
+  else titulo.textContent = '💬 ' + chatConversaAtual;
+}
+
+async function chatCarregarContatos(silencioso) {
+  try {
+    const resp = await fetch(GAS_URL + '?action=chatListarContatos&token=' + encodeURIComponent(currentUser.token || ''));
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.erro || 'Falha');
+    chatContatosCache = data.contatos || [];
+    chatRenderLista();
+  } catch (e) {
+    if (!silencioso) console.warn('Chat contatos:', e);
+  }
+}
+
+function chatRenderLista() {
+  const container = document.getElementById('chatContatos');
+  if (!container) return;
+  const busca = (document.getElementById('chatBusca')?.value || '').toLowerCase().trim();
+
+  let html = `<div class="chat-contato ${chatConversaAtual === '__GERAL__' ? 'ativo' : ''}" onclick="chatAbrirConversa('__GERAL__')">
+    <span class="chat-contato-nome">🌐 Chat Geral</span>
+  </div>`;
+
+  chatContatosCache
+    .filter(c => !busca || (c.nome || '').toLowerCase().includes(busca))
+    .forEach(c => {
+      const ativo = chatConversaAtual === c.usuario ? 'ativo' : '';
+      const badge = c.naoLidas > 0 ? `<span class="chat-contato-badge">${c.naoLidas}</span>` : '';
+      html += `<div class="chat-contato ${ativo}" onclick="chatAbrirConversa('${escapeHtml(c.usuario)}')">
+        <span class="chat-contato-nome">${escapeHtml(c.nome || c.usuario)}</span>${badge}
+      </div>`;
+    });
+
+  container.innerHTML = html;
+}
+
+function chatAbrirConversa(usuario) {
+  chatConversaAtual = usuario;
+  chatAtualizarTituloConversa();
+  chatCarregarMensagens(usuario);
+  chatRenderLista();
+  document.querySelector('.chat-side')?.classList.add('hidden-mobile');
+  document.querySelector('.chat-conv')?.classList.remove('hidden-mobile');
+}
+
+async function chatCarregarMensagens(conversa, silencioso) {
+  try {
+    const destino = conversa === '__GERAL__' ? '' : conversa;
+    const resp = await fetch(GAS_URL + '?action=chatListarMensagens&token=' + encodeURIComponent(currentUser.token || '') + '&destino=' + encodeURIComponent(destino));
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.erro || 'Falha');
+    chatMensagensCache = data.mensagens || [];
+    chatRenderMensagens();
+  } catch (e) {
+    if (!silencioso) {
+      const box = document.getElementById('chatMsgs');
+      if (box) box.innerHTML = '<div style="color:#e53e3e;text-align:center;padding:20px;">Erro ao carregar mensagens.</div>';
+    }
+  }
+}
+
+function chatRenderMensagens() {
+  const box = document.getElementById('chatMsgs');
+  if (!box) return;
+  if (!chatMensagensCache.length) {
+    box.innerHTML = '<div style="color:#a0aec0;text-align:center;padding:20px;font-size:0.85em;">Nenhuma mensagem ainda. Diga olá! 👋</div>';
+    return;
+  }
+  const meuUser = currentUser.usuario;
+  box.innerHTML = chatMensagensCache.map(m => {
+    const minha = m.remetente === meuUser;
+    return `<div class="chat-msg ${minha ? 'minha' : 'outra'}">
+      ${!minha ? `<strong style="font-size:0.85em;">${escapeHtml(m.remetenteNome || m.remetente)}</strong><br>` : ''}
+      ${escapeHtml(m.texto)}
+      <span class="chat-msg-meta">${formatarDataHoraExibicao(m.dataHora)}</span>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function chatTecla(ev) {
+  if (ev.key === 'Enter' && !ev.shiftKey) {
+    ev.preventDefault();
+    chatEnviar();
+  }
+}
+
+async function chatEnviar() {
+  const txt = document.getElementById('chatTexto');
+  const texto = (txt?.value || '').trim();
+  if (!texto) return;
+  const destino = chatConversaAtual === '__GERAL__' ? '' : chatConversaAtual;
+  try {
+    txt.value = '';
+    const resp = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'chatEnviarMensagem',
+        token: currentUser.token,
+        destino,
+        texto
+      })
+    });
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.erro || 'Falha ao enviar');
+    chatCarregarMensagens(chatConversaAtual, true);
+  } catch (e) {
+    toast('Erro ao enviar: ' + e.message, 'error');
+    txt.value = texto;
+  }
+}
+
+/* ================== CHAT FRONTEND (Leitura Direta + GAS + Popup + Ícone no Perfil) ================== */
+const CHAT = {
+  aberto: false,
+  contatoAtual: null,
+  contatos: [],
+  mensagens: [],
+  usuario: null,
+  perfil: null,
+  nome: null,
+  pollMsg: null,
+  pollContatos: null,
+  enviando: false,
+  naoLidasAnteriores: {},
+  idsNotificadosPopup: new Set(),
+  primeiroCarregamento: true
+};
+
+const CHAT_POLL_MSG_MS = 7000;
+const CHAT_POLL_CONT_MS = 10000;
+
+function escapeHtmlChat(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function normChatKey(v) {
+  return String(v == null ? '' : v).trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function isMsgChatLida(v) {
+  if (v === true) return true;
+  if (v === false) return false;
+  const s = normChatKey(v);
+  return s === 'true' || s === 'sim' || s === '1' || s === 'yes' || s === 'lida';
+}
+
+function chatInit(usuario, perfil, nome) {
+  if (!usuario && currentUser && currentUser.usuario) {
+    usuario = currentUser.usuario;
+    perfil  = currentUser.perfil;
+    nome    = currentUser.nome || usuario;
+  }
+  if (!usuario || !perfil) return;
+
+  CHAT.usuario = String(usuario).trim().toLowerCase();
+  CHAT.perfil  = String(perfil).trim().toLowerCase();
+  CHAT.nome    = String(nome || usuario).trim();
+  CHAT.contatoAtual = null;
+  CHAT.mensagens = [];
+  CHAT.naoLidasAnteriores = {};
+  CHAT.primeiroCarregamento = true;
+
+  const btn = document.getElementById('chatFloatBtn');
+  if (btn) btn.style.display = 'flex';
+
+  // Exibe também o botão de sininho no topo para todos os perfis verem notificações do chat
+  const notifBtn = document.getElementById('notifBtn');
+  if (notifBtn) notifBtn.style.display = 'flex';
+
+  carregarContatosChat();
+  iniciarPollingChat();
+}
+
+(function chatAutoInitBoot() {
+  setInterval(() => {
+    const dash = document.getElementById('dashboard');
+    const dashVisible = dash && dash.classList.contains('active');
+    if (dashVisible && currentUser && currentUser.usuario && !CHAT.usuario) {
+      chatInit(currentUser.usuario, currentUser.perfil, currentUser.nome);
+    } else if (!dashVisible && CHAT.usuario) {
+      chatLogout();
+    }
+  }, 800);
+})();
+
+function chatLogout() {
+  CHAT.aberto = false;
+  CHAT.contatoAtual = null;
+  CHAT.contatos = [];
+  CHAT.mensagens = [];
+  CHAT.usuario = CHAT.perfil = CHAT.nome = null;
+  CHAT.naoLidasAnteriores = {};
+  CHAT.idsNotificadosPopup.clear();
+  CHAT.primeiroCarregamento = true;
+
+  if (CHAT.pollMsg)      { clearInterval(CHAT.pollMsg);      CHAT.pollMsg = null; }
+  if (CHAT.pollContatos) { clearInterval(CHAT.pollContatos); CHAT.pollContatos = null; }
+
+  const panel = document.getElementById('chatPanel');
+  if (panel) panel.classList.remove('open');
+  const btn = document.getElementById('chatFloatBtn');
+  if (btn) btn.style.display = 'none';
+  atualizarBadgeChat(0);
+}
+
+function chatToggle() {
+  if (!CHAT.usuario && currentUser && currentUser.usuario) {
+    chatInit(currentUser.usuario, currentUser.perfil, currentUser.nome);
+  }
+  if (!CHAT.usuario) { mostrarToast('⚠️ Faça login para usar o chat.', 'error'); return; }
+  CHAT.aberto = !CHAT.aberto;
+  const panel = document.getElementById('chatPanel');
+  if (!panel) return;
+  panel.classList.toggle('open', CHAT.aberto);
+  if (CHAT.aberto) {
+    carregarContatosChat();
+    if (CHAT.contatoAtual) carregarMensagensChat(true);
+  }
+}
+
+// Lê diretamente a aba Chat da planilha via gviz para garantir que naoLidas funcione sempre
+async function lerAbaChatDiretoPlanilha() {
+  const nomesPossiveis = ['Chat', 'CHAT'];
+  for (const nomeAba of nomesPossiveis) {
+    try {
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}&_=${Date.now()}`;
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const txt = await res.text();
+      const ini = txt.indexOf('{'), fim = txt.lastIndexOf('}');
+      if (ini < 0 || fim < 0) continue;
+      const data = JSON.parse(txt.substring(ini, fim + 1));
+      if (!data.table || !data.table.rows) continue;
+
+      const cols = data.table.cols.map((c, i) => texto(c.label) || c.id || `col_${i}`);
+      const rows = data.table.rows.map(row => {
+        const obj = {};
+        (row.c || []).forEach((cell, i) => {
+          const k = cols[i] || `col_${i}`;
+          obj[k] = cell ? (cell.v !== null && cell.v !== undefined ? cell.v : (cell.f || '')) : '';
+        });
+        return obj;
+      });
+      if (rows.length >= 0) return rows;
+    } catch (e) { /* tenta próximo */ }
+  }
+  return [];
+}
+
+function obterContatosFallbackLocal() {
+  const meuUser = normChatKey(CHAT.usuario);
+  const meuPerfil = normChatKey(CHAT.perfil);
+  const prioridade = { admin:10, direcao:9, coordenacao:8, secretaria:7, financeiro:6, professor:5, aluno:1 };
+  const mapa = {};
+
+  const listaUsuarios = (db && Array.isArray(db.usuarios)) ? db.usuarios : [];
+  listaUsuarios.forEach(u => {
+    if (!u.usuario || (u.status && u.status !== 'ATIVO')) return;
+    const uLow = normChatKey(u.usuario);
+    const pLow = normChatKey(u.perfil);
+    if (uLow === meuUser) return;
+    if (meuPerfil === 'aluno' && pLow === 'aluno') return;
+    const peso = prioridade[pLow] || 0;
+    if (!mapa[uLow] || peso > (mapa[uLow]._peso || 0)) {
+      mapa[uLow] = {
+        usuario: uLow,
+        nome: u.nome || u.usuario,
+        perfil: pLow,
+        naoLidas: 0,
+        ultimaMsgNaoLida: '',
+        _peso: peso
+      };
+    }
+  });
+
+  return Object.values(mapa).sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+}
+
+function dispararPopupChatNaoLida(contato, qtd, ultimaMsg) {
+  const container = document.getElementById('popupContainer');
+  if (!container) return;
+
+  const nomeExibicao = contato.nome || contato.usuario;
+  const perfilExibicao = contato.perfil ? contato.perfil.toUpperCase() : 'USUÁRIO';
+  const resumoMsg = ultimaMsg
+    ? `“${String(ultimaMsg).substring(0, 90)}${String(ultimaMsg).length > 90 ? '...' : ''}”`
+    : (qtd === 1 ? 'Enviou 1 nova mensagem não lida.' : `Enviou ${qtd} mensagens não lidas.`);
+
+  // Remove popup anterior do mesmo remetente para não empilhar repetido
+  const popId = 'popup_chat_' + normChatKey(contato.usuario);
+  const existente = document.getElementById(popId);
+  if (existente) existente.remove();
+
+  const popup = document.createElement('div');
+  popup.id = popId;
+  popup.className = 'popup-notif tipo-mensagem';
+  popup.style.cursor = 'pointer';
+  popup.innerHTML = `
+    <div class="popup-icon">📩</div>
+    <div class="popup-body">
+      <div class="popup-title">🔔 Nova mensagem de ${escapeHtmlChat(nomeExibicao)} <span style="background:#e9d8fd;color:#553c9a;padding:1px 6px;border-radius:6px;font-size:0.78em;">${escapeHtmlChat(perfilExibicao)}</span></div>
+      <div class="popup-desc">${escapeHtmlChat(resumoMsg)}</div>
+      <div class="popup-time">💬 ${qtd} não lida(s) • Clique para responder</div>
+    </div>
+    <button class="popup-close" aria-label="Fechar">×</button>
+  `;
+
+  popup.addEventListener('click', (e) => {
+    if (e.target.classList.contains('popup-close')) return;
+    if (!CHAT.aberto) chatToggle();
+    chatAbrirContato({
+      usuario: contato.usuario,
+      perfil: contato.perfil,
+      nome: contato.nome || contato.usuario
+    });
+    popup.classList.remove('show');
+    setTimeout(() => popup.remove(), 300);
+  });
+
+  popup.querySelector('.popup-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    popup.classList.remove('show');
+    setTimeout(() => popup.remove(), 350);
+  });
+
+  container.appendChild(popup);
+  try { tocarSomNotificacao(); } catch (e) {}
+  requestAnimationFrame(() => popup.classList.add('show'));
+
+  setTimeout(() => {
+    if (popup.parentNode) {
+      popup.classList.remove('show');
+      setTimeout(() => popup.remove(), 350);
+    }
+  }, 10000);
+}
+
+function verificarNovasMensagensPopup(contatosNovos) {
+  if (!Array.isArray(contatosNovos)) return;
+
+  contatosNovos.forEach(c => {
+    const key = normChatKey(c.usuario);
+    const qtdAtual = Number(c.naoLidas) || 0;
+    const qtdAnt = Number(CHAT.naoLidasAnteriores[key]) || 0;
+
+    const conversaAbertaComEle = CHAT.aberto &&
+      CHAT.contatoAtual &&
+      normChatKey(CHAT.contatoAtual.usuario) === key;
+
+    if (!conversaAbertaComEle && qtdAtual > 0 && (CHAT.primeiroCarregamento || qtdAtual > qtdAnt)) {
+      dispararPopupChatNaoLida(c, qtdAtual, c.ultimaMsgNaoLida || '');
+    }
+
+    CHAT.naoLidasAnteriores[key] = qtdAtual;
+  });
+
+  CHAT.primeiroCarregamento = false;
+}
+
+async function carregarContatosChat() {
+  if (!CHAT.usuario) return;
+
+  // 1) Garante que db.usuarios esteja populado
+  if (!db.usuarios || db.usuarios.length === 0) {
+    try {
+      const resU = await enviarParaGAS('listarUsuarios', {});
+      if (resU && resU.success && Array.isArray(resU.usuarios)) {
+        db.usuarios = resU.usuarios.map(u => ({
+          id: texto(u.id),
+          nome: texto(u.nome).toUpperCase(),
+          perfil: texto(u.perfil).toLowerCase(),
+          usuario: texto(u.usuario).toLowerCase(),
+          status: texto(u.status || 'ATIVO').toUpperCase(),
+          alunoVinculado: texto(u.alunoVinculado).toUpperCase()
+        })).filter(u => u.usuario);
+      }
+    } catch (e) {}
+  }
+
+  let listaBase = obterContatosFallbackLocal();
+
+  // 2) Tenta buscar contatos e não lidas via GAS
+  let contatosDoGAS = null;
+  let totalNaoLidas = 0;
+  try {
+    const res = await enviarParaGAS('carregarContatosChat', {
+      usuario: CHAT.usuario,
+      perfil: CHAT.perfil
+    });
+    if (res && res.ok && Array.isArray(res.contatos) && res.contatos.length > 0) {
+      contatosDoGAS = res.contatos;
+      totalNaoLidas = Number(res.totalNaoLidas) || 0;
+    }
+  } catch (err) {
+    console.warn('[CHAT] fallback GAS carregarContatosChat:', err);
+  }
+
+  // 3) Lê diretamente a aba Chat da planilha para cruzar mensagens não lidas com 100% de certeza
+  const mapUnreadPlanilha = {};
+  const mapUltimaMsg = {};
+  let totalPlanilha = 0;
+  try {
+    const linhasChat = await lerAbaChatDiretoPlanilha();
+    const meuUser = normChatKey(CHAT.usuario);
+    const meuNome = normChatKey(CHAT.nome);
+
+    linhasChat.forEach(row => {
+      const deU   = normChatKey(getColuna(row, 'DeUsuario', 'Remetente', 'col_2'));
+      const deN   = normChatKey(getColuna(row, 'DeNome', 'col_4'));
+      const paraU = normChatKey(getColuna(row, 'ParaUsuario', 'Destinatario', 'col_5'));
+      const paraN = normChatKey(getColuna(row, 'ParaNome', 'col_7'));
+      const msg   = texto(getColuna(row, 'Mensagem', 'col_8'));
+      const lida  = isMsgChatLida(getColuna(row, 'Lida', 'col_9'));
+
+      const ehParaMim = (paraU && paraU === meuUser) || (paraN && meuNome && paraN === meuNome);
+      const naoEhMinha = (deU !== meuUser);
+
+      if (ehParaMim && naoEhMinha && !lida) {
+        const chaveRem = deU || deN;
+        if (chaveRem) {
+          mapUnreadPlanilha[chaveRem] = (mapUnreadPlanilha[chaveRem] || 0) + 1;
+          mapUltimaMsg[chaveRem] = msg;
+          totalPlanilha++;
+        }
+      }
+    });
+  } catch (e) {}
+
+  // 4) Unifica os contatos e contadores de não lidas
+  const fonteContatos = contatosDoGAS || listaBase;
+  const contatosFinais = fonteContatos.map(c => {
+    const uKey = normChatKey(c.usuario);
+    const nKey = normChatKey(c.nome);
+    const qtdGas = Number(c.naoLidas) || 0;
+    const qtdSheet = (mapUnreadPlanilha[uKey] || mapUnreadPlanilha[nKey] || 0);
+    const naoLidas = Math.max(qtdGas, qtdSheet);
+    return {
+      usuario: c.usuario,
+      nome: c.nome || c.usuario,
+      perfil: c.perfil || '',
+      naoLidas: naoLidas,
+      ultimaMsgNaoLida: mapUltimaMsg[uKey] || mapUltimaMsg[nKey] || ''
+    };
+  });
+
+  const somaTotal = contatosFinais.reduce((acc, c) => acc + (Number(c.naoLidas) || 0), 0);
+  const badgeTotal = Math.max(totalNaoLidas, totalPlanilha, somaTotal);
+
+  verificarNovasMensagensPopup(contatosFinais);
+  CHAT.contatos = contatosFinais;
+  renderContatosChat();
+  atualizarBadgeChat(badgeTotal);
+}
+
+function renderContatosChat() {
+  const listaEl = document.getElementById('chatContatosLista');
+  if (!listaEl) return;
+  const busca = (document.getElementById('chatBuscaContato')?.value || '').toLowerCase();
+
+  const filtrados = CHAT.contatos
+    .filter(c => {
+      const nome = (c.nome || c.usuario || '').toLowerCase();
+      const user = (c.usuario || '').toLowerCase();
+      const perf = (c.perfil || '').toLowerCase();
+      return nome.includes(busca) || user.includes(busca) || perf.includes(busca);
+    })
+    .sort((a, b) => {
+      const diff = (Number(b.naoLidas) || 0) - (Number(a.naoLidas) || 0);
+      if (diff !== 0) return diff;
+      return String(a.nome || a.usuario).localeCompare(String(b.nome || b.usuario), 'pt-BR');
+    });
+
+  if (!filtrados.length) {
+    listaEl.innerHTML = '<div class="chat-vazio-msg">Nenhum contato disponível</div>';
+    return;
+  }
+
+  listaEl.innerHTML = filtrados.map(c => {
+    const ativo = CHAT.contatoAtual &&
+                  normChatKey(CHAT.contatoAtual.usuario) === normChatKey(c.usuario);
+    const qtd = Number(c.naoLidas) || 0;
+    const temNaoLida = qtd > 0;
+    const inicial = (c.nome || c.usuario || '?').charAt(0).toUpperCase();
+
+    return `<div class="chat-contato ${ativo ? 'active' : ''} ${temNaoLida ? 'tem-nao-lida' : ''}"
+                 data-usuario="${escapeHtmlChat(c.usuario)}"
+                 data-perfil="${escapeHtmlChat(c.perfil)}"
+                 data-nome="${escapeHtmlChat(c.nome || c.usuario)}">
+      <div class="chat-avatar" style="${temNaoLida ? 'background:#e53e3e;' : ''}">
+        ${temNaoLida ? '📩' : escapeHtmlChat(inicial)}
+      </div>
+      <div class="chat-contato-info">
+        <div class="chat-contato-nome">
+          <span class="nome-txt">${escapeHtmlChat(c.nome || c.usuario)}</span>
+          ${temNaoLida ? `<span class="chat-unread-icon" title="${qtd} mensagem(ns) não lida(s)">🔔</span>` : ''}
+        </div>
+        <div class="chat-contato-perfil">
+          <span>${escapeHtmlChat(c.perfil)}</span>
+          ${temNaoLida ? `<span class="chat-perfil-unread-tag">📩 ${qtd} nova(s)</span>` : ''}
+        </div>
+      </div>
+      ${temNaoLida ? `<div class="chat-badge" title="${qtd} não lida(s)">${qtd > 99 ? '99+' : qtd}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  listaEl.querySelectorAll('.chat-contato').forEach(el => {
+    el.addEventListener('click', () => {
+      chatAbrirContato({
+        usuario: el.dataset.usuario,
+        perfil:  el.dataset.perfil,
+        nome:    el.dataset.nome
+      });
+    });
+  });
+}
+
+function chatAbrirContato(contato) {
+  CHAT.contatoAtual = contato;
+  CHAT.mensagens = [];
+
+  const key = normChatKey(contato.usuario);
+  CHAT.naoLidasAnteriores[key] = 0;
+  CHAT.contatos.forEach(c => {
+    if (normChatKey(c.usuario) === key) c.naoLidas = 0;
+  });
+
+  // Recalcula o badge total imediatamente
+  const novoTotal = CHAT.contatos.reduce((acc, c) => acc + (Number(c.naoLidas) || 0), 0);
+  atualizarBadgeChat(novoTotal);
+
+  document.getElementById('chatVazio').style.display = 'none';
+  document.getElementById('chatConversa').style.display = 'flex';
+  document.getElementById('chatComTitulo').textContent = contato.nome || contato.usuario;
+  document.getElementById('chatComSubtitulo').textContent = contato.perfil;
+  document.getElementById('chatComAvatar').textContent =
+    (contato.nome || contato.usuario || '?').charAt(0).toUpperCase();
+
+  renderContatosChat();
+  carregarMensagensChat(true);
+  setTimeout(() => document.getElementById('chatInputMsg')?.focus(), 150);
+}
+
+async function carregarMensagensChat(marcarLidas) {
+  if (!CHAT.usuario || !CHAT.contatoAtual) return;
+  try {
+    const res = await enviarParaGAS('carregarMensagensChat', {
+      usuario: CHAT.usuario,
+      perfil:  CHAT.perfil,
+      contatoUsuario: CHAT.contatoAtual.usuario,
+      contatoPerfil:  CHAT.contatoAtual.perfil,
+      marcarLidas: !!marcarLidas
+    });
+    if (res && res.ok && Array.isArray(res.mensagens)) {
+      CHAT.mensagens = res.mensagens;
+      renderMensagensChat();
+      if (marcarLidas) carregarContatosChat();
+      return;
+    }
+  } catch (err) {
+    console.error('[CHAT] msgs GAS falhou, lendo da planilha:', err);
+  }
+
+  // Fallback direto da planilha caso a rota do GAS falhe
+  try {
+    const rows = await lerAbaChatDiretoPlanilha();
+    const u1 = normChatKey(CHAT.usuario);
+    const u2 = normChatKey(CHAT.contatoAtual.usuario);
+    const msgs = [];
+    rows.forEach(r => {
+      const deU = normChatKey(getColuna(r, 'DeUsuario', 'col_2'));
+      const paraU = normChatKey(getColuna(r, 'ParaUsuario', 'col_5'));
+      if ((deU === u1 && paraU === u2) || (deU === u2 && paraU === u1)) {
+        msgs.push({
+          id: getColuna(r, 'ID', 'col_0'),
+          timestamp: getColuna(r, 'Timestamp', 'col_1'),
+          deUsuario: deU,
+          paraUsuario: paraU,
+          mensagem: getColuna(r, 'Mensagem', 'col_8'),
+          lida: isMsgChatLida(getColuna(r, 'Lida', 'col_9')),
+          minha: deU === u1
+        });
+      }
+    });
+    CHAT.mensagens = msgs;
+    renderMensagensChat();
+  } catch (e) {}
+}
+
+function renderMensagensChat() {
+  const box = document.getElementById('chatMensagens');
+  if (!box) return;
+
+  if (!CHAT.mensagens.length) {
+    box.innerHTML = '<div class="chat-vazio-msg">Nenhuma mensagem ainda. Diga olá! 👋</div>';
+    return;
+  }
+
+  let html = '';
+  let ultimoDia = null;
+  CHAT.mensagens.forEach(m => {
+    const dt = new Date(m.timestamp);
+    const dataValida = !isNaN(dt.getTime());
+    const dia = dataValida ? dt.toLocaleDateString('pt-BR') : 'Hoje';
+    if (dia !== ultimoDia) {
+      html += `<div class="chat-dia">${dia}</div>`;
+      ultimoDia = dia;
+    }
+    const hora = dataValida ? dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '';
+    html += `<div class="chat-msg ${m.minha ? 'minha' : 'deles'}">
+      <div class="chat-msg-bolha">${escapeHtmlChat(m.mensagem)}</div>
+      <div class="chat-msg-hora">${hora}${m.minha && m.lida ? ' ✓✓' : ''}</div>
+    </div>`;
+  });
+
+  const estavaNoFim = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+  box.innerHTML = html;
+  if (estavaNoFim) box.scrollTop = box.scrollHeight;
+}
+
+async function enviarMensagemChatSubmit(ev) {
+  if (ev) ev.preventDefault();
+  if (CHAT.enviando) return;
+  if (!CHAT.usuario || !CHAT.contatoAtual) return;
+
+  const input = document.getElementById('chatInputMsg');
+  const txt = (input.value || '').trim();
+  if (!txt) return;
+
+  const btnEnviar = document.querySelector('.chat-btn-enviar');
+  CHAT.enviando = true;
+  if (btnEnviar) btnEnviar.disabled = true;
+
+  const tempId = 'temp-' + Date.now();
+  CHAT.mensagens.push({
+    id: tempId,
+    timestamp: new Date().toISOString(),
+    deUsuario: CHAT.usuario,
+    dePerfil: CHAT.perfil,
+    paraUsuario: CHAT.contatoAtual.usuario,
+    paraPerfil: CHAT.contatoAtual.perfil,
+    mensagem: txt,
+    lida: false,
+    minha: true
+  });
+  renderMensagensChat();
+  input.value = '';
+
+  try {
+    const res = await enviarParaGAS('enviarMensagemChat', {
+      deUsuario: CHAT.usuario,
+      dePerfil:  CHAT.perfil,
+      deNome:    CHAT.nome || CHAT.usuario,
+      paraUsuario: CHAT.contatoAtual.usuario,
+      paraPerfil:  CHAT.contatoAtual.perfil,
+      paraNome:    CHAT.contatoAtual.nome || CHAT.contatoAtual.usuario,
+      mensagem:    txt
+    });
+    if (!res || !res.ok) {
+      mostrarToast('❌ Erro ao enviar: ' + ((res && (res.erro || res.error)) || 'desconhecido'), 'error');
+      CHAT.mensagens = CHAT.mensagens.filter(m => m.id !== tempId);
+      renderMensagensChat();
+      input.value = txt;
+    } else {
+      await carregarMensagensChat(false);
+      carregarContatosChat();
+    }
+  } catch (err) {
+    mostrarToast('❌ Falha de conexão: ' + err.message, 'error');
+    CHAT.mensagens = CHAT.mensagens.filter(m => m.id !== tempId);
+    renderMensagensChat();
+    input.value = txt;
+  } finally {
+    CHAT.enviando = false;
+    if (btnEnviar) btnEnviar.disabled = false;
+  }
+}
+
+function atualizarBadgeChat(n) {
+  const badge = document.getElementById('chatFloatBadge');
+  if (badge) {
+    if (n > 0) {
+      badge.textContent = n > 99 ? '99+' : n;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // Também atualiza o badge do sininho no topo quando há mensagens de chat não lidas
+  const notifBadge = document.getElementById('notifBadge');
+  if (notifBadge && currentUser.perfil !== 'aluno') {
+    if (n > 0) {
+      notifBadge.textContent = n > 99 ? '99+' : n;
+      notifBadge.classList.remove('hidden');
+    } else {
+      notifBadge.classList.add('hidden');
+    }
+  }
+}
+
+function iniciarPollingChat() {
+  if (CHAT.pollMsg) clearInterval(CHAT.pollMsg);
+  if (CHAT.pollContatos) clearInterval(CHAT.pollContatos);
+
+  CHAT.pollContatos = setInterval(() => {
+    if (CHAT.usuario) carregarContatosChat();
+  }, CHAT_POLL_CONT_MS);
+
+  CHAT.pollMsg = setInterval(() => {
+    if (CHAT.usuario && CHAT.aberto && CHAT.contatoAtual) {
+      carregarMensagensChat(true);
+    }
+  }, CHAT_POLL_MSG_MS);
+}
 </script>
 </body>
 </html>
