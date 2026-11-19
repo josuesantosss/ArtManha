@@ -458,6 +458,9 @@ function rotear(acao, payload) {
     case 'adminListarBugs': return adminListarBugs(payload);
     case 'listarCursos': return listarCursos(payload);
     case 'salvarCurso': return salvarCurso(payload);
+    case 'carregarContatosChat': return ChatMod.carregarContatosChat(payload);
+    case 'carregarMensagensChat': return ChatMod.carregarMensagensChat(payload);
+    case 'enviarMensagemChat': return ChatMod.enviarMensagemChat(payload);
     case 'garantirAdminPadrao': {
       try { return { success: true, ...garantirUsuarioPadrao() }; }
       catch (err) { return { success: false, error: err.message }; }
@@ -465,7 +468,6 @@ function rotear(acao, payload) {
     default: return { success: false, error: 'Ação desconhecida: ' + acao };
   }
 }
-
 // ============================================================
 // LOGIN — registra log apenas para perfis logados
 // ============================================================
@@ -1668,3 +1670,527 @@ function adminListarBugs(payload) {
     return { success: false, error: e.message };
   }
 }
+
+// =========================================================
+// CHAT INTERNO - BACKEND (ÚNICO E CORRIGIDO)
+// =========================================================
+var ChatMod = (function () {
+  var SHEET_NAME = 'Chat';
+  var HEADERS = ['ID','Timestamp','DeUsuario','DePerfil','DeNome',
+                 'ParaUsuario','ParaPerfil','ParaNome','Mensagem','Lida','LidaEm'];
+
+  function getSpreadsheet() {
+    return SpreadsheetApp.openById(SHEET_ID);
+  }
+
+  function getChatSheet() {
+    var ss = getSpreadsheet();
+    var sh = ss.getSheetByName(SHEET_NAME) || ss.getSheetByName('CHAT');
+    if (!sh) {
+      sh = ss.insertSheet(SHEET_NAME);
+      sh.appendRow(HEADERS);
+      sh.getRange(1,1,1,HEADERS.length).setFontWeight('bold');
+      sh.setFrozenRows(1);
+      sh.setColumnWidth(9, 400);
+    } else if (sh.getLastRow() === 0) {
+      sh.appendRow(HEADERS);
+      sh.getRange(1,1,1,HEADERS.length).setFontWeight('bold');
+      sh.setFrozenRows(1);
+    }
+    return sh;
+  }
+
+  function getUsuariosSheet() {
+    var ss = getSpreadsheet();
+    var abas = ss.getSheets();
+    for (var i = 0; i < abas.length; i++) {
+      var nomeNorm = normalizarChave(abas[i].getName());
+      if (nomeNorm === 'usuarios' || nomeNorm === 'usuario' || nomeNorm === 'logins') {
+        return abas[i];
+      }
+    }
+    return garantirAbaUsuarios();
+  }
+
+  function normPerfil(p) {
+    return String(p == null ? '' : p).trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  }
+
+  function isLida(v) {
+    if (v === true) return true;
+    if (v === false) return false;
+    var str = String(v == null ? '' : v).trim().toLowerCase();
+    return str === 'true' || str === 'sim' || str === '1' || str === 'yes';
+  }
+
+  function podeConversar(pa, pb) {
+    var a = normPerfil(pa), b = normPerfil(pb);
+    if (a === 'aluno' && b === 'aluno') return false;
+    return true;
+  }
+
+  function getUsuariosChat() {
+    var sh = getUsuariosSheet();
+    if (!sh) return [];
+    var data = sh.getDataRange().getValues();
+    if (data.length < 2) return [];
+    var headers = data[0].map(function(h){ return normalizarChave(h); });
+
+    function idx(names) {
+      for (var k = 0; k < names.length; k++) {
+        var i = headers.indexOf(names[k]);
+        if (i >= 0) return i;
+      }
+      return -1;
+    }
+
+    var iUsuario = idx(['usuario','login','user','username']);
+    var iNome    = idx(['nome','nome completo','name','nome_usuario']);
+    var iPerfil  = idx(['perfil','role','tipo','cargo']);
+    var iStatus  = idx(['status','ativo','situacao']);
+    if (iUsuario < 0 || iPerfil < 0) return [];
+
+    var prioridade = { admin:10, direcao:9, coordenacao:8, secretaria:7,
+                       financeiro:6, professor:5, aluno:1 };
+    var porUsuario = {};
+
+    for (var r = 1; r < data.length; r++) {
+      var row = data[r];
+      var usuario = String(row[iUsuario] == null ? '' : row[iUsuario]).trim();
+      if (!usuario) continue;
+
+      if (iStatus >= 0) {
+        var st = normalizarChave(row[iStatus]);
+        if (st && ['inativo','inactive','nao','0','false','bloqueado','desativado','cancelado'].indexOf(st) >= 0) continue;
+      }
+
+      var perfil = iPerfil >= 0 ? normPerfil(row[iPerfil]) : '';
+      var nome   = iNome   >= 0 ? String(row[iNome] || '').trim() || usuario : usuario;
+      var key    = usuario.toLowerCase();
+      var peso   = prioridade[perfil] || 0;
+
+      if (!porUsuario[key] || peso > (porUsuario[key]._peso || 0)) {
+        porUsuario[key] = { usuario: usuario.toLowerCase(), nome: nome, perfil: perfil, _peso: peso };
+      }
+    }
+
+    var out = [];
+    for (var k in porUsuario) {
+      var u = porUsuario[k];
+      delete u._peso;
+      out.push(u);
+    }
+    return out;
+  }
+
+  function carregarContatosChat(payload) {
+    try {
+      var p = payload || {};
+      var usuario = String(p.usuario || '').trim();
+      var perfil  = String(p.perfil  || '').trim();
+      if (!usuario) return { success: false, ok: false, erro: 'Usuário não informado.' };
+
+      var todos = getUsuariosChat();
+      var contatos = todos.filter(function(u) {
+        if (u.usuario.toLowerCase() === usuario.toLowerCase()) return false;
+        return podeConversar(perfil, u.perfil);
+      });
+
+      var sh = getChatSheet();
+      var data = sh.getDataRange().getValues();
+      var uLow = usuario.toLowerCase();
+      var unread = {}, total = 0;
+
+      for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var paraU = String(row[5] == null ? '' : row[5]).toLowerCase();
+        if (paraU === uLow && !isLida(row[9])) {
+          var deU = String(row[2] == null ? '' : row[2]).toLowerCase();
+          unread[deU] = (unread[deU] || 0) + 1;
+          total++;
+        }
+      }
+
+      contatos = contatos.map(function(c){
+        return {
+          usuario: c.usuario,
+          nome: c.nome,
+          perfil: c.perfil,
+          naoLidas: unread[c.usuario.toLowerCase()] || 0
+        };
+      }).sort(function(a,b){
+        return String(a.nome).localeCompare(String(b.nome), 'pt-BR', {sensitivity:'base'});
+      });
+
+      return { success: true, ok: true, contatos: contatos, totalNaoLidas: total };
+    } catch (e) {
+      return { success: false, ok: false, erro: String(e && e.message ? e.message : e) };
+    }
+  }
+
+  function carregarMensagensChat(payload) {
+    try {
+      var p = payload || {};
+      var usuario        = String(p.usuario        || '').trim();
+      var perfil         = String(p.perfil         || '').trim();
+      var contatoUsuario = String(p.contatoUsuario || '').trim();
+      var contatoPerfil  = String(p.contatoPerfil  || '').trim();
+      var marcarLidas    = !!p.marcarLidas;
+
+      if (!usuario || !contatoUsuario) return { success: false, ok: false, erro: 'Parâmetros inválidos.' };
+      if (!podeConversar(perfil, contatoPerfil)) {
+        return { success: false, ok: false, erro: 'Conversa não permitida entre estes perfis.' };
+      }
+
+      var sh = getChatSheet();
+      var data = sh.getDataRange().getValues();
+      var u1 = usuario.toLowerCase(), u2 = contatoUsuario.toLowerCase();
+
+      var mensagens = [], updates = [];
+
+      for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var deU   = String(row[2] == null ? '' : row[2]).toLowerCase();
+        var paraU = String(row[5] == null ? '' : row[5]).toLowerCase();
+
+        var matchA = (deU === u1 && paraU === u2);
+        var matchB = (deU === u2 && paraU === u1);
+        if (!matchA && !matchB) continue;
+
+        var ts = row[1];
+        var tsISO = (ts instanceof Date) ? ts.toISOString() : String(ts || '');
+
+        mensagens.push({
+          id: row[0], timestamp: tsISO,
+          deUsuario: row[2], dePerfil: row[3], deNome: row[4],
+          paraUsuario: row[5], paraPerfil: row[6], paraNome: row[7],
+          mensagem: row[8], lida: isLida(row[9]), minha: matchA
+        });
+
+        if (marcarLidas && matchB && !isLida(row[9])) updates.push(r + 1);
+      }
+
+      if (updates.length) {
+        var now = new Date();
+        for (var k = 0; k < updates.length; k++) {
+          sh.getRange(updates[k], 10).setValue(true);
+          sh.getRange(updates[k], 11).setValue(now);
+        }
+      }
+
+      mensagens.sort(function(a,b){
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      });
+
+      return { success: true, ok: true, mensagens: mensagens };
+    } catch (e) {
+      return { success: false, ok: false, erro: String(e && e.message ? e.message : e) };
+    }
+  }
+
+  function enviarMensagemChat(payload) {
+    try {
+      var p = payload || {};
+      var deUsuario   = String(p.deUsuario   || '').trim();
+      var dePerfil    = String(p.dePerfil    || '').trim();
+      var deNome      = String(p.deNome      || deUsuario).trim();
+      var paraUsuario = String(p.paraUsuario || '').trim();
+      var paraPerfil  = String(p.paraPerfil  || '').trim();
+      var paraNome    = String(p.paraNome    || paraUsuario).trim();
+      var mensagem    = String(p.mensagem    || '').trim();
+
+      if (!deUsuario || !paraUsuario || !mensagem)
+        return { success: false, ok: false, erro: 'Dados incompletos.' };
+      if (deUsuario.toLowerCase() === paraUsuario.toLowerCase())
+        return { success: false, ok: false, erro: 'Não é possível enviar mensagem para si mesmo.' };
+      if (!podeConversar(dePerfil, paraPerfil))
+        return { success: false, ok: false, erro: 'Conversa não permitida entre estes perfis.' };
+      if (mensagem.length > 2000)
+        return { success: false, ok: false, erro: 'Mensagem muito longa (máx. 2000 caracteres).' };
+
+      var sh = getChatSheet();
+      var id = Utilities.getUuid();
+      var agora = new Date();
+      sh.appendRow([id, agora, deUsuario, dePerfil, deNome,
+                    paraUsuario, paraPerfil, paraNome, mensagem, false, '']);
+
+      return { success: true, ok: true, id: id, timestamp: agora.toISOString() };
+    } catch (e) {
+      return { success: false, ok: false, erro: String(e && e.message ? e.message : e) };
+    }
+  }
+
+  return {
+    carregarContatosChat: carregarContatosChat,
+    carregarMensagensChat: carregarMensagensChat,
+    enviarMensagemChat: enviarMensagemChat
+  };
+})();
+
+/* =========================================================
+   CHAT INTERNO - BACKEND (versão encapsulada / idempotente)
+   Pode colar 1x ou Nx — não gera "already been declared".
+   ========================================================= */
+var ChatMod = (function () {
+  var SHEET_NAME = 'Chat';
+  var HEADERS = ['ID','Timestamp','DeUsuario','DePerfil','DeNome',
+                 'ParaUsuario','ParaPerfil','ParaNome','Mensagem','Lida','LidaEm'];
+
+  function getChatSheet() {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName(SHEET_NAME);
+    if (!sh) {
+      sh = ss.insertSheet(SHEET_NAME);
+      sh.appendRow(HEADERS);
+      sh.getRange(1,1,1,HEADERS.length).setFontWeight('bold');
+      sh.setFrozenRows(1);
+      sh.setColumnWidth(9, 400);
+    } else if (sh.getLastRow() === 0) {
+      sh.appendRow(HEADERS);
+      sh.getRange(1,1,1,HEADERS.length).setFontWeight('bold');
+      sh.setFrozenRows(1);
+    }
+    return sh;
+  }
+
+  function getUsuariosSheet() {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var nomes = ['Usuarios','Usuários','usuarios','USUARIOS','Login','Logins',
+                 'Autenticacao','Autenticação','UsuariosSenhas'];
+    for (var i = 0; i < nomes.length; i++) {
+      var s = ss.getSheetByName(nomes[i]);
+      if (s) return s;
+    }
+    return null;
+  }
+
+  function normPerfil(p) {
+    return String(p == null ? '' : p).trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  }
+
+  function isLida(v) {
+    if (v === true) return true;
+    if (v === false) return false;
+    var s = String(v == null ? '' : v).trim().toLowerCase();
+    return s === 'true' || s === 'sim' || s === '1' || s === 'yes';
+  }
+
+  function podeConversar(pa, pb) {
+    var a = normPerfil(pa), b = normPerfil(pb);
+    if (a === 'aluno' && b === 'aluno') return false;
+    return true;
+  }
+
+  function getUsuariosChat_() {
+  var sh = getUsuariosSheet_();
+  if (!sh) return [];
+  var data = sh.getDataRange().getValues();
+  if (data.length < 2) return [];
+  var headers = data[0].map(function(h){ return String(h).trim().toLowerCase(); });
+
+  function idx(names) {
+    for (var k = 0; k < names.length; k++) {
+      var i = headers.indexOf(names[k]);
+      if (i >= 0) return i;
+    }
+    return -1;
+  }
+
+  var iUsuario = idx(['usuario','usuário','login','user','username']);
+  var iNome    = idx(['nome','nome completo','name']);
+  var iPerfil  = idx(['perfil','role','tipo']);
+  var iStatus  = idx(['status','ativo','ativo?']);
+  if (iUsuario < 0 || iPerfil < 0) return [];
+
+  // 🔑 Prioridade de perfil: mantém o de maior privilégio por usuário
+  var prioridade = { admin:10, direcao:9, coordenacao:8, secretaria:7,
+                     financeiro:6, professor:5, aluno:1 };
+
+  var porUsuario = {}; // usuário.toLowerCase() → { usuario, nome, perfil }
+
+  for (var r = 1; r < data.length; r++) {
+    var row = data[r];
+    var usuario = String(row[iUsuario] == null ? '' : row[iUsuario]).trim();
+    if (!usuario) continue;
+
+    if (iStatus >= 0) {
+      var st = String(row[iStatus] == null ? '' : row[iStatus]).trim().toLowerCase();
+      if (st && ['inativo','inactive','nao','não','0','false','bloqueado','desativado'].indexOf(st) >= 0) continue;
+    }
+
+    var perfil = iPerfil >= 0 ? String(row[iPerfil] || '').trim() : '';
+    var nome   = iNome   >= 0 ? String(row[iNome]   || '').trim() || usuario : usuario;
+    var key    = usuario.toLowerCase();
+    var peso   = prioridade[perfil.toLowerCase()] || 0;
+
+    // Guarda só o registro de maior privilégio por usuário
+    if (!porUsuario[key] || peso > (porUsuario[key]._peso || 0)) {
+      porUsuario[key] = { usuario: usuario, nome: nome, perfil: perfil, _peso: peso };
+    }
+  }
+
+  var out = [];
+  for (var k in porUsuario) {
+    var u = porUsuario[k];
+    delete u._peso;
+    out.push(u);
+  }
+  return out;
+}
+
+  function carregarContatosChat(payload) {
+    try {
+      var p = payload || {};
+      var usuario = String(p.usuario || '').trim();
+      var perfil  = String(p.perfil  || '').trim();
+      if (!usuario) return { ok:false, erro:'Usuário não informado.' };
+
+      var todos = getUsuariosChat();
+      var contatos = todos.filter(function(u) {
+        if (u.usuario.toLowerCase() === usuario.toLowerCase()) return false;
+        return podeConversar(perfil, u.perfil);
+      });
+
+      var sh = getChatSheet();
+      var data = sh.getDataRange().getValues();
+      var uLow = usuario.toLowerCase();
+      var pLow = normPerfil(perfil);
+      var unread = {}, total = 0;
+
+      for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var paraU = String(row[5] == null ? '' : row[5]).toLowerCase();
+        var paraP = normPerfil(row[6]);
+        if (paraU === uLow && paraP === pLow && !isLida(row[9])) {
+          var deU = String(row[2] == null ? '' : row[2]).toLowerCase();
+          unread[deU] = (unread[deU] || 0) + 1;
+          total++;
+        }
+      }
+
+      contatos = contatos.map(function(c){
+        return {
+          usuario: c.usuario,
+          nome: c.nome,
+          perfil: c.perfil,
+          naoLidas: unread[c.usuario.toLowerCase()] || 0
+        };
+      }).sort(function(a,b){
+        return String(a.nome).localeCompare(String(b.nome), 'pt-BR', {sensitivity:'base'});
+      });
+
+      return { ok:true, contatos: contatos, totalNaoLidas: total };
+    } catch (e) {
+      return { ok:false, erro: String(e && e.message ? e.message : e) };
+    }
+  }
+
+  function carregarMensagensChat(payload) {
+    try {
+      var p = payload || {};
+      var usuario        = String(p.usuario        || '').trim();
+      var perfil         = String(p.perfil         || '').trim();
+      var contatoUsuario = String(p.contatoUsuario || '').trim();
+      var contatoPerfil  = String(p.contatoPerfil  || '').trim();
+      var marcarLidas    = !!p.marcarLidas;
+
+      if (!usuario || !contatoUsuario) return { ok:false, erro:'Parâmetros inválidos.' };
+      if (!podeConversar(perfil, contatoPerfil)) {
+        return { ok:false, erro:'Conversa não permitida entre estes perfis.' };
+      }
+
+      var sh = getChatSheet();
+      var data = sh.getDataRange().getValues();
+      var u1 = usuario.toLowerCase(),     u2 = contatoUsuario.toLowerCase();
+      var p1 = normPerfil(perfil),        p2 = normPerfil(contatoPerfil);
+
+      var mensagens = [], updates = [];
+
+      for (var r = 1; r < data.length; r++) {
+        var row = data[r];
+        var deU   = String(row[2] == null ? '' : row[2]).toLowerCase();
+        var deP   = normPerfil(row[3]);
+        var paraU = String(row[5] == null ? '' : row[5]).toLowerCase();
+        var paraP = normPerfil(row[6]);
+
+        var matchA = (deU === u1 && deP === p1 && paraU === u2 && paraP === p2);
+        var matchB = (deU === u2 && deP === p2 && paraU === u1 && paraP === p1);
+        if (!matchA && !matchB) continue;
+
+        var ts = row[1];
+        var tsISO = (ts instanceof Date) ? ts.toISOString() : String(ts || '');
+
+        mensagens.push({
+          id: row[0], timestamp: tsISO,
+          deUsuario: row[2], dePerfil: row[3], deNome: row[4],
+          paraUsuario: row[5], paraPerfil: row[6], paraNome: row[7],
+          mensagem: row[8], lida: isLida(row[9]), minha: matchA
+        });
+
+        if (marcarLidas && matchB && !isLida(row[9])) updates.push(r + 1);
+      }
+
+      if (updates.length) {
+        var now = new Date();
+        for (var k = 0; k < updates.length; k++) {
+          sh.getRange(updates[k], 10).setValue(true);
+          sh.getRange(updates[k], 11).setValue(now);
+        }
+      }
+
+      mensagens.sort(function(a,b){
+        return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+      });
+
+      return { ok:true, mensagens: mensagens };
+    } catch (e) {
+      return { ok:false, erro: String(e && e.message ? e.message : e) };
+    }
+  }
+
+  function enviarMensagemChat(payload) {
+    try {
+      var p = payload || {};
+      var deUsuario   = String(p.deUsuario   || '').trim();
+      var dePerfil    = String(p.dePerfil    || '').trim();
+      var deNome      = String(p.deNome      || deUsuario).trim();
+      var paraUsuario = String(p.paraUsuario || '').trim();
+      var paraPerfil  = String(p.paraPerfil  || '').trim();
+      var paraNome    = String(p.paraNome    || paraUsuario).trim();
+      var mensagem    = String(p.mensagem    || '').trim();
+
+      if (!deUsuario || !paraUsuario || !mensagem)
+        return { ok:false, erro:'Dados incompletos.' };
+      if (deUsuario.toLowerCase() === paraUsuario.toLowerCase() &&
+          normPerfil(dePerfil) === normPerfil(paraPerfil))
+        return { ok:false, erro:'Não é possível enviar mensagem para si mesmo.' };
+      if (!podeConversar(dePerfil, paraPerfil))
+        return { ok:false, erro:'Conversa não permitida entre estes perfis.' };
+      if (mensagem.length > 2000)
+        return { ok:false, erro:'Mensagem muito longa (máx. 2000 caracteres).' };
+
+      var sh = getChatSheet();
+      var id = Utilities.getUuid();
+      var agora = new Date();
+      sh.appendRow([id, agora, deUsuario, dePerfil, deNome,
+                    paraUsuario, paraPerfil, paraNome, mensagem, false, '']);
+
+      return { ok:true, id: id, timestamp: agora.toISOString() };
+    } catch (e) {
+      return { ok:false, erro: String(e && e.message ? e.message : e) };
+    }
+  }
+
+  return {
+    carregarContatosChat: carregarContatosChat,
+    carregarMensagensChat: carregarMensagensChat,
+    enviarMensagemChat: enviarMensagemChat
+  };
+})();
+
+/* ---- Wrappers globais (obrigatórios: google.script.run só enxerga funções globais) ---- */
+function carregarContatosChat(payload) { return ChatMod.carregarContatosChat(payload); }
+function carregarMensagensChat(payload) { return ChatMod.carregarMensagensChat(payload); }
+function enviarMensagemChat(payload)    { return ChatMod.enviarMensagemChat(payload); }
