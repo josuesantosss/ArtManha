@@ -1217,6 +1217,19 @@
       return str;
     }
 
+    function normalizarHoraHHMM(valor) {
+      if (!valor) return '';
+      if (valor instanceof Date && !isNaN(valor.getTime())) {
+        return `${String(valor.getHours()).padStart(2,'0')}:${String(valor.getMinutes()).padStart(2,'0')}`;
+      }
+      const str = String(valor).trim();
+      const mGviz = str.match(/^Date\(\d+,\d+,\d+,(\d+),(\d+)/);
+      if (mGviz) return `${String(mGviz[1]).padStart(2,'0')}:${String(mGviz[2]).padStart(2,'0')}`;
+      const mHora = str.match(/(\d{1,2}):(\d{2})/);
+      if (mHora) return `${String(mHora[1]).padStart(2,'0')}:${mHora[2]}`;
+      return str.padStart(5, '0').slice(0, 5);
+    }
+
     function normalizarReferencia(raw) {
       if (!raw) return getAnoMesAtual();
       const str = String(raw).trim();
@@ -1481,7 +1494,7 @@
 
     async function carregarAba(nomeAba, chave) {
       try {
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}`;
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}&_=${Date.now()}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error();
         const txt = await res.text();
@@ -1494,7 +1507,6 @@
         });
       } catch { dadosPlanilha[chave] = []; }
     }
-
     function processarDadosPlanilha() {
       escolaData.alunos = (dadosPlanilha.alunos || []).map(a => ({
         id: texto(getColuna(a,'ID','ID_Aluno')) || normalizarNome(getColuna(a,'Nome','Aluno')),
@@ -1625,7 +1637,7 @@
       db.agenda = (dadosPlanilha.agenda || []).map((a, i) => ({
         ID: texto(getColuna(a,'ID')) || `AG_${i+1}`,
         Data: normalizarDataISO(getColuna(a,'Data')),
-        HoraInicio: texto(getColuna(a,'HoraInicio','Hora')).padStart(5,'0'),
+        HoraInicio: normalizarHoraHHMM(getColuna(a,'HoraInicio','Hora')),
         TipoAula: texto(getColuna(a,'TipoAula','Tipo') || 'Individual'),
         AlunoNome: texto(getColuna(a,'AlunoNome','Aluno')).toUpperCase(),
         ProfessorID: texto(getColuna(a,'ProfessorID')),
@@ -1742,52 +1754,83 @@
     }
     function irParaHoje() { document.getElementById('agendaData').value = new Date().toISOString().slice(0, 10); renderAgenda(); }
 
-    function renderAgenda() {
-      const dataSel = document.getElementById('agendaData').value;
-      const modo = document.getElementById('agendaModo').value;
-      const entidades = modo === 'professor' ? escolaData.professores : escolaData.salas;
-      const aulasDia = db.agenda.filter(a => a.Data === dataSel && a.StatusPresenca !== 'Cancelada');
-
-      document.getElementById('agendaThead').innerHTML = `<tr>
-        <th class="p-3 text-left w-48 border-r bg-slate-100">${modo === 'professor' ? 'Professor' : 'Sala'}</th>
-        ${HORARIOS_GRADE.map(h => `<th class="p-2 text-center border-r font-semibold">${h}</th>`).join('')}
-      </tr>`;
-
-      if (!entidades.length) {
-        document.getElementById('agendaTbody').innerHTML = `<tr><td colspan="${HORARIOS_GRADE.length+1}" class="p-8 text-center text-slate-400">Cadastre salas e professores para visualizar a grade.</td></tr>`;
-        return;
-      }
-
-      document.getElementById('agendaTbody').innerHTML = entidades.map(ent => {
-        const entId = String(ent.id || '').trim();
-        const entNome = normalizarNome(ent.nome);
-        return `<tr class="h-24">
-          <td class="p-3 border-r bg-slate-50 font-semibold text-slate-700 align-top">
-            <div>${escapeHtml(ent.nome)}</div>
-            <div class="text-xs font-normal text-slate-400">${modo === 'professor' ? escapeHtml(ent.tipo || '') : 'Cap: ' + ent.capacidade}</div>
-          </td>
-          ${HORARIOS_GRADE.map(h => {
-            const aula = aulasDia.find(a => {
-              if (!a.HoraInicio.startsWith(h.slice(0,2))) return false;
-              return modo === 'professor'
-                ? (a.ProfessorID === entId || normalizarNome(a.ProfessorNome) === entNome)
-                : (a.SalaID === entId || normalizarNome(a.SalaNome) === entNome);
-            });
-            if (!aula) return `<td onclick="abrirModalAula(null,'${entId}','${h}','${modo}')" class="grid-cell border-r p-1 align-top text-[10px] text-slate-300 text-center pt-8">${h}</td>`;
-            const cor = aula.StatusPresenca === 'Presente' ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
-                      : aula.EhReposicao === 'Sim' ? 'bg-amber-50 border-amber-500 text-amber-900'
-                      : 'bg-indigo-50 border-indigo-600 text-indigo-900';
-            return `<td class="border-r p-1 align-top">
-              <div onclick="abrirModalAula('${aula.ID}')" class="aula-card cursor-pointer rounded-md border-l-4 p-1.5 text-xs h-full ${cor}">
-                <div class="font-bold truncate">${escapeHtml(aula.AlunoNome)}</div>
-                <div class="text-[11px] opacity-80 truncate">${escapeHtml(aula.Instrumento)}</div>
-                <div class="text-[10px] mt-1 flex justify-between"><span>${escapeHtml(modo === 'professor' ? aula.SalaNome : aula.ProfessorNome)}</span>${aula.EhReposicao === 'Sim' ? '<span class="bg-amber-200 px-1 rounded font-bold">REP</span>' : ''}</div>
-              </div>
-            </td>`;
-          }).join('')}
-        </tr>`;
-      }).join('');
-    }
+      function renderAgenda() {
+            const dataSel = document.getElementById('agendaData').value;
+            const modo = document.getElementById('agendaModo').value;
+            const ehProf = currentUser.perfil === 'professor';
+            const profLogado = ehProf ? (currentUser.professorData || encontrarProfessorPorNome(currentUser.nome)) : null;
+      
+            // Na Grade por Professor, o professor vê apenas a própria linha; gestão vê todos
+            let entidades = modo === 'professor' ? escolaData.professores : escolaData.salas;
+            if (modo === 'professor' && ehProf && profLogado) {
+              entidades = escolaData.professores.filter(p => p.id === profLogado.id || nomesIguais(p.nome, profLogado.nome));
+            }
+      
+            const aulasDia = db.agenda.filter(a => a.Data === dataSel && a.StatusPresenca !== 'Cancelada');
+      
+            document.getElementById('agendaThead').innerHTML = `<tr>
+              <th class="p-3 text-left w-48 border-r bg-slate-100">${modo === 'professor' ? 'Professor' : 'Sala'}</th>
+              ${HORARIOS_GRADE.map(h => `<th class="p-2 text-center border-r font-semibold">${h}</th>`).join('')}
+            </tr>`;
+      
+            if (!entidades.length) {
+              document.getElementById('agendaTbody').innerHTML = `<tr><td colspan="${HORARIOS_GRADE.length+1}" class="p-8 text-center text-slate-400">Nenhum registro encontrado para exibir na grade.</td></tr>`;
+              return;
+            }
+      
+            document.getElementById('agendaTbody').innerHTML = entidades.map(ent => {
+              const entId = String(ent.id || '').trim();
+              const entNome = normalizarNome(ent.nome);
+      
+              return `<tr class="h-24">
+                <td class="p-3 border-r bg-slate-50 font-semibold text-slate-700 align-top">
+                  <div>${escapeHtml(ent.nome)}</div>
+                  <div class="text-xs font-normal text-slate-400">${modo === 'professor' ? escapeHtml(ent.tipo || '') : 'Cap: ' + ent.capacidade}</div>
+                </td>
+                ${HORARIOS_GRADE.map(h => {
+                  const aula = aulasDia.find(a => {
+                    if (!a.HoraInicio || !a.HoraInicio.startsWith(h.slice(0,2))) return false;
+                    return modo === 'professor'
+                      ? (String(a.ProfessorID).trim() === entId || normalizarNome(a.ProfessorNome) === entNome)
+                      : (String(a.SalaID).trim() === entId || normalizarNome(a.SalaNome) === entNome);
+                  });
+      
+                  if (!aula) {
+                    return `<td onclick="abrirModalAula(null,'${entId}','${h}','${modo}')" class="grid-cell border-r p-1 align-top text-[10px] text-slate-300 text-center pt-8">${h}</td>`;
+                  }
+      
+                  // Verifica se a aula pertence ao professor logado
+                  const ehMinhaAula = !ehProf || (profLogado && (String(aula.ProfessorID).trim() === String(profLogado.id).trim() || nomesIguais(aula.ProfessorNome, profLogado.nome)));
+      
+                  // Se for outro professor olhando a Grade por Sala: mostra a sala bloqueada sem expor a aula
+                  if (ehProf && !ehMinhaAula) {
+                    return `<td class="border-r p-1 align-top">
+                      <div onclick="mostrarToast('🔒 Esta sala já está reservada neste horário.', 'info')"
+                           class="cursor-not-allowed rounded-md border-l-4 border-slate-400 bg-slate-100 text-slate-500 p-1.5 text-xs h-full flex flex-col justify-center">
+                        <div class="font-bold truncate">🔒 Sala Ocupada</div>
+                        <div class="text-[10px] opacity-80 truncate">Horário reservado</div>
+                      </div>
+                    </td>`;
+                  }
+      
+                  const cor = aula.StatusPresenca === 'Presente' ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
+                            : aula.EhReposicao === 'Sim' ? 'bg-amber-50 border-amber-500 text-amber-900'
+                            : 'bg-indigo-50 border-indigo-600 text-indigo-900';
+      
+                  return `<td class="border-r p-1 align-top">
+                    <div onclick="abrirModalAula('${aula.ID}')" class="aula-card cursor-pointer rounded-md border-l-4 p-1.5 text-xs h-full ${cor}">
+                      <div class="font-bold truncate">${escapeHtml(aula.AlunoNome)}</div>
+                      <div class="text-[11px] opacity-80 truncate">${escapeHtml(aula.Instrumento)}</div>
+                      <div class="text-[10px] mt-1 flex justify-between">
+                        <span class="truncate">${escapeHtml(modo === 'professor' ? aula.SalaNome : aula.ProfessorNome)}</span>
+                        ${aula.EhReposicao === 'Sim' ? '<span class="bg-amber-200 px-1 rounded font-bold">REP</span>' : ''}
+                      </div>
+                    </div>
+                  </td>`;
+                }).join('')}
+              </tr>`;
+            }).join('');
+          }
 
     function getConflitoSalaAula(data, hora, salaId, ignorarAulaId = '') {
       if (!data || !hora || !salaId) return null;
