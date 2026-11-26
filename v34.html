@@ -456,3 +456,683 @@
             <div id="frequenciaResultados" class="bg-white rounded-xl p-4 border text-sm text-slate-500">Selecione um curso.</div>
           </div>
         </section>
+<!-- ==================== [BLOCO 11] SEÇÃO 5: COORDENAÇÃO PEDAGÓGICA ==================== -->
+        <section id="sec-pedagogico" class="secao hidden p-6 space-y-5">
+          <h2 class="text-2xl font-bold text-slate-800">Coordenação Pedagógica</h2>
+          <div class="flex gap-4 border-b overflow-x-auto text-sm">
+            <button onclick="mudarSubAba('coord','visao',this)" class="sub-tab active px-3 py-2">📊 Visão por Curso</button>
+            <button onclick="mudarSubAba('coord','acompanhamento',this)" class="sub-tab px-3 py-2 text-slate-500">👨‍🏫 Acompanhamento</button>
+            <button onclick="mudarSubAba('coord','atribuicao',this)" class="sub-tab px-3 py-2 text-slate-500">📋 Atribuir Cursos</button>
+            <button onclick="mudarSubAba('coord','relatorios',this)" class="sub-tab px-3 py-2 text-slate-500">📥 Relatórios Recebidos</button>
+          </div>
+
+          <div id="coord-visao" class="coord-pane bg-white rounded-xl border overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                <tr><th class="p-3">Curso</th><th class="p-3">Professor</th><th class="p-3">Média</th><th class="p-3">Presença</th><th class="p-3">Alunos</th></tr>
+              </thead>
+              <tbody id="visaoGeralCursos" class="divide-y"></tbody>
+            </table>
+          </div>
+
+          <div id="coord-acompanhamento" class="coord-pane hidden space-y-4">
+            <select id="selectProfAcompanhamento" onchange="renderAcompanhamentoProf()" class="border rounded-lg px-3 py-2 text-sm bg-white max-w-sm w-full"></select>
+            <div id="acompanhamentoResultados" class="space-y-4"></div>
+          </div>
+
+          <div id="coord-atribuicao" class="coord-pane hidden space-y-4">
+            <div class="bg-white p-5 rounded-xl border grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+              <div><label class="text-xs font-semibold text-slate-500">Professor</label><select id="professorSelect" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></select></div>
+              <div><label class="text-xs font-semibold text-slate-500">Curso</label><select id="cursoSelect" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></select></div>
+              <div class="flex gap-2">
+                <button onclick="atribuirCurso()" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium">+ Atribuir</button>
+                <button onclick="removerCurso()" class="flex-1 bg-rose-600 text-white py-2 rounded-lg text-sm font-medium">✕ Remover</button>
+              </div>
+            </div>
+            <div id="professoresAtribuidos" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+          </div>
+
+          <div id="coord-relatorios" class="coord-pane hidden space-y-3">
+            <div id="listaRelatoriosRecebidos" class="space-y-3"></div>
+          </div>
+        </section>
+
+<!-- ==================== [BLOCO 12] SEÇÃO 6: DIÁRIO DO PROFESSOR ==================== -->
+        <section id="sec-professor" class="secao hidden p-6 space-y-5">
+          <div class="flex flex-wrap justify-between items-center gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800">Diário do Professor</h2>
+              <p class="text-sm text-slate-500">Avaliações, chamadas, observações, relatórios e envio de materiais</p>
+            </div>
+            <div id="dirSimularProfBox" class="hidden flex items-center gap-2">
+              <label class="text-xs font-semibold text-slate-500">Simular Professor:</label>
+              <select id="selectProfSimular" onchange="trocarProfessorAtivo()" class="border rounded-lg px-3 py-1.5 text-sm bg-white"></select>
+            </div>
+          </div>
+
+          <div id="cursosContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+
+          <div id="registrosSection" class="bg-white rounded-xl border p-5 space-y-5">
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b pb-3">
+              <h3 class="font-bold text-lg text-slate-800">Curso selecionado: <span id="cursoSelecionadoNome" class="text-indigo-700">-</span></h3>
+              <div class="flex gap-2 flex-wrap text-xs">
+                <button onclick="mudarSubAba('prof','notas',this)" class="sub-tab active px-3 py-1.5">📊 Avaliações</button>
+                <button onclick="mudarSubAba('prof','presencas',this)" class="sub-tab px-3 py-1.5 text-slate-500">✅ Presenças</button>
+                <button onclick="mudarSubAba('prof','observacoes',this)" class="sub-tab px-3 py-1.5 text-slate-500">✏️ Observações</button>
+                <button onclick="mudarSubAba('prof','relatorios',this)" class="sub-tab px-3 py-1.5 text-slate-500">📄 Relatórios</button>
+                <button onclick="mudarSubAba('prof','comunicacao',this)" class="sub-tab px-3 py-1.5 text-slate-500">📎 Materiais & Mensagens</button>
+              </div>
+            </div>
+
+            <!-- Notas -->
+            <div id="prof-notas" class="prof-pane space-y-4">
+              <div class="flex gap-3 items-end">
+                <div>
+                  <label class="text-xs font-semibold text-slate-500">Bimestre</label>
+                  <select id="bimestreNota" onchange="carregarTabelaNotas()" class="border rounded-lg px-3 py-2 text-sm block mt-1">
+                    <option value="1">1º Bimestre</option><option value="2">2º Bimestre</option><option value="3">3º Bimestre</option><option value="4">4º Bimestre</option>
+                  </select>
+                </div>
+                <button onclick="salvarNotas()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">💾 Salvar Avaliações</button>
+              </div>
+              <div class="overflow-x-auto border rounded-lg">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                    <tr><th class="p-3">Nº</th><th class="p-3">Aluno</th><th class="p-3">Nota (0-10)</th><th class="p-3">Média</th><th class="p-3">Status</th></tr>
+                  </thead>
+                  <tbody id="tabelaNotasBody" class="divide-y"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Presenças -->
+            <div id="prof-presencas" class="prof-pane hidden space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div><label class="text-xs font-semibold text-slate-500">Data da Aula</label><input type="date" id="dataPresenca" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></div>
+                <div><label class="text-xs font-semibold text-slate-500">Conteúdo Ministrado</label><input type="text" id="obsPresenca" placeholder="Ex: Escala maior, leitura rítmica..." class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></div>
+              </div>
+              <div class="overflow-x-auto border rounded-lg">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                    <tr><th class="p-2 text-center w-14">Nº</th><th class="p-2">Aluno</th><th class="p-2 text-center w-24">Presente</th></tr>
+                  </thead>
+                  <tbody id="alunosPresencaTabela" class="divide-y"></tbody>
+                </table>
+              </div>
+              <button onclick="salvarPresenca()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium">✅ Salvar Presença</button>
+              <div id="registrosPresenca" class="space-y-2 pt-2"></div>
+            </div>
+
+            <!-- Observações -->
+            <div id="prof-observacoes" class="prof-pane hidden space-y-3">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div><label class="text-xs font-semibold text-slate-500">Aluno</label><select id="alunoObservacao" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></select></div>
+                <div><label class="text-xs font-semibold text-slate-500">Data</label><input type="date" id="dataObservacao" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></div>
+                <div><label class="text-xs font-semibold text-slate-500">Tipo</label>
+                  <select id="tipoObservacao" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                    <option value="Positiva">✅ Positiva</option><option value="Negativa">⚠️ Negativa</option><option value="Neutra">ℹ️ Neutra</option>
+                  </select>
+                </div>
+              </div>
+              <textarea id="observacaoText" rows="3" placeholder="Registre observações sobre o desenvolvimento..." class="w-full border rounded-lg p-3 text-sm"></textarea>
+              <button onclick="salvarObservacao()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">💾 Salvar Observação</button>
+              <div id="registrosObservacoes" class="space-y-2 pt-2"></div>
+            </div>
+
+            <!-- Relatórios -->
+            <div id="prof-relatorios" class="prof-pane hidden space-y-4">
+              <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-3">
+                <h4 class="font-bold text-indigo-900 text-sm">✏️ Novo Relatório Pedagógico</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <select id="alunoRelatorioPreencher" class="border rounded-lg px-3 py-2 text-sm bg-white"></select>
+                  <select id="bimestreRelatorioPreencher" class="border rounded-lg px-3 py-2 text-sm bg-white">
+                    <option value="1">1º Bimestre</option><option value="2">2º Bimestre</option><option value="3">3º Bimestre</option><option value="4">4º Bimestre</option><option value="anual">Anual</option>
+                  </select>
+                </div>
+                <textarea id="relatorioTexto" rows="4" placeholder="Descreva a evolução do aluno..." class="w-full border rounded-lg p-3 text-sm bg-white"></textarea>
+                <button onclick="enviarRelatorioCoordenacao()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">📤 Enviar para Coordenação</button>
+              </div>
+              <div id="relatoriosEnviados" class="space-y-2"></div>
+            </div>
+
+            <!-- Comunicação (Upload & Mensagens) -->
+            <div id="prof-comunicacao" class="prof-pane hidden grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div class="bg-slate-50 p-4 rounded-xl border space-y-3">
+                <h4 class="font-bold text-slate-800 text-sm">📎 Enviar Arquivo / Partitura</h4>
+                <select id="uploadDestinatarios" multiple size="3" class="w-full border rounded-lg p-2 text-sm bg-white"></select>
+                <div id="fileDropZone" onclick="document.getElementById('uploadFileInput').click()" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-5 text-center cursor-pointer bg-white text-xs text-slate-500">
+                  <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-500 mb-1"></i>
+                  <div>Clique para selecionar arquivo (PDF, áudio, imagem — máx. 20MB)</div>
+                  <input type="file" id="uploadFileInput" class="hidden" onchange="selecionarArquivoUpload(event)">
+                </div>
+                <div id="filePreview" class="hidden"></div>
+                <textarea id="uploadMensagem" rows="2" placeholder="Mensagem opcional..." class="w-full border rounded-lg p-2 text-sm bg-white"></textarea>
+                <button id="btnEnviarArquivo" onclick="enviarArquivoUpload()" disabled class="bg-indigo-600 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium">📤 Enviar Arquivo</button>
+                <div id="arquivosEnviadosHistorico" class="space-y-2 pt-2"></div>
+              </div>
+
+              <div class="bg-slate-50 p-4 rounded-xl border space-y-3">
+                <h4 class="font-bold text-slate-800 text-sm">💬 Enviar Aviso / Mensagem</h4>
+                <select id="msgDestinatarios" multiple size="3" class="w-full border rounded-lg p-2 text-sm bg-white"></select>
+                <input type="text" id="msgAssunto" placeholder="Assunto" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+                <textarea id="msgTexto" rows="4" placeholder="Digite sua mensagem..." class="w-full border rounded-lg p-2 text-sm bg-white"></textarea>
+                <button id="btnEnviarMensagem" onclick="enviarMensagemAluno()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">💬 Enviar Mensagem</button>
+                <div id="mensagensEnviadasHistorico" class="space-y-2 pt-2"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+<!-- ==================== [BLOCO 13] SEÇÃO 7: FINANCEIRO ==================== -->
+        <section id="sec-financeiro" class="secao hidden p-6 space-y-5">
+          <div class="flex flex-wrap justify-between items-center gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-800">Financeiro</h2>
+              <p class="text-sm text-slate-500">Mensalidades, Pix, Folha Semanal de Professores e Despesas</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="month" id="finMesReferencia" onchange="renderFinanceiroCompleto()" class="border rounded-lg px-3 py-2 text-sm bg-white font-semibold">
+              <button onclick="abrirModalDespesa()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-lg text-sm font-medium shadow">- Nova Despesa</button>
+            </div>
+          </div>
+
+          <div id="statsMensalidadesFinanceiro" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+
+          <div class="flex gap-4 border-b overflow-x-auto text-sm">
+            <button onclick="mudarSubAba('fin','mensalidades',this)" class="sub-tab active px-3 py-2 whitespace-nowrap">👥 Mensalidades</button>
+            <button onclick="mudarSubAba('fin','registrar',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">📝 Registrar Pagamento</button>
+            <button onclick="mudarSubAba('fin','folha',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">💰 Folha Professores</button>
+            <button onclick="mudarSubAba('fin','valores',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">⚙️ Valor Hora/Aula</button>
+            <button onclick="mudarSubAba('fin','despesas',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">📉 Despesas</button>
+          </div>
+
+          <div id="fin-mensalidades" class="fin-pane space-y-3">
+            <div class="flex flex-wrap gap-3">
+              <input type="text" id="buscaMensalidadeFinanceiro" oninput="renderMensalidadesFinanceiro()" placeholder="Buscar aluno..." class="border rounded-lg px-3 py-2 text-sm bg-white">
+              <select id="filtroStatusMensalidadeFinanceiro" onchange="renderMensalidadesFinanceiro()" class="border rounded-lg px-3 py-2 text-sm bg-white">
+                <option value="">Todos Status</option><option value="PAGO">✅ Pago</option><option value="PENDENTE">⏳ Pendente</option><option value="ATRASADO">⚠️ Atrasado</option>
+              </select>
+            </div>
+            <div class="bg-white rounded-xl border overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                  <tr><th class="p-3">Aluno</th><th class="p-3">Valor</th><th class="p-3">Vencimento</th><th class="p-3">Status</th><th class="p-3">Pago em</th><th class="p-3 text-right">Ações</th></tr>
+                </thead>
+                <tbody id="tabelaMensalidadesFinanceiro" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="fin-registrar" class="fin-pane hidden bg-white rounded-xl border p-5 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div><label class="text-xs font-semibold text-slate-500">Aluno *</label><select id="registrarPagamentoAluno" class="w-full border rounded-lg px-3 py-2 mt-1"></select></div>
+              <div><label class="text-xs font-semibold text-slate-500">Mês Referência *</label><input type="month" id="registrarPagamentoMes" class="w-full border rounded-lg px-3 py-2 mt-1"></div>
+              <div><label class="text-xs font-semibold text-slate-500">Data Pagamento *</label><input type="date" id="registrarPagamentoData" class="w-full border rounded-lg px-3 py-2 mt-1"></div>
+              <div><label class="text-xs font-semibold text-slate-500">Valor (R$)</label><input type="number" id="registrarPagamentoValor" step="0.01" class="w-full border rounded-lg px-3 py-2 mt-1"></div>
+              <div><label class="text-xs font-semibold text-slate-500">Dia Vencimento</label><input type="number" id="registrarPagamentoVencimento" min="1" max="31" value="10" class="w-full border rounded-lg px-3 py-2 mt-1"></div>
+              <div class="flex items-end"><button onclick="registrarPagamentoManual()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-semibold">💾 Confirmar Pagamento</button></div>
+            </div>
+            <div id="registrarPagamentoInfo"></div>
+          </div>
+
+          <div id="fin-folha" class="fin-pane hidden bg-white rounded-xl border overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                <tr><th class="p-3">Professor</th><th class="p-3">Valor/h</th><th class="p-3 text-center">S1</th><th class="p-3 text-center">S2</th><th class="p-3 text-center">S3</th><th class="p-3 text-center">S4</th><th class="p-3 text-center">S5</th><th class="p-3 text-center">Aulas</th><th class="p-3 text-right">A Pagar</th></tr>
+              </thead>
+              <tbody id="tabelaPagamentosFinanceiro" class="divide-y"></tbody>
+            </table>
+          </div>
+
+          <div id="fin-valores" class="fin-pane hidden bg-white rounded-xl border overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                <tr><th class="p-3">Professor</th><th class="p-3">Valor Hora/Aula (R$)</th><th class="p-3">Salvar</th></tr>
+              </thead>
+              <tbody id="tabelaValoresProfessores" class="divide-y"></tbody>
+            </table>
+          </div>
+
+          <div id="fin-despesas" class="fin-pane hidden bg-white rounded-xl border overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                <tr><th class="p-3">Data</th><th class="p-3">Categoria</th><th class="p-3">Descrição</th><th class="p-3 text-right">Valor</th></tr>
+              </thead>
+              <tbody id="tbodyDespesas" class="divide-y"></tbody>
+            </table>
+          </div>
+        </section>
+
+<!-- ==================== [BLOCO 14] SEÇÃO 8: RELATÓRIOS & GRÁFICOS ==================== -->
+        <section id="sec-relatorios" class="secao hidden p-6 space-y-6">
+          <h2 class="text-2xl font-bold text-slate-800">Relatórios & Indicadores</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-xl border shadow-xs">
+              <h3 class="font-bold text-slate-700 mb-4">Fluxo de Caixa Mensal (Receitas vs Despesas)</h3>
+              <canvas id="chartFluxo" height="220"></canvas>
+            </div>
+            <div class="bg-white p-5 rounded-xl border shadow-xs">
+              <h3 class="font-bold text-slate-700 mb-4">Matrículas Ativas por Curso</h3>
+              <canvas id="chartInstrumentos" height="220"></canvas>
+            </div>
+          </div>
+          <div class="bg-white p-5 rounded-xl border space-y-4">
+            <div class="flex flex-wrap gap-2">
+              <button onclick="gerarRelatorioGeral()" class="bg-indigo-600 text-white px-3.5 py-2 rounded-lg text-xs font-semibold">📊 Relatório Geral</button>
+              <button onclick="gerarRelatorioFinanceiroDirecao()" class="bg-emerald-600 text-white px-3.5 py-2 rounded-lg text-xs font-semibold">💰 Resumo Financeiro</button>
+            </div>
+            <div id="relatorioConsolidado" class="text-sm"></div>
+          </div>
+        </section>
+
+<!-- ==================== [BLOCO 15] SEÇÃO 9: PORTAL DO ALUNO ==================== -->
+        <section id="sec-aluno" class="secao hidden p-6 space-y-5">
+          <div class="bg-gradient-to-r from-[#252338] to-[#7c2d45] text-white rounded-2xl p-6 shadow">
+            <h2 id="alunoHeroNome" class="text-2xl font-bold">🎓 Olá, Aluno!</h2>
+            <p id="alunoHeroInfo" class="text-sm text-white/80">Bem-vindo à sua área musical</p>
+          </div>
+          <div id="alunoStats" class="grid grid-cols-2 lg:grid-cols-5 gap-3"></div>
+
+          <div class="flex gap-3 border-b overflow-x-auto text-sm">
+            <button onclick="mudarSubAba('aluno','mensalidade',this)" class="sub-tab active px-3 py-2 whitespace-nowrap">💰 Mensalidade</button>
+            <button onclick="mudarSubAba('aluno','notas',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">📝 Notas</button>
+            <button onclick="mudarSubAba('aluno','frequencia',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">✅ Frequência</button>
+            <button onclick="mudarSubAba('aluno','materiais',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">📎 Materiais & Mensagens</button>
+            <button onclick="mudarSubAba('aluno','relatorios',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">📄 Relatórios</button>
+            <button onclick="mudarSubAba('aluno','dados',this)" class="sub-tab px-3 py-2 text-slate-500 whitespace-nowrap">👤 Meus Dados</button>
+          </div>
+
+          <div id="aluno-mensalidade" class="aluno-pane space-y-4">
+            <div id="alunoAnoTabs" class="flex gap-2 flex-wrap"></div>
+            <div id="alunoMesesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+          </div>
+          <div id="aluno-notas" class="aluno-pane hidden bg-white rounded-xl border overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                <tr><th class="p-3">Curso</th><th class="p-3">1ºB</th><th class="p-3">2ºB</th><th class="p-3">3ºB</th><th class="p-3">4ºB</th><th class="p-3">Média</th><th class="p-3">Status</th></tr>
+              </thead>
+              <tbody id="alunoTabelaNotas" class="divide-y"></tbody>
+            </table>
+          </div>
+          <div id="aluno-frequencia" class="aluno-pane hidden bg-white rounded-xl border overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                <tr><th class="p-3">Curso</th><th class="p-3">Data</th><th class="p-3">Status</th><th class="p-3">Conteúdo</th><th class="p-3">Professor</th></tr>
+              </thead>
+              <tbody id="alunoTabelaFrequencia" class="divide-y"></tbody>
+            </table>
+          </div>
+          <div id="aluno-materiais" class="aluno-pane hidden grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-xl border"><h4 class="font-bold text-sm mb-3">📁 Arquivos Recebidos</h4><div id="alunoListaArquivos" class="space-y-2 text-sm"></div></div>
+            <div class="bg-white p-4 rounded-xl border"><h4 class="font-bold text-sm mb-3">💬 Mensagens Recebidas</h4><div id="alunoListaMensagens" class="space-y-2 text-sm"></div></div>
+          </div>
+          <div id="aluno-relatorios" class="aluno-pane hidden space-y-3">
+            <div id="alunoListaRelatorios" class="space-y-3"></div>
+          </div>
+          <div id="aluno-dados" class="aluno-pane hidden bg-white p-5 rounded-xl border text-sm space-y-2">
+            <div><b>Nome:</b> <span id="alunoDadoNome">-</span></div>
+            <div><b>Nascimento:</b> <span id="alunoDadoNascimento">-</span></div>
+            <div><b>Responsável:</b> <span id="alunoDadoResponsavel">-</span></div>
+            <div><b>Contato:</b> <span id="alunoDadoContato">-</span></div>
+            <div><b>Status:</b> <span id="alunoDadoStatus">-</span></div>
+          </div>
+        </section>
+
+<!-- ==================== [BLOCO 16] SEÇÃO 10: ADMINISTRAÇÃO & DIAGNÓSTICO ==================== -->
+        <section id="sec-admin" class="secao hidden p-6 space-y-5">
+          <div class="flex flex-wrap justify-between items-center gap-3">
+            <h2 class="text-2xl font-bold text-slate-800">Administração, Salas, Usuários & Logs</h2>
+            <button onclick="abrirModalCriarUsuario()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Novo Usuário</button>
+          </div>
+
+          <div class="flex gap-4 border-b overflow-x-auto text-sm">
+            <button onclick="mudarSubAba('adm','estrutura',this)" class="sub-tab active px-3 py-2">🏫 Salas & Pix</button>
+            <button onclick="mudarSubAba('adm','usuarios',this)" class="sub-tab px-3 py-2 text-slate-500">🔑 Usuários & Senhas</button>
+            <button onclick="mudarSubAba('adm','diagnostico',this)" class="sub-tab px-3 py-2 text-slate-500">🔍 Diagnóstico & Bugs</button>
+            <button onclick="mudarSubAba('adm','logs',this)" class="sub-tab px-3 py-2 text-slate-500">📜 Logs</button>
+          </div>
+
+          <div id="adm-estrutura" class="adm-pane grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-xl border space-y-3">
+              <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-700">Salas de Aula</h3>
+                <button onclick="abrirModalSala()" class="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded">+ Nova Sala</button>
+              </div>
+              <div id="listaSalas" class="space-y-2 text-sm"></div>
+            </div>
+            <div class="bg-white p-5 rounded-xl border space-y-3">
+              <h3 class="font-bold text-slate-700">Configurações da Escola & Chave Pix</h3>
+              <form onsubmit="salvarConfigEscola(event)" class="space-y-3 text-sm">
+                <div><label class="text-xs font-semibold text-slate-500">Nome da Escola</label><input type="text" id="cfgNome" class="w-full border rounded px-3 py-1.5 mt-1"></div>
+                <div><label class="text-xs font-semibold text-slate-500">Chave Pix</label><input type="text" id="cfgPix" class="w-full border rounded px-3 py-1.5 mt-1"></div>
+                <div><label class="text-xs font-semibold text-slate-500">Cidade (sem acento)</label><input type="text" id="cfgCidade" class="w-full border rounded px-3 py-1.5 mt-1"></div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg font-medium">Salvar Configurações</button>
+              </form>
+            </div>
+          </div>
+
+          <div id="adm-usuarios" class="adm-pane hidden space-y-3">
+            <button onclick="carregarUsuariosTabela()" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">🔄 Atualizar Usuários</button>
+            <div class="bg-white rounded-xl border overflow-x-auto">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 border-b text-xs uppercase text-slate-500">
+                  <tr><th class="p-3">Usuário</th><th class="p-3">Nome</th><th class="p-3">Perfil</th><th class="p-3">Aluno Vinculado</th><th class="p-3">Status</th><th class="p-3">Ações</th></tr>
+                </thead>
+                <tbody id="tabelaUsuariosGeral" class="divide-y"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="adm-diagnostico" class="adm-pane hidden space-y-3">
+            <div class="flex gap-2">
+              <button onclick="adminRodarDiagnostico()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">🔍 Executar Diagnóstico</button>
+              <button onclick="adminGerarBugsAutomaticos()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-semibold">🐛 Detectar Inconsistências</button>
+            </div>
+            <div id="adminDiagnosticoResult" class="space-y-2 text-sm"></div>
+          </div>
+
+          <div id="adm-logs" class="adm-pane hidden space-y-3">
+            <button onclick="adminCarregarLogs()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-semibold">🔄 Carregar Logs do GAS</button>
+            <pre id="adminLogsContainer" class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-xs max-h-96 overflow-auto">Clique em "Carregar Logs do GAS".</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+<!-- ==================== [BLOCO 17] MODAL: AGENDAMENTO / CONTROLE DE AULA ==================== -->
+  <div id="modalAula" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-lg text-slate-800">Agendamento / Controle de Aula</h3>
+        <button onclick="fecharModal('modalAula')" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+      </div>
+      <form onsubmit="submitAula(event)" class="space-y-3 text-sm">
+        <input type="hidden" id="aulaId">
+
+        <!-- 1. Seleção de Professor no topo -->
+        <div>
+          <label class="text-xs font-semibold text-slate-500">Professor *</label>
+          <select id="aulaProf" required onchange="atualizarCamposPorProfessorAula()" class="w-full border rounded px-2.5 py-2 font-medium bg-white"></select>
+          <p id="aulaProfAviso" class="hidden text-[11px] text-indigo-600 mt-1">🔒 Como professor, você só pode agendar aulas para o seu próprio perfil.</p>
+        </div>
+
+        <!-- 2. Box com os alunos do professor escolhido -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-xs font-bold text-slate-700">👥 Alunos deste Professor</span>
+            <span id="aulaProfQtdAlunos" class="text-[11px] text-slate-500">0 aluno(s)</span>
+          </div>
+          <div id="boxAlunosProfessorAula" class="max-h-24 overflow-y-auto flex flex-wrap gap-1.5 text-xs">
+            <span class="text-slate-400">Selecione um professor...</span>
+          </div>
+        </div>
+
+        <!-- 3. Curso / Instrumento e Aluno -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-500">Curso / Instrumento *</label>
+            <select id="aulaInstrumento" required class="w-full border rounded px-2 py-1.5"></select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500">Aluno *</label>
+            <select id="aulaAluno" required class="w-full border rounded px-2 py-1.5"></select>
+          </div>
+        </div>
+
+        <!-- 4. Data, Início e Tipo -->
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-500">Data *</label>
+            <input type="date" id="aulaData" required onchange="atualizarDisponibilidadeSalasAula()" class="w-full border rounded px-2 py-1.5">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500">Início *</label>
+            <input type="time" id="aulaInicio" required onchange="atualizarDisponibilidadeSalasAula()" class="w-full border rounded px-2 py-1.5">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500">Tipo</label>
+            <select id="aulaTipo" class="w-full border rounded px-2 py-1.5">
+              <option>Individual</option><option>Turma</option><option>Experimental</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 5. Sala -->
+        <div>
+          <label class="text-xs font-semibold text-slate-500">Sala *</label>
+          <select id="aulaSala" required onchange="atualizarDisponibilidadeSalasAula()" class="w-full border rounded px-2 py-1.5"></select>
+          <div id="aulaSalaConflitoAviso" class="hidden mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold"></div>
+        </div>
+
+        <!-- 6. Status e Reposição -->
+        <div class="grid grid-cols-2 gap-3 items-center">
+          <div>
+            <label class="text-xs font-semibold text-slate-500">Status</label>
+            <select id="aulaStatus" class="w-full border rounded px-2 py-1.5">
+              <option value="Agendada">Agendada</option>
+              <option value="Presente">Presente (Realizada)</option>
+              <option value="Falta Justificada">Falta Justificada</option>
+              <option value="Falta Injustificada">Falta Injustificada</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+          </div>
+          <label class="flex items-center gap-2 mt-4 cursor-pointer">
+            <input type="checkbox" id="aulaReposicao">
+            <span class="font-medium text-amber-700">Marcar como Reposição</span>
+          </label>
+        </div>
+
+        <!-- 7. Observações / Conteúdo -->
+        <div>
+          <label class="text-xs font-semibold text-slate-500">Observações / Conteúdo</label>
+          <textarea id="aulaObs" rows="2" class="w-full border rounded px-2 py-1.5"></textarea>
+        </div>
+
+        <!-- 8. Botões -->
+        <div class="flex justify-between pt-2 border-t">
+          <button type="button" id="btnExcluirAula" onclick="deletarAula()" class="hidden text-rose-600 hover:underline text-xs font-semibold">Excluir Aula</button>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" onclick="fecharModal('modalAula')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+            <button type="submit" id="btnSalvarAula" class="px-4 py-2 bg-[#7c2d45] text-white rounded-lg font-medium">Salvar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- ==================== [BLOCO 18] MODAIS: ALUNO, MATRÍCULA & PROFESSOR ==================== -->
+  <!-- Modal Cadastro Aluno + Login -->
+  <div id="modalCadastroAluno" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-lg">📝 Matrícula de Novo Aluno + Login</h3>
+        <button onclick="fecharModal('modalCadastroAluno')" class="text-xl text-slate-400">&times;</button>
+      </div>
+      <form id="formCadastroAluno" class="space-y-3 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="text-xs font-semibold">Nome Completo *</label><input type="text" id="cadAlunoNome" required class="w-full border rounded px-3 py-1.5 uppercase"></div>
+          <div><label class="text-xs font-semibold">Data Nascimento *</label><input type="date" id="cadAlunoNascimento" required class="w-full border rounded px-3 py-1.5"></div>
+          <div><label class="text-xs font-semibold">Responsável</label><input type="text" id="cadAlunoResponsavel" class="w-full border rounded px-3 py-1.5 uppercase"></div>
+          <div><label class="text-xs font-semibold">Contato / WhatsApp</label><input type="tel" id="cadAlunoContato" class="w-full border rounded px-3 py-1.5"></div>
+          <div><label class="text-xs font-semibold">Mensalidade (R$)</label><input type="number" id="cadAlunoMensalidade" step="0.01" value="0" class="w-full border rounded px-3 py-1.5"></div>
+          <div><label class="text-xs font-semibold">Dia Vencimento</label><input type="number" id="cadAlunoVencimento" min="1" max="31" value="10" class="w-full border rounded px-3 py-1.5"></div>
+        </div>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="text-xs font-bold text-emerald-800">Usuário de Login *</label><input type="text" id="cadAlunoLogin" required placeholder="ex: aluno.joao" class="w-full border rounded px-3 py-1.5 bg-white"></div>
+          <div><label class="text-xs font-bold text-emerald-800">Senha (mín. 4) *</label>
+            <div class="flex gap-1"><input type="password" id="cadAlunoSenha" required minlength="4" class="w-full border rounded px-3 py-1.5 bg-white"><button type="button" onclick="gerarSenhaAleatoria('cadAlunoSenha')" class="px-2.5 bg-amber-500 text-white rounded">🎲</button></div>
+          </div>
+        </div>
+        <div><label class="text-xs font-semibold">Cursos (marque 1+)</label><div id="cursosChecklist" class="max-h-40 overflow-y-auto border rounded-lg p-2.5 bg-slate-50 grid grid-cols-2 gap-1 text-xs"></div></div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModal('modalCadastroAluno')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold">💾 Matricular + Criar Login</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Nova Matrícula -->
+  <div id="modalNovaMatricula" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-2"><h3 class="font-bold text-lg">📋 Nova Matrícula</h3><button onclick="fecharModal('modalNovaMatricula')" class="text-xl text-slate-400">&times;</button></div>
+      <form id="formNovaMatricula" class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs font-semibold">Aluno *</label><select id="matriculaAluno" required class="w-full border rounded px-2 py-1.5"></select></div>
+          <div><label class="text-xs font-semibold">Curso *</label><select id="matriculaCurso" required class="w-full border rounded px-2 py-1.5"></select></div>
+          <div><label class="text-xs font-semibold">Professor</label><select id="matriculaProfessor" class="w-full border rounded px-2 py-1.5 bg-slate-100" disabled></select></div>
+          <div><label class="text-xs font-semibold">Ano Letivo</label><input type="number" id="matriculaAno" value="2026" class="w-full border rounded px-2 py-1.5"></div>
+          <div><label class="text-xs font-semibold">Mensalidade (R$)</label><input type="number" id="matriculaMensalidade" step="0.01" value="0" class="w-full border rounded px-2 py-1.5"></div>
+          <div><label class="text-xs font-semibold">Dia Vencimento</label><input type="number" id="matriculaVencimento" min="1" max="31" value="10" class="w-full border rounded px-2 py-1.5"></div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModal('modalNovaMatricula')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Professor -->
+  <div id="modalCadastroProfessor" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-2"><h3 class="font-bold text-lg">👨‍🏫 Novo Professor</h3><button onclick="fecharModal('modalCadastroProfessor')" class="text-xl text-slate-400">&times;</button></div>
+      <form id="formCadastroProfessor" class="space-y-3 text-sm">
+        <input type="hidden" id="cadProfessorID">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2"><label class="text-xs font-semibold">Nome *</label><input type="text" id="cadProfessorNome" required class="w-full border rounded px-3 py-1.5 uppercase"></div>
+          <div><label class="text-xs font-semibold">Tipo *</label><select id="cadProfessorTipo" required class="w-full border rounded px-2 py-1.5"><option value="Instrumento">Instrumento</option><option value="Teoria Musical">Teoria Musical</option><option value="Musicalização">Musicalização</option></select></div>
+          <div><label class="text-xs font-semibold">Curso Principal *</label><select id="cadProfessorCurso" required class="w-full border rounded px-2 py-1.5"></select></div>
+          <div><label class="text-xs font-semibold">Telefone *</label><input type="tel" id="cadProfessorTelefone" required class="w-full border rounded px-3 py-1.5"></div>
+          <div><label class="text-xs font-semibold">Email</label><input type="email" id="cadProfessorEmail" class="w-full border rounded px-3 py-1.5"></div>
+        </div>
+        <div><label class="text-xs font-semibold">Cursos Adicionais</label><div id="cadProfessorCursosExtras" class="max-h-32 overflow-y-auto border rounded p-2 bg-slate-50 grid grid-cols-2 gap-1 text-xs"></div></div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModal('modalCadastroProfessor')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- ==================== [BLOCO 19] MODAIS: CRM, SALA, DESPESA & USUÁRIO ==================== -->
+  <!-- Modal CRM -->
+  <div id="modalCRM" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <h3 class="font-bold text-lg border-b pb-2">Novo Lead / Aula Experimental</h3>
+      <form onsubmit="submitCRM(event)" class="space-y-3 text-sm">
+        <input type="text" id="crmNome" placeholder="Nome do Interessado" required class="w-full border rounded px-3 py-2">
+        <input type="text" id="crmTel" placeholder="WhatsApp" required class="w-full border rounded px-3 py-2">
+        <input type="text" id="crmInst" placeholder="Instrumento de Interesse" required class="w-full border rounded px-3 py-2">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="date" id="crmData" class="border rounded px-3 py-2">
+          <input type="time" id="crmHora" class="border rounded px-3 py-2">
+        </div>
+        <select id="crmEtapa" class="w-full border rounded px-3 py-2">
+          <option>Novo Lead</option><option>Experimental Agendada</option><option>Realizada</option><option>Matriculado</option>
+        </select>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModal('modalCRM')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Salvar Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Sala -->
+  <div id="modalSala" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <h3 class="font-bold text-lg border-b pb-2">Cadastrar Sala de Aula</h3>
+      <form onsubmit="submitSala(event)" class="space-y-3 text-sm">
+        <input type="text" id="salaNome" placeholder="Ex: Sala 01 - Metais / Piano" required class="w-full border rounded px-3 py-2">
+        <input type="number" id="salaCap" placeholder="Capacidade" value="2" required class="w-full border rounded px-3 py-2">
+        <input type="text" id="salaEquip" placeholder="Equipamentos (ex: Piano, Amp)" class="w-full border rounded px-3 py-2">
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModal('modalSala')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Despesa -->
+  <div id="modalDespesa" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <h3 class="font-bold text-lg border-b pb-2">Lançar Despesa</h3>
+      <form onsubmit="submitDespesa(event)" class="space-y-3 text-sm">
+        <input type="date" id="despData" required class="w-full border rounded px-3 py-2">
+        <select id="despCat" class="w-full border rounded px-3 py-2">
+          <option>Aluguel / Estrutura</option><option>Folha de Professores</option><option>Manutenção de Instrumentos</option><option>Marketing</option><option>Outros</option>
+        </select>
+        <input type="text" id="despDesc" placeholder="Descrição" required class="w-full border rounded px-3 py-2">
+        <input type="number" step="0.01" id="despValor" placeholder="Valor (R$)" required class="w-full border rounded px-3 py-2">
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModal('modalDespesa')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-rose-600 text-white rounded-lg font-semibold">Salvar Despesa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Criar Usuário -->
+  <div id="modalCriarUsuario" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <h3 class="font-bold text-lg border-b pb-2">🔑 Novo Usuário (Funcionário)</h3>
+      <form id="formCriarUsuario" class="space-y-3 text-sm">
+        <input type="text" id="userNome" placeholder="Nome Completo" required class="w-full border rounded px-3 py-2 uppercase">
+        <select id="userPerfil" required class="w-full border rounded px-3 py-2">
+          <option value="">-- Perfil --</option>
+          <option value="direcao">👔 Direção</option><option value="secretaria">📁 Secretaria</option><option value="coordenacao">📚 Coordenação</option><option value="professor">🎹 Professor</option><option value="financeiro">💰 Financeiro</option><option value="admin">🛡️ Administrador</option>
+        </select>
+        <input type="text" id="userLogin" placeholder="Usuário (login)" required class="w-full border rounded px-3 py-2">
+        <input type="password" id="userSenha" placeholder="Senha (mín. 4)" required minlength="4" class="w-full border rounded px-3 py-2">
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModal('modalCriarUsuario')" class="px-4 py-2 border rounded-lg">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold">Criar Usuário</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<!-- ==================== [BLOCO 20] CHAT FLUTUANTE ==================== -->
+  <button id="chatFloatBtn" onclick="chatToggle()" title="Chat Interno" class="hidden fixed right-5 bottom-5 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-[#7c2d45] text-white text-2xl shadow-xl z-[9998] flex items-center justify-center hover:scale-105 transition">
+    💬
+    <span id="chatFloatBadge" class="hidden absolute -top-1 -right-1 min-w-[22px] h-5 px-1 rounded-full bg-rose-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white">0</span>
+  </button>
+
+  <div id="chatPanel" class="chat-panel">
+    <div class="flex justify-between items-center px-4 py-3 bg-gradient-to-r from-[#252338] to-[#7c2d45] text-white">
+      <h3 class="font-bold text-sm">💬 Chat Interno da Escola</h3>
+      <button onclick="chatToggle()" class="w-7 h-7 rounded bg-white/20 hover:bg-white/30 text-sm">✕</button>
+    </div>
+    <div class="flex flex-1 min-h-0">
+      <div class="chat-sidebar w-60 border-r bg-slate-50 flex flex-col">
+        <div class="p-2 border-b"><input type="text" id="chatBuscaContato" oninput="renderContatosChat()" placeholder="🔎 Buscar..." class="w-full border rounded-lg px-2.5 py-1.5 text-xs bg-white outline-none"></div>
+        <div id="chatContatosLista" class="flex-1 overflow-y-auto p-1.5 space-y-1 text-sm"></div>
+      </div>
+      <div class="chat-conversa-wrap flex-1 flex flex-col min-w-0">
+        <div id="chatVazio" class="flex-1 flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+          <div class="text-4xl mb-2 opacity-60">💬</div>
+          <p class="text-sm">Selecione um contato para conversar</p>
+        </div>
+        <div id="chatConversa" class="hidden flex-1 flex flex-col min-h-0">
+          <div class="flex items-center gap-2.5 px-3 py-2.5 border-b bg-white">
+            <button type="button" onclick="chatVoltarListaMobile()" class="md:hidden px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-bold">
+              ← Voltar
+            </button>
+            <div id="chatComAvatar" class="w-9 h-9 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center flex-shrink-0">?</div>
+            <div class="min-w-0">
+              <div id="chatComTitulo" class="font-bold text-sm truncate">-</div>
+              <div id="chatComSubtitulo" class="text-[11px] text-slate-500 uppercase">-</div>
+            </div>
+          </div>
+          <div id="chatMensagens" class="flex-1 overflow-y-auto p-3 bg-slate-50 flex flex-col gap-2 text-sm"></div>
+          <form onsubmit="enviarMensagemChatSubmit(event)" class="flex gap-2 p-2.5 border-t bg-white">
+            <input type="text" id="chatInputMsg" placeholder="Digite sua mensagem..." autocomplete="off" required class="flex-1 border rounded-full px-4 py-2 text-sm outline-none focus:border-indigo-500">
+            <button type="submit" class="chat-btn-enviar w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center flex-shrink-0">➤</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
