@@ -1596,15 +1596,6 @@
         equipamentos: texto(getColuna(s,'Equipamentos'))
       })).filter(s => s.nome);
 
-      if (!escolaData.salas.length) {
-        escolaData.salas = [
-          { id: 'SALA_1', nome: 'Sala 01 - Piano/Teclado', capacidade: '2', equipamentos: 'Piano Digital' },
-          { id: 'SALA_2', nome: 'Sala 02 - Cordas/Violão', capacidade: '4', equipamentos: 'Amplificador' },
-          { id: 'SALA_3', nome: 'Sala 03 - Metais/Sopro', capacidade: '2', equipamentos: 'Estantes' },
-          { id: 'SALA_4', nome: 'Sala 04 - Bateria/Prática', capacidade: '4', equipamentos: 'Bateria Acústica' }
-        ];
-      }
-
       db.matriculas = (dadosPlanilha.matriculas || []).map(m => ({
         aluno: texto(getColuna(m,'Aluno')).toUpperCase(),
         curso: normalizarCursoId(getColuna(m,'Curso')),
