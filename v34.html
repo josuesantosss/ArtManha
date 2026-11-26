@@ -1136,3 +1136,1015 @@
       </div>
     </div>
   </div>
+  <script>
+    // ==================== [BLOCO 21] CONFIGURAÇÃO UNIFICADA & CONSTANTES ====================
+    const SHEET_CONFIG = {
+      sheetId: '1FRtD7cbV2tvK2og4NDkyWi8V_hziyERNZoSh20gG980',
+      abas: {
+        alunos: 'ALUNOS', matriculas: 'MATRICULAS', professores: 'PROFESSORES',
+        avaliacoes: 'AVALIACOES', presencas: 'PRESENCAS', conteudos: 'CONTEUDOS',
+        observacoes: 'OBSERVACOES', relatorios: 'RELATORIOS',
+        notificacoes: 'NOTIFICACOES', arquivos: 'ARQUIVOS', mensagens: 'MENSAGENS',
+        pagamentos: 'PAGAMENTOS', logs: 'LOGS', usuarios: 'USUARIOS',
+        agenda: 'AGENDA', salas: 'SALAS', crm: 'CRM', despesas: 'DESPESAS', config: 'CONFIG'
+      }
+    };
+
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJzP3RvoiUnrmUY_G5QIfJiUI63ijHfFKYPxxl94GCqF30lGHYD_X91FD0PpGA5DkGpQ/exec';
+
+    const CURSOS = [
+      { id: 'piano', nome: '🎹 Piano', tipo: 'Instrumento' },
+      { id: 'teclado', nome: '🎹 Teclado', tipo: 'Instrumento' },
+      { id: 'orgaoA', nome: '🎹 Órgão A', tipo: 'Instrumento' },
+      { id: 'orgaoB', nome: '🎹 Órgão B', tipo: 'Instrumento' },
+      { id: 'violao', nome: '🎸 Violão', tipo: 'Instrumento' },
+      { id: 'guitarra', nome: '🎸 Guitarra', tipo: 'Instrumento' },
+      { id: 'violino', nome: '🎻 Violino', tipo: 'Instrumento' },
+      { id: 'violoncelo', nome: '🎻 Violoncelo', tipo: 'Instrumento' },
+      { id: 'viola-erudita', nome: '🎻 Viola Erudita', tipo: 'Instrumento' },
+      { id: 'contrabaixo-acustico', nome: '🎻 Contrabaixo Acústico', tipo: 'Instrumento' },
+      { id: 'bateria', nome: '🥁 Bateria', tipo: 'Instrumento' },
+      { id: 'trompete', nome: '🎺 Trompete', tipo: 'Instrumento' },
+      { id: 'trombone', nome: '🎺 Trombone', tipo: 'Instrumento' },
+      { id: 'euphonio', nome: '🎺 Eufônio', tipo: 'Instrumento' },
+      { id: 'tuba', nome: '🎺 Tuba', tipo: 'Instrumento' },
+      { id: 'saxofone', nome: '🎷 Saxofone', tipo: 'Instrumento' },
+      { id: 'flauta', nome: '🎶 Flauta', tipo: 'Instrumento' },
+      { id: 'clarinete', nome: '🎶 Clarinete', tipo: 'Instrumento' },
+      { id: 'canto', nome: '🎤 Canto', tipo: 'Instrumento' },
+      { id: 'teoria-musical1', nome: '🎼 Teoria Musical 1', tipo: 'Teoria Musical 1' },
+      { id: 'teoria-musical2', nome: '🎼 Teoria Musical 2', tipo: 'Teoria Musical 2' },
+      { id: 'musicalizacao-infantil', nome: '🎵 Musicalização Infantil', tipo: 'Musicalização' }
+    ];
+    const CURSOS_MAP = Object.fromEntries(CURSOS.map(c => [c.id, c]));
+    const MESES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const HORARIOS_GRADE = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+
+    const CARGO_LABEL = {
+      direcao: '👔 Direção', secretaria: '📁 Secretaria', coordenacao: '📚 Coordenação',
+      professor: '🎹 Professor', financeiro: '💰 Financeiro', aluno: '🎓 Aluno', admin: '🛡️ Administrador'
+    };
+
+    // ==================== [BLOCO 22] ESTADO GLOBAL ====================
+    let dadosPlanilha = {};
+    let escolaData = { alunos: [], professores: [], cursos: CURSOS, salas: [], config: {} };
+    let db = {
+      matriculas: [], avaliacoes: [], presencas: {}, conteudos: {}, observacoes: {},
+      relatorios: [], notificacoes: [], arquivos: [], mensagens: [],
+      pagamentosMensais: [], logs: [], usuarios: [], agenda: [], crm: [], despesas: []
+    };
+    let currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
+    let cursoSelecionado = null, dadosAluno = null, arquivoUploadSelecionado = null;
+    let anoSelecionadoAluno = new Date().getFullYear();
+    let chartFluxoInst = null, chartInstInst = null;
+    let popupIdsMostrados = new Set(), notifPollInterval = null;
+
+    // ==================== [BLOCO 23] UTILITÁRIOS & FORMATADORES ====================
+    const texto = v => (v === null || v === undefined) ? '' : String(v).trim();
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const normalizarNome = v => texto(v).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    const nomesIguais = (a, b) => normalizarNome(a) === normalizarNome(b);
+    const fmtMoeda = v => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const escapeHtml = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const labelCurso = id => CURSOS_MAP[id] ? CURSOS_MAP[id].nome : (id || '-');
+    const getAnoMesAtual = () => { const h = new Date(); return `${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,'0')}`; };
+    const getDataAtualFormatada = () => { const h = new Date(); return `${String(h.getDate()).padStart(2,'0')}/${String(h.getMonth()+1).padStart(2,'0')}/${h.getFullYear()}`; };
+    const getDataHoraAtual = () => { const h = new Date(); return `${getDataAtualFormatada()} - ${String(h.getHours()).padStart(2,'0')}:${String(h.getMinutes()).padStart(2,'0')}`; };
+
+    function getColuna(obj, ...nomes) {
+      if (!obj) return '';
+      const chaves = Object.keys(obj);
+      for (const nome of nomes) {
+        const alvo = String(nome).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_\-]+/g, '');
+        for (const c of chaves) {
+          const cn = String(c).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s_\-]+/g, '');
+          if (cn === alvo) return obj[c];
+        }
+      }
+      return '';
+    }
+
+    function normalizarValor(raw) {
+      if (raw === null || raw === undefined || raw === '') return 0;
+      if (typeof raw === 'number') return isFinite(raw) ? raw : 0;
+      let str = String(raw).trim().replace(/R\$\s*/gi, '').replace(/[^\d.,\-]/g, '');
+      if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(str)) str = str.replace(/\./g, '').replace(',', '.');
+      else if (/^-?\d+(,\d+)$/.test(str)) str = str.replace(',', '.');
+      const n = parseFloat(str);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function normalizarDiaVencimento(raw) {
+      const n = parseInt(String(raw || '10').replace(/[^\d]/g, ''), 10);
+      return isNaN(n) ? 10 : Math.max(1, Math.min(31, n));
+    }
+
+    function formatarDataExibicao(valor) {
+      if (!valor) return '';
+      if (valor instanceof Date && !isNaN(valor.getTime())) return `${String(valor.getDate()).padStart(2,'0')}/${String(valor.getMonth()+1).padStart(2,'0')}/${valor.getFullYear()}`;
+      const str = String(valor).trim();
+      const m1 = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+      if (m1) return `${String(m1[1]).padStart(2,'0')}/${String(m1[2]).padStart(2,'0')}/${m1[3]}`;
+      const m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m2) return `${m2[3]}/${m2[2]}/${m2[1]}`;
+      const m3 = str.match(/^Date\((\d+),(\d+),(\d+)/);
+      if (m3) return `${String(m3[3]).padStart(2,'0')}/${String(parseInt(m3[2],10)+1).padStart(2,'0')}/${m3[1]}`;
+      return str;
+    }
+
+    function normalizarDataISO(valor) {
+      if (!valor) return '';
+      const str = String(valor).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+      const m1 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m1) return `${m1[3]}-${String(m1[2]).padStart(2,'0')}-${String(m1[1]).padStart(2,'0')}`;
+      const m3 = str.match(/^Date\((\d+),(\d+),(\d+)/);
+      if (m3) return `${m3[1]}-${String(parseInt(m3[2],10)+1).padStart(2,'0')}-${String(m3[3]).padStart(2,'0')}`;
+      return str;
+    }
+
+    function normalizarHoraHHMM(valor) {
+      if (!valor) return '';
+      if (valor instanceof Date && !isNaN(valor.getTime())) {
+        return `${String(valor.getHours()).padStart(2,'0')}:${String(valor.getMinutes()).padStart(2,'0')}`;
+      }
+      const str = String(valor).trim();
+      const mGviz = str.match(/^Date\(\d+,\d+,\d+,(\d+),(\d+)/);
+      if (mGviz) return `${String(mGviz[1]).padStart(2,'0')}:${String(mGviz[2]).padStart(2,'0')}`;
+      const mHora = str.match(/(\d{1,2}):(\d{2})/);
+      if (mHora) return `${String(mHora[1]).padStart(2,'0')}:${mHora[2]}`;
+      return str.padStart(5, '0').slice(0, 5);
+    }
+
+    function normalizarReferencia(raw) {
+      if (!raw) return getAnoMesAtual();
+      const str = String(raw).trim();
+      const mG = str.match(/^Date\((\d+),(\d+),(\d+)/);
+      if (mG) return `${mG[1]}-${String(parseInt(mG[2],10)+1).padStart(2,'0')}`;
+      const m1 = str.match(/^(\d{4})-(\d{1,2})/);
+      if (m1) return `${m1[1]}-${String(m1[2]).padStart(2,'0')}`;
+      const m2 = str.match(/^(\d{1,2})\/(\d{4})$/);
+      if (m2) return `${m2[2]}-${String(m2[1]).padStart(2,'0')}`;
+      return getAnoMesAtual();
+    }
+
+    function normalizarCursoId(raw) {
+      if (!raw) return '';
+      let r = texto(raw).toLowerCase().replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s\-]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (CURSOS_MAP[r]) return r;
+      const aliases = { 'viola': 'viola-erudita', 'contrabaixo': 'contrabaixo-acustico', 'teoria': 'teoria-musical1', 'teoria musical': 'teoria-musical1', 'musicalizacao': 'musicalizacao-infantil', 'eufonio': 'euphonio' };
+      if (aliases[r]) return aliases[r];
+      for (const c of CURSOS) {
+        const nl = c.nome.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s\-]/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        if (nl === r) return c.id;
+      }
+      return r;
+    }
+
+    function extrairCursosDoProfessor(prof) {
+      if (!prof) return [];
+      const bruto = [prof.curso || '', prof.cursos || '', prof.instrumentos || ''].join(',');
+      return [...new Set(bruto.split(/[,;|/\n]+/).map(p => normalizarCursoId(p)).filter(id => id && CURSOS_MAP[id]))];
+    }
+
+    function mostrarToast(msg, tipo = 'success') {
+      const box = document.getElementById('toastContainer');
+      const cor = tipo === 'error' ? 'bg-rose-600' : tipo === 'info' ? 'bg-indigo-600' : 'bg-emerald-600';
+      const el = document.createElement('div');
+      el.className = `${cor} text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3800);
+    }
+
+    function gerarSenhaAleatoria(id) {
+      const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let s = ''; for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+      const inp = document.getElementById(id);
+      if (inp) { inp.value = s; inp.type = 'text'; setTimeout(() => inp.type = 'password', 2500); }
+    }
+
+    function fecharModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+    // ==================== [BLOCO 24] COMUNICAÇÃO GAS & BARRA DE PROGRESSO ====================
+    async function enviarParaGAS(acao, payload = {}) {
+      try {
+        const res = await fetch(GAS_URL, {
+          method: 'POST', headers: { 'Content-Type': 'text/plain' }, redirect: 'follow',
+          body: JSON.stringify({ acao, action: acao, payload: { ...payload, token: currentUser.token || undefined } })
+        });
+        const txt = await res.text();
+        if (txt.includes('accounts.google.com')) throw new Error('Web App do GAS não está público ("Qualquer pessoa").');
+        return JSON.parse(txt);
+      } catch (e) {
+        console.error('Erro GAS:', e);
+        return { success: false, ok: false, error: e.message };
+      }
+    }
+
+    async function executarComProgresso({ titulo = 'Salvando...', subtitulo = 'Aguarde...', executar, sucesso = 'Salvo!' }) {
+      const ov = document.getElementById('saveProgressOverlay');
+      const fill = document.getElementById('saveProgressFill');
+      const pct = document.getElementById('saveProgressPct');
+      const step = document.getElementById('saveProgressStep');
+      const msg = document.getElementById('saveProgressMsg');
+      document.getElementById('saveProgressTitle').textContent = titulo;
+      document.getElementById('saveProgressSub').textContent = subtitulo;
+      document.getElementById('saveProgressIcon').textContent = '💾';
+      ov.classList.remove('hidden');
+      const setP = (v, s, m = '') => { fill.style.width = v + '%'; pct.textContent = v + '%'; step.textContent = s; msg.textContent = m; };
+      try {
+        setP(20, 'Validando dados...'); await sleep(150);
+        setP(55, 'Gravando na planilha...');
+        const r = await executar();
+        if (r && r.success === false && r.ok !== true) throw new Error(r.error || 'Falha na operação');
+        document.getElementById('saveProgressIcon').textContent = '✅';
+        setP(100, 'Concluído!', sucesso);
+        await sleep(500); ov.classList.add('hidden');
+        mostrarToast(sucesso, 'success');
+        return r;
+      } catch (e) {
+        document.getElementById('saveProgressIcon').textContent = '❌';
+        setP(100, 'Erro', e.message);
+        await sleep(1200); ov.classList.add('hidden');
+        mostrarToast('❌ ' + e.message, 'error');
+        throw e;
+      }
+    }
+
+    // ==================== [BLOCO 25] SESSÃO & AUTENTICAÇÃO ====================
+    const SESSION_KEY = 'musicSys.session.v2';
+    const INATIVIDADE_MS = 60 * 60 * 1000;
+
+    function salvarSessao() {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ ...currentUser, salvoEm: Date.now() }));
+    }
+    function lerSessao() {
+      try {
+        const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+        if (!s || !s.token || (Date.now() - (s.salvoEm || 0) > INATIVIDADE_MS)) return null;
+        return s;
+      } catch { return null; }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const perfil = document.getElementById('loginPerfil').value;
+      const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
+      const senha = document.getElementById('loginSenha').value;
+      const btn = document.getElementById('btnEntrar');
+      const box = document.getElementById('loginProgress');
+      const setLP = (v, t, m = '') => {
+        box.classList.remove('hidden');
+        document.getElementById('loginProgressFill').style.width = v + '%';
+        document.getElementById('loginProgressPct').textContent = v + '%';
+        document.getElementById('loginProgressText').textContent = t;
+        document.getElementById('loginProgressMsg').textContent = m;
+      };
+      btn.disabled = true;
+      try {
+        setLP(25, 'Validando credenciais...');
+        const res = await enviarParaGAS('login', { usuario, senha, perfil });
+        if (!res || !res.success) throw new Error((res && res.error) || 'Usuário ou senha inválidos.');
+        setLP(60, 'Carregando dados da escola...');
+        const perfilEfetivo = res.perfilEfetivo || res.perfil;
+        currentUser = {
+          perfil: perfilEfetivo, nome: res.nome, usuario: res.usuario, token: res.token,
+          expiraEm: Date.now() + INATIVIDADE_MS, alunoVinculado: res.alunoVinculado || (perfilEfetivo === 'aluno' ? res.nome : ''),
+          professorData: null, cursos: []
+        };
+        salvarSessao();
+        await carregarDadosPlanilha();
+        setLP(100, 'Bem-vindo(a)!');
+        await sleep(250);
+        entrarNoApp();
+      } catch (err) {
+        setLP(100, 'Falha no login', err.message);
+        mostrarToast('❌ ' + err.message, 'error');
+      } finally { btn.disabled = false; }
+    });
+
+    function entrarNoApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appShell').classList.remove('hidden');
+      document.getElementById('userDisplay').textContent = `${currentUser.nome} • ${CARGO_LABEL[currentUser.perfil] || currentUser.perfil}`;
+      document.getElementById('sidebarPerfilBadge').textContent = CARGO_LABEL[currentUser.perfil] || currentUser.perfil;
+
+      document.querySelectorAll('#sidebarNav .nav-item').forEach(btn => {
+        const roles = (btn.dataset.roles || '').split(',');
+        btn.classList.toggle('hidden', !roles.includes(currentUser.perfil));
+      });
+
+      document.getElementById('dirSimularProfBox').classList.toggle('hidden', !['direcao','admin'].includes(currentUser.perfil));
+
+      if (currentUser.perfil === 'professor') {
+        const prof = encontrarProfessorPorNome(currentUser.nome);
+        if (prof) { currentUser.professorData = prof; currentUser.cursos = extrairCursosDoProfessor(prof); cursoSelecionado = currentUser.cursos[0] || null; }
+        navegar('professor');
+      } else if (currentUser.perfil === 'aluno') {
+        navegar('aluno');
+      } else if (currentUser.perfil === 'financeiro') {
+        navegar('financeiro');
+      } else if (currentUser.perfil === 'coordenacao') {
+        navegar('pedagogico');
+      } else {
+        navegar('dashboard');
+      }
+
+      chatInit(currentUser.usuario, currentUser.perfil, currentUser.nome);
+      renderNotificacoes();
+      iniciarPollingNotificacoes();
+    }
+
+    function logout(manual = true) {
+      localStorage.removeItem(SESSION_KEY);
+      if (currentUser.token) enviarParaGAS('logout', { token: currentUser.token }).catch(() => {});
+      chatLogout();
+      toggleSidebarMobile(false);
+      currentUser = { perfil: '', nome: '', usuario: '', professorData: null, cursos: [], token: null, expiraEm: 0, alunoVinculado: '' };
+      document.getElementById('appShell').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('loginForm').reset();
+      document.getElementById('loginProgress').classList.add('hidden');
+      if (notifPollInterval) { clearInterval(notifPollInterval); notifPollInterval = null; }
+      popupIdsMostrados.clear();
+      document.querySelectorAll('.popup-notif').forEach(el => el.remove());
+      if (manual) mostrarToast('👋 Sessão encerrada.', 'info');
+    }
+
+    // ==================== [BLOCO 26] NAVEGAÇÃO & MOBILE SIDEBAR ====================
+    function toggleSidebarMobile(forcarEstado = null) {
+      const sb = document.getElementById('sidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      if (!sb || !bd) return;
+      const abrir = forcarEstado !== null ? forcarEstado : !sb.classList.contains('mobile-open');
+      sb.classList.toggle('mobile-open', abrir);
+      bd.classList.toggle('hidden', !abrir);
+    }
+
+    function chatVoltarListaMobile() {
+      document.getElementById('chatPanel')?.classList.remove('mobile-in-chat');
+    }
+
+    function navegar(sec) {
+      toggleSidebarMobile(false);
+      document.querySelectorAll('.secao').forEach(s => s.classList.add('hidden'));
+      document.getElementById('sec-' + sec)?.classList.remove('hidden');
+      document.querySelectorAll('#sidebarNav .nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById('nav-' + sec)?.classList.add('active');
+      const titles = {
+        dashboard: 'Visão Geral', agenda: 'Agenda Integrada', crm: 'Atendimento (CRM)',
+        escola: 'Secretaria Escolar', pedagogico: 'Coordenação Pedagógica',
+        professor: 'Diário do Professor', financeiro: 'Financeiro',
+        relatorios: 'Relatórios & Gráficos', aluno: 'Portal do Aluno', admin: 'Administração & BD'
+      };
+      document.getElementById('topbarTitle').textContent = titles[sec] || 'MusicSys';
+
+      if (sec === 'dashboard') renderDashboard();
+      if (sec === 'agenda') renderAgenda();
+      if (sec === 'crm') renderCRM();
+      if (sec === 'escola') renderEscola();
+      if (sec === 'pedagogico') renderCoordenacao();
+      if (sec === 'professor') renderAreaProfessor();
+      if (sec === 'financeiro') renderFinanceiroCompleto();
+      if (sec === 'relatorios') renderRelatoriosGraficos();
+      if (sec === 'aluno') carregarDadosAluno();
+      if (sec === 'admin') renderAdmin();
+    }
+
+    function mudarSubAba(grupo, aba, btnEl) {
+      document.querySelectorAll(`.${grupo}-pane`).forEach(p => p.classList.add('hidden'));
+      document.getElementById(`${grupo}-${aba}`)?.classList.remove('hidden');
+      if (btnEl && btnEl.parentElement) {
+        btnEl.parentElement.querySelectorAll('.sub-tab').forEach(b => { b.classList.remove('active'); b.classList.add('text-slate-500'); });
+        btnEl.classList.add('active'); btnEl.classList.remove('text-slate-500');
+      }
+      if (grupo === 'adm' && aba === 'usuarios') carregarUsuariosTabela();
+    }
+
+    // ==================== [BLOCO 27] CARREGAMENTO DA PLANILHA (GVIZ) & HELPERS ====================
+    async function carregarDadosPlanilha() {
+      const ov = document.getElementById('loadingOverlay');
+      ov.classList.remove('hidden');
+      try {
+        await Promise.all(Object.entries(SHEET_CONFIG.abas).map(([k, aba]) => carregarAba(aba, k)));
+        processarDadosPlanilha();
+        document.getElementById('syncStatusText').textContent = 'Sincronizado';
+        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0';
+        if (currentUser.perfil) {
+          const ativa = document.querySelector('#sidebarNav .nav-item.active');
+          if (ativa) navegar(ativa.id.replace('nav-', ''));
+        }
+      } catch (e) {
+        document.getElementById('syncStatusText').textContent = 'Erro de sync';
+        document.getElementById('syncDot').className = 'w-2.5 h-2.5 rounded-full bg-rose-500 flex-shrink-0';
+        mostrarToast('Erro ao sincronizar planilha.', 'error');
+      } finally { ov.classList.add('hidden'); }
+    }
+
+    async function carregarAba(nomeAba, chave) {
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}&_=${Date.now()}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const txt = await res.text();
+        const data = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+        const cols = data.table.cols.map((c, i) => texto(c.label) || c.id || `col_${i}`);
+        dadosPlanilha[chave] = (data.table.rows || []).map(row => {
+          const obj = {};
+          (row.c || []).forEach((cell, i) => { obj[cols[i]] = cell ? (cell.v ?? cell.f ?? '') : ''; });
+          return obj;
+        });
+      } catch { dadosPlanilha[chave] = []; }
+    }
+
+    function processarDadosPlanilha() {
+      escolaData.alunos = (dadosPlanilha.alunos || []).map(a => ({
+        id: texto(getColuna(a,'ID','ID_Aluno')) || normalizarNome(getColuna(a,'Nome','Aluno')),
+        nome: texto(getColuna(a,'Nome','Nome_Aluno','Aluno')).toUpperCase(),
+        dataNascimento: formatarDataExibicao(getColuna(a,'Data_Nascimento','Nascimento')),
+        responsavel: texto(getColuna(a,'Responsavel','Responsável')),
+        contato: texto(getColuna(a,'Contato','Telefone')),
+        status: texto(getColuna(a,'Status') || 'ATIVO').toUpperCase(),
+        mensalidade: normalizarValor(getColuna(a,'Mensalidade','Valor_Mensalidade')),
+        vencimento: normalizarDiaVencimento(getColuna(a,'Vencimento','Dia_Vencimento'))
+      })).filter(a => a.nome);
+
+      const pMap = {};
+      (dadosPlanilha.professores || []).forEach((p, idx) => {
+        const nome = texto(getColuna(p,'Nome','Professor')).toUpperCase();
+        if (!nome) return;
+        const curso = texto(getColuna(p,'Curso','Cursos','Instrumentos'));
+        if (!pMap[nome]) {
+          pMap[nome] = {
+            id: texto(getColuna(p,'ID_Professor','ID')) || `PROF_${idx+1}`,
+            nome, tipo: texto(getColuna(p,'Tipo')), curso,
+            telefone: texto(getColuna(p,'Telefone')), email: texto(getColuna(p,'Email')),
+            status: texto(getColuna(p,'Status') || 'ATIVO').toUpperCase(),
+            valorHora: normalizarValor(getColuna(p,'Valor_Hora','ValorHoraAula'))
+          };
+        } else if (curso) {
+          pMap[nome].curso += ',' + curso;
+        }
+      });
+      escolaData.professores = Object.values(pMap);
+
+      escolaData.salas = (dadosPlanilha.salas || []).map((s, i) => ({
+        id: texto(getColuna(s,'ID','ID_Sala')) || `SALA_${i+1}`,
+        nome: texto(getColuna(s,'Nome','Sala')),
+        capacidade: texto(getColuna(s,'Capacidade') || '2'),
+        equipamentos: texto(getColuna(s,'Equipamentos'))
+      })).filter(s => s.nome);
+
+      if (!escolaData.salas.length) {
+        escolaData.salas = [
+          { id: 'SALA_1', nome: 'Sala 01 - Piano/Teclado', capacidade: '2', equipamentos: 'Piano Digital' },
+          { id: 'SALA_2', nome: 'Sala 02 - Cordas/Violão', capacidade: '4', equipamentos: 'Amplificador' },
+          { id: 'SALA_3', nome: 'Sala 03 - Metais/Sopro', capacidade: '2', equipamentos: 'Estantes' },
+          { id: 'SALA_4', nome: 'Sala 04 - Bateria/Prática', capacidade: '4', equipamentos: 'Bateria Acústica' }
+        ];
+      }
+
+      db.matriculas = (dadosPlanilha.matriculas || []).map(m => ({
+        aluno: texto(getColuna(m,'Aluno')).toUpperCase(),
+        curso: normalizarCursoId(getColuna(m,'Curso')),
+        professor: texto(getColuna(m,'Professor')).toUpperCase(),
+        dataMatricula: formatarDataExibicao(getColuna(m,'Data_Matricula','Data')),
+        anoLetivo: texto(getColuna(m,'Ano_Letivo','Ano')),
+        status: texto(getColuna(m,'Status') || 'ATIVO').toUpperCase(),
+        mensalidade: normalizarValor(getColuna(m,'Mensalidade','Valor_Mensalidade'))
+      })).filter(m => m.aluno);
+
+      db.avaliacoes = (dadosPlanilha.avaliacoes || []).map(a => ({
+        aluno: texto(getColuna(a,'Aluno')).toUpperCase(),
+        curso: normalizarCursoId(getColuna(a,'Curso')),
+        bimestre: parseInt(getColuna(a,'Bimestre')) || 1,
+        nota: parseFloat(getColuna(a,'Nota')) || 0,
+        professor: texto(getColuna(a,'Professor')).toUpperCase(),
+        dataLancamento: formatarDataExibicao(getColuna(a,'Data_Lancamento'))
+      }));
+
+      db.presencas = {};
+      (dadosPlanilha.presencas || []).forEach(p => {
+        const curso = normalizarCursoId(getColuna(p,'Curso'));
+        if (!curso) return;
+        if (!db.presencas[curso]) db.presencas[curso] = [];
+        db.presencas[curso].push({
+          data: formatarDataExibicao(getColuna(p,'Data')),
+          presentes: texto(getColuna(p,'Presentes')).split(',').map(x => x.trim().toUpperCase()).filter(Boolean),
+          faltantes: texto(getColuna(p,'Faltantes')).split(',').map(x => x.trim().toUpperCase()).filter(Boolean),
+          professor: texto(getColuna(p,'Professor')).toUpperCase(),
+          conteudo: texto(getColuna(p,'Conteudo','Conteúdo','Observacao'))
+        });
+      });
+
+      db.observacoes = {};
+      (dadosPlanilha.observacoes || []).forEach(o => {
+        const curso = normalizarCursoId(getColuna(o,'Curso'));
+        if (!curso) return;
+        if (!db.observacoes[curso]) db.observacoes[curso] = [];
+        db.observacoes[curso].push({ data: formatarDataExibicao(getColuna(o,'Data')), aluno: texto(getColuna(o,'Aluno')).toUpperCase(), observacao: texto(getColuna(o,'Observacao')), tipo: texto(getColuna(o,'Tipo') || 'Neutra') });
+      });
+
+      db.relatorios = (dadosPlanilha.relatorios || []).map(r => ({
+        aluno: texto(getColuna(r,'Aluno')).toUpperCase(), curso: normalizarCursoId(getColuna(r,'Curso')),
+        bimestre: texto(getColuna(r,'Bimestre') || '1'), professor: texto(getColuna(r,'Professor')).toUpperCase(),
+        relatorio: texto(getColuna(r,'Relatorio')), data: formatarDataExibicao(getColuna(r,'Data')), visto: texto(getColuna(r,'Visto'))
+      }));
+
+      db.arquivos = (dadosPlanilha.arquivos || []).map(a => ({
+        id: texto(getColuna(a,'ID')), aluno: texto(getColuna(a,'Aluno')).toUpperCase(), curso: normalizarCursoId(getColuna(a,'Curso')),
+        professor: texto(getColuna(a,'Professor')).toUpperCase(), nome: texto(getColuna(a,'Nome_Arquivo','Nome')),
+        url: texto(getColuna(a,'URL','Link')), mensagem: texto(getColuna(a,'Mensagem')), data: formatarDataExibicao(getColuna(a,'Data'))
+      }));
+
+      db.mensagens = (dadosPlanilha.mensagens || []).map(m => ({
+        id: texto(getColuna(m,'ID')), aluno: texto(getColuna(m,'Aluno')).toUpperCase(), curso: normalizarCursoId(getColuna(m,'Curso')),
+        professor: texto(getColuna(m,'Professor')).toUpperCase(), assunto: texto(getColuna(m,'Assunto')),
+        mensagem: texto(getColuna(m,'Mensagem','Texto')), lida: texto(getColuna(m,'Lida')).toUpperCase() === 'SIM', data: formatarDataExibicao(getColuna(m,'Data'))
+      }));
+
+      db.notificacoes = (dadosPlanilha.notificacoes || []).map(n => ({
+        id: texto(getColuna(n,'ID')), aluno: texto(getColuna(n,'Aluno')).toUpperCase(),
+        tipo: texto(getColuna(n,'Tipo') || 'geral').toLowerCase(), titulo: texto(getColuna(n,'Titulo')),
+        descricao: texto(getColuna(n,'Descricao','Mensagem')), lida: texto(getColuna(n,'Lida')).toUpperCase() === 'SIM', data: formatarDataExibicao(getColuna(n,'Data'))
+      }));
+
+      const pgMap = {};
+      (dadosPlanilha.pagamentos || []).forEach(p => {
+        const aluno = texto(getColuna(p,'Aluno','Nome')).toUpperCase();
+        if (!aluno) return;
+        const ref = normalizarReferencia(getColuna(p,'Referencia','Mes','Ref'));
+        const stRaw = texto(getColuna(p,'Status')).toUpperCase();
+        const status = stRaw.includes('PAG') ? 'PAGO' : stRaw.includes('ATRAS') ? 'ATRASADO' : 'PENDENTE';
+        pgMap[`${normalizarNome(aluno)}||${ref}`] = {
+          aluno, valor: normalizarValor(getColuna(p,'Valor','Mensalidade')),
+          vencimento: normalizarDiaVencimento(getColuna(p,'Vencimento')),
+          status, dataPagamento: formatarDataExibicao(getColuna(p,'Data_Pagamento')), referencia: ref
+        };
+      });
+      db.pagamentosMensais = Object.values(pgMap);
+
+      db.agenda = (dadosPlanilha.agenda || []).map((a, i) => ({
+        ID: texto(getColuna(a,'ID')) || `AG_${i+1}`,
+        Data: normalizarDataISO(getColuna(a,'Data')),
+        HoraInicio: normalizarHoraHHMM(getColuna(a,'HoraInicio','Hora')),
+        TipoAula: texto(getColuna(a,'TipoAula','Tipo') || 'Individual'),
+        AlunoNome: texto(getColuna(a,'AlunoNome','Aluno')).toUpperCase(),
+        ProfessorID: texto(getColuna(a,'ProfessorID')),
+        ProfessorNome: texto(getColuna(a,'ProfessorNome','Professor')).toUpperCase(),
+        SalaID: texto(getColuna(a,'SalaID')),
+        SalaNome: texto(getColuna(a,'SalaNome','Sala')),
+        Instrumento: texto(getColuna(a,'Instrumento','Curso')),
+        StatusPresenca: texto(getColuna(a,'StatusPresenca','Status') || 'Agendada'),
+        EhReposicao: texto(getColuna(a,'EhReposicao') || 'Não'),
+        Observacoes: texto(getColuna(a,'Observacoes'))
+      })).filter(a => a.Data);
+
+      db.crm = (dadosPlanilha.crm || []).map((c, i) => ({
+        ID: texto(getColuna(c,'ID')) || `CRM_${i+1}`,
+        NomeLead: texto(getColuna(c,'NomeLead','Nome')),
+        Telefone: texto(getColuna(c,'Telefone')),
+        Instrumento: texto(getColuna(c,'Instrumento')),
+        DataExperimental: normalizarDataISO(getColuna(c,'DataExperimental','Data')),
+        Horario: texto(getColuna(c,'Horario')),
+        EtapaFunil: texto(getColuna(c,'EtapaFunil','Etapa') || 'Novo Lead')
+      })).filter(c => c.NomeLead);
+
+      db.despesas = (dadosPlanilha.despesas || []).map(d => ({
+        Data: normalizarDataISO(getColuna(d,'Data')),
+        Categoria: texto(getColuna(d,'Categoria')),
+        Descricao: texto(getColuna(d,'Descricao')),
+        Valor: normalizarValor(getColuna(d,'Valor'))
+      })).filter(d => d.Descricao);
+
+      db.usuarios = (dadosPlanilha.usuarios || []).map(u => ({
+        nome: texto(getColuna(u,'Nome')).toUpperCase(),
+        perfil: texto(getColuna(u,'Perfil')).toLowerCase(),
+        usuario: texto(getColuna(u,'Usuario')).toLowerCase(),
+        status: texto(getColuna(u,'Status') || 'ATIVO').toUpperCase(),
+        alunoVinculado: texto(getColuna(u,'Aluno_Vinculado')).toUpperCase()
+      })).filter(u => u.usuario);
+
+      const cfg = {};
+      (dadosPlanilha.config || []).forEach(c => {
+        const k = texto(getColuna(c,'Chave','Key'));
+        if (k) cfg[k] = texto(getColuna(c,'Valor','Value'));
+      });
+      escolaData.config = cfg;
+      if (cfg.NomeEscola) document.getElementById('headerNomeEscola').textContent = cfg.NomeEscola;
+    }
+
+    const encontrarProfessorPorNome = nome => escolaData.professores.find(p => nomesIguais(p.nome, nome)) || null;
+    const encontrarAlunoPorNome = nome => escolaData.alunos.find(a => nomesIguais(a.nome, nome)) || null;
+    const getAlunosByCurso = cid => db.matriculas.filter(m => m.curso === cid && m.status === 'ATIVO').map(m => encontrarAlunoPorNome(m.aluno)).filter(Boolean);
+    const getProfessorByCurso = cid => escolaData.professores.find(p => extrairCursosDoProfessor(p).includes(cid)) || null;
+    const getNotaAluno = (al, cid, bim) => (db.avaliacoes.find(a => nomesIguais(a.aluno, al) && a.curso === cid && a.bimestre === bim)?.nota) || 0;
+    function getMediaAluno(al, cid) {
+      let s = 0, c = 0; for (let b = 1; b <= 4; b++) { const n = getNotaAluno(al, cid, b); if (n > 0) { s += n; c++; } }
+      return c ? s / c : 0;
+    }
+
+    function getPagamentoMes(aluno, ref) {
+      const pg = db.pagamentosMensais.find(p => nomesIguais(p.aluno, aluno) && p.referencia === ref);
+      if (pg) return pg;
+      const al = encontrarAlunoPorNome(aluno);
+      if (!al || !al.mensalidade) return null;
+      const [ano, mes] = ref.split('-').map(Number);
+      const h = new Date();
+      let status = 'PENDENTE';
+      if (ano < h.getFullYear() || (ano === h.getFullYear() && mes < h.getMonth()+1) || (ano === h.getFullYear() && mes === h.getMonth()+1 && h.getDate() > al.vencimento)) status = 'ATRASADO';
+      return { aluno: al.nome, valor: al.mensalidade, vencimento: al.vencimento, status, dataPagamento: '', referencia: ref };
+    }
+
+    // ==================== [BLOCO 28] SEÇÃO 1: DASHBOARD ====================
+    function renderDashboard() {
+      const hoje = new Date().toISOString().slice(0, 10);
+      const ref = getAnoMesAtual();
+      const ativos = escolaData.alunos.filter(a => a.status === 'ATIVO');
+      const matAtivas = db.matriculas.filter(m => m.status === 'ATIVO');
+      const aulasHoje = db.agenda.filter(a => a.Data === hoje && a.StatusPresenca !== 'Cancelada').sort((a,b) => a.HoraInicio.localeCompare(b.HoraInicio));
+      let recebido = 0, inadimplente = 0;
+      ativos.forEach(a => {
+        const pg = getPagamentoMes(a.nome, ref);
+        if (pg?.status === 'PAGO') recebido += pg.valor;
+        if (pg?.status === 'ATRASADO') inadimplente += pg.valor;
+      });
+      document.getElementById('kpi-alunos').textContent = ativos.length;
+      document.getElementById('kpi-aulas-hoje').textContent = aulasHoje.length;
+      document.getElementById('kpi-matriculas').textContent = matAtivas.length;
+      document.getElementById('kpi-recebido').textContent = fmtMoeda(recebido);
+      document.getElementById('kpi-inadimplencia').textContent = fmtMoeda(inadimplente);
+
+      document.getElementById('dash-aulas-hoje').innerHTML = aulasHoje.length
+        ? aulasHoje.map(a => `<div onclick="abrirModalAula('${a.ID}')" class="p-3 rounded-lg border hover:bg-slate-50 cursor-pointer flex justify-between items-center">
+            <div><span class="font-bold text-indigo-700">${a.HoraInicio}</span> • <b>${escapeHtml(a.AlunoNome)}</b> (${escapeHtml(a.Instrumento)})<div class="text-xs text-slate-500">Prof. ${escapeHtml(a.ProfessorNome)} | ${escapeHtml(a.SalaNome)}</div></div>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 font-semibold">${escapeHtml(a.StatusPresenca)}</span></div>`).join('')
+        : '<p class="text-slate-400">Nenhuma aula agendada para hoje.</p>';
+
+      const leads = db.crm.filter(c => c.EtapaFunil !== 'Matriculado');
+      document.getElementById('dash-crm-pendentes').innerHTML = leads.length
+        ? leads.slice(0, 6).map(c => `<div class="p-3 rounded-lg border flex justify-between items-center">
+            <div><b>${escapeHtml(c.NomeLead)}</b> (${escapeHtml(c.Instrumento)})<div class="text-xs text-slate-500">${c.DataExperimental || 'Sem data'} ${c.Horario} • ${escapeHtml(c.Telefone)}</div></div>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">${escapeHtml(c.EtapaFunil)}</span></div>`).join('')
+        : '<p class="text-slate-400">Nenhum lead pendente no CRM.</p>';
+    }
+
+    // ==================== [BLOCO 29] SEÇÃO 2: AGENDA INTEGRADA ====================
+    function mudarDiaAgenda(delta) {
+      const inp = document.getElementById('agendaData');
+      const d = new Date(inp.value + 'T12:00:00'); d.setDate(d.getDate() + delta);
+      inp.value = d.toISOString().slice(0, 10); renderAgenda();
+    }
+    function irParaHoje() { document.getElementById('agendaData').value = new Date().toISOString().slice(0, 10); renderAgenda(); }
+
+    function renderAgenda() {
+      const dataSel = document.getElementById('agendaData').value;
+      const modo = document.getElementById('agendaModo').value;
+      const ehProf = currentUser.perfil === 'professor';
+      const profLogado = ehProf ? (currentUser.professorData || encontrarProfessorPorNome(currentUser.nome)) : null;
+
+      let entidades = modo === 'professor' ? escolaData.professores : escolaData.salas;
+      if (modo === 'professor' && ehProf && profLogado) {
+        entidades = escolaData.professores.filter(p => p.id === profLogado.id || nomesIguais(p.nome, profLogado.nome));
+      }
+
+      const aulasDia = db.agenda.filter(a => a.Data === dataSel && a.StatusPresenca !== 'Cancelada');
+
+      document.getElementById('agendaThead').innerHTML = `<tr>
+        <th class="p-3 text-left w-48 border-r bg-slate-100">${modo === 'professor' ? 'Professor' : 'Sala'}</th>
+        ${HORARIOS_GRADE.map(h => `<th class="p-2 text-center border-r font-semibold">${h}</th>`).join('')}
+      </tr>`;
+
+      if (!entidades.length) {
+        document.getElementById('agendaTbody').innerHTML = `<tr><td colspan="${HORARIOS_GRADE.length+1}" class="p-8 text-center text-slate-400">Nenhum registro encontrado para exibir na grade.</td></tr>`;
+        return;
+      }
+
+      document.getElementById('agendaTbody').innerHTML = entidades.map(ent => {
+        const entId = String(ent.id || '').trim();
+        const entNome = normalizarNome(ent.nome);
+
+        return `<tr class="h-24">
+          <td class="p-3 border-r bg-slate-50 font-semibold text-slate-700 align-top">
+            <div>${escapeHtml(ent.nome)}</div>
+            <div class="text-xs font-normal text-slate-400">${modo === 'professor' ? escapeHtml(ent.tipo || '') : 'Cap: ' + ent.capacidade}</div>
+          </td>
+          ${HORARIOS_GRADE.map(h => {
+            const aula = aulasDia.find(a => {
+              if (!a.HoraInicio || !a.HoraInicio.startsWith(h.slice(0,2))) return false;
+              return modo === 'professor'
+                ? (String(a.ProfessorID).trim() === entId || normalizarNome(a.ProfessorNome) === entNome)
+                : (String(a.SalaID).trim() === entId || normalizarNome(a.SalaNome) === entNome);
+            });
+
+            if (!aula) {
+              return `<td onclick="abrirModalAula(null,'${entId}','${h}','${modo}')" class="grid-cell border-r p-1 align-top text-[10px] text-slate-300 text-center pt-8">${h}</td>`;
+            }
+
+            const ehMinhaAula = !ehProf || (profLogado && (String(aula.ProfessorID).trim() === String(profLogado.id).trim() || nomesIguais(aula.ProfessorNome, profLogado.nome)));
+
+            if (ehProf && !ehMinhaAula) {
+              return `<td class="border-r p-1 align-top">
+                <div onclick="mostrarToast('🔒 Esta sala já está reservada neste horário.', 'info')"
+                     class="cursor-not-allowed rounded-md border-l-4 border-slate-400 bg-slate-100 text-slate-500 p-1.5 text-xs h-full flex flex-col justify-center">
+                  <div class="font-bold truncate">🔒 Sala Ocupada</div>
+                  <div class="text-[10px] opacity-80 truncate">Horário reservado</div>
+                </div>
+              </td>`;
+            }
+
+            const cor = aula.StatusPresenca === 'Presente' ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
+                      : aula.EhReposicao === 'Sim' ? 'bg-amber-50 border-amber-500 text-amber-900'
+                      : 'bg-indigo-50 border-indigo-600 text-indigo-900';
+
+            return `<td class="border-r p-1 align-top">
+              <div onclick="abrirModalAula('${aula.ID}')" class="aula-card cursor-pointer rounded-md border-l-4 p-1.5 text-xs h-full ${cor}">
+                <div class="font-bold truncate">${escapeHtml(aula.AlunoNome)}</div>
+                <div class="text-[11px] opacity-80 truncate">${escapeHtml(aula.Instrumento)}</div>
+                <div class="text-[10px] mt-1 flex justify-between">
+                  <span class="truncate">${escapeHtml(modo === 'professor' ? aula.SalaNome : aula.ProfessorNome)}</span>
+                  ${aula.EhReposicao === 'Sim' ? '<span class="bg-amber-200 px-1 rounded font-bold">REP</span>' : ''}
+                </div>
+              </div>
+            </td>`;
+          }).join('')}
+        </tr>`;
+      }).join('');
+    }
+
+    function getConflitoSalaAula(data, hora, salaId, ignorarAulaId = '') {
+      if (!data || !hora || !salaId) return null;
+      const horaChave = String(hora).padStart(5, '0').slice(0, 5);
+      return db.agenda.find(a =>
+        a.ID !== ignorarAulaId &&
+        a.StatusPresenca !== 'Cancelada' &&
+        a.Data === data &&
+        String(a.HoraInicio || '').padStart(5, '0').slice(0, 5) === horaChave &&
+        String(a.SalaID || '').trim() === String(salaId).trim()
+      ) || null;
+    }
+
+    function atualizarDisponibilidadeSalasAula(salaSelecionadaPreferida = null) {
+      const selSala = document.getElementById('aulaSala');
+      const aviso = document.getElementById('aulaSalaConflitoAviso');
+      const btnSalvar = document.getElementById('btnSalvarAula');
+      const data = document.getElementById('aulaData').value;
+      const hora = document.getElementById('aulaInicio').value;
+      const aulaId = document.getElementById('aulaId').value;
+      const valorAtual = salaSelecionadaPreferida !== null ? salaSelecionadaPreferida : selSala.value;
+
+      selSala.innerHTML = escolaData.salas.map(s => {
+        const conflito = getConflitoSalaAula(data, hora, s.id, aulaId);
+        if (conflito) {
+          return `<option value="${s.id}" disabled>🔒 ${escapeHtml(s.nome)} (Ocupada: ${escapeHtml(conflito.ProfessorNome || conflito.AlunoNome)})</option>`;
+        }
+        return `<option value="${s.id}">${escapeHtml(s.nome)}</option>`;
+      }).join('');
+
+      const conflitoAtual = getConflitoSalaAula(data, hora, valorAtual, aulaId);
+      if (valorAtual && !conflitoAtual) {
+        selSala.value = valorAtual;
+      } else {
+        const primeiraLivre = Array.from(selSala.options).find(o => !o.disabled);
+        if (primeiraLivre) selSala.value = primeiraLivre.value;
+      }
+
+      const todasOcupadas = Array.from(selSala.options).every(o => o.disabled);
+      if (todasOcupadas) {
+        aviso.textContent = '⚠️ Todas as salas já estão ocupadas neste dia e horário. Escolha outro horário.';
+        aviso.classList.remove('hidden');
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('opacity-50', 'cursor-not-allowed');
+      } else if (conflitoAtual && salaSelecionadaPreferida) {
+        aviso.textContent = `⚠️ A sala selecionada já possui aula agendada neste horário (${conflitoAtual.AlunoNome} - Prof. ${conflitoAtual.ProfessorNome}). Selecione outra sala livre.`;
+        aviso.classList.remove('hidden');
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        aviso.classList.add('hidden');
+        btnSalvar.disabled = false;
+        btnSalvar.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    function atualizarCamposPorProfessorAula(instrumentoPreferido = null, alunoPreferido = null) {
+      const profId = document.getElementById('aulaProf').value;
+      const prof = escolaData.professores.find(p => p.id === profId);
+
+      const cursosProf = prof ? extrairCursosDoProfessor(prof) : [];
+      const listaCursos = cursosProf.length ? cursosProf.map(id => CURSOS_MAP[id]).filter(Boolean) : CURSOS;
+      const selInst = document.getElementById('aulaInstrumento');
+      selInst.innerHTML = listaCursos.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+      if (instrumentoPreferido) {
+        const existe = Array.from(selInst.options).some(o => o.value === instrumentoPreferido);
+        if (!existe) selInst.innerHTML += `<option value="${escapeHtml(instrumentoPreferido)}">${escapeHtml(instrumentoPreferido)}</option>`;
+        selInst.value = instrumentoPreferido;
+      }
+
+      const alunosSet = new Map();
+      if (prof) {
+        db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => {
+          if (nomesIguais(m.professor, prof.nome) || cursosProf.includes(m.curso)) {
+            if (!alunosSet.has(m.aluno)) alunosSet.set(m.aluno, labelCurso(m.curso));
+          }
+        });
+      }
+
+      const alunosProf = Array.from(alunosSet.entries());
+      const box = document.getElementById('boxAlunosProfessorAula');
+      document.getElementById('aulaProfQtdAlunos').textContent = `${alunosProf.length} aluno(s)`;
+
+      if (alunosProf.length) {
+        box.innerHTML = alunosProf.map(([nomeAl, cursoNome]) => `
+          <button type="button" onclick="selecionarAlunoDaBoxAula('${nomeAl.replace(/'/g, "\\'")}', '${cursoNome.replace(/'/g, "\\'")}')"
+                  class="px-2 py-1 rounded-full bg-white border border-indigo-200 hover:bg-indigo-600 hover:text-white text-slate-700 font-medium transition">
+            ${escapeHtml(nomeAl)}
+          </button>`).join('');
+      } else {
+        box.innerHTML = '<span class="text-slate-400">Nenhum aluno matriculado com este professor.</span>';
+      }
+
+      const selAluno = document.getElementById('aulaAluno');
+      let opts = `<option value="TURMA">Turma / Grupo</option>`;
+      if (alunosProf.length) {
+        opts += `<optgroup label="Alunos do Professor">` + alunosProf.map(([n]) => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') + `</optgroup>`;
+      }
+      const outrosAlunos = escolaData.alunos.filter(a => !alunosSet.has(a.nome));
+      if (outrosAlunos.length) {
+        opts += `<optgroup label="Outros Alunos">` + outrosAlunos.map(a => `<option value="${escapeHtml(a.nome)}">${escapeHtml(a.nome)}</option>`).join('') + `</optgroup>`;
+      }
+      selAluno.innerHTML = opts;
+      if (alunoPreferido) selAluno.value = alunoPreferido;
+    }
+
+    function selecionarAlunoDaBoxAula(nomeAluno, cursoNome) {
+      document.getElementById('aulaAluno').value = nomeAluno;
+      const selInst = document.getElementById('aulaInstrumento');
+      if (Array.from(selInst.options).some(o => o.value === cursoNome)) selInst.value = cursoNome;
+    }
+
+    function abrirModalAula(id = null, entId = null, hora = null, modo = null) {
+      const ehProf = currentUser.perfil === 'professor';
+      const profLogado = ehProf ? (currentUser.professorData || encontrarProfessorPorNome(currentUser.nome)) : null;
+
+      if (id && ehProf && profLogado) {
+        const aulaEx = db.agenda.find(x => x.ID === id);
+        if (aulaEx && aulaEx.ProfessorID !== profLogado.id && !nomesIguais(aulaEx.ProfessorNome, profLogado.nome)) {
+          mostrarToast('🔒 Você só pode editar as suas próprias aulas.', 'error');
+          return;
+        }
+      }
+
+      if (!id && ehProf && profLogado && modo === 'professor' && entId && entId !== profLogado.id) {
+        mostrarToast('🔒 Você só pode agendar aulas para o seu próprio perfil.', 'error');
+        return;
+      }
+
+      const selProf = document.getElementById('aulaProf');
+      const avisoProf = document.getElementById('aulaProfAviso');
+      if (ehProf && profLogado) {
+        selProf.innerHTML = `<option value="${profLogado.id}">${escapeHtml(profLogado.nome)}</option>`;
+        selProf.value = profLogado.id;
+        selProf.disabled = true;
+        avisoProf.classList.remove('hidden');
+      } else {
+        selProf.innerHTML = escolaData.professores.map(p => `<option value="${p.id}">${escapeHtml(p.nome)}</option>`).join('');
+        selProf.disabled = false;
+        avisoProf.classList.add('hidden');
+      }
+
+      if (id) {
+        const a = db.agenda.find(x => x.ID === id);
+        if (a) {
+          document.getElementById('aulaId').value = a.ID;
+          document.getElementById('aulaData').value = a.Data;
+          document.getElementById('aulaInicio').value = a.HoraInicio;
+          document.getElementById('aulaTipo').value = a.TipoAula;
+          document.getElementById('aulaStatus').value = a.StatusPresenca;
+          document.getElementById('aulaReposicao').checked = a.EhReposicao === 'Sim';
+          document.getElementById('aulaObs').value = a.Observacoes || '';
+          if (!ehProf && a.ProfessorID) selProf.value = a.ProfessorID;
+          atualizarCamposPorProfessorAula(a.Instrumento, a.AlunoNome);
+          atualizarDisponibilidadeSalasAula(a.SalaID);
+          document.getElementById('btnExcluirAula').classList.remove('hidden');
+        }
+      } else {
+        document.getElementById('aulaId').value = '';
+        document.getElementById('aulaData').value = document.getElementById('agendaData').value;
+        document.getElementById('aulaInicio').value = hora || '09:00';
+        document.getElementById('aulaStatus').value = 'Agendada';
+        document.getElementById('aulaReposicao').checked = false;
+        document.getElementById('aulaObs').value = '';
+        if (!ehProf && modo === 'professor' && entId) selProf.value = entId;
+        atualizarCamposPorProfessorAula();
+        atualizarDisponibilidadeSalasAula(modo === 'sala' ? entId : null);
+        document.getElementById('btnExcluirAula').classList.add('hidden');
+      }
+      document.getElementById('modalAula').classList.remove('hidden');
+    }
+
+    async function submitAula(e) {
+      e.preventDefault();
+      const aulaId = document.getElementById('aulaId').value;
+      const data = document.getElementById('aulaData').value;
+      const hora = document.getElementById('aulaInicio').value;
+      const salaId = document.getElementById('aulaSala').value;
+      const status = document.getElementById('aulaStatus').value;
+
+      if (status !== 'Cancelada') {
+        const conflito = getConflitoSalaAula(data, hora, salaId, aulaId);
+        if (conflito) {
+          mostrarToast(`🔒 Sala já ocupada neste horário por ${conflito.AlunoNome} (Prof. ${conflito.ProfessorNome}).`, 'error');
+          atualizarDisponibilidadeSalasAula(salaId);
+          return;
+        }
+      }
+
+      const profId = document.getElementById('aulaProf').value;
+      const profSel = escolaData.professores.find(p => p.id === profId);
+      const salaSel = escolaData.salas.find(s => s.id === salaId);
+
+      const payload = {
+        ID: aulaId || 'AG_' + Date.now(),
+        Data: data,
+        HoraInicio: hora,
+        TipoAula: document.getElementById('aulaTipo').value,
+        AlunoNome: document.getElementById('aulaAluno').value,
+        ProfessorID: profSel ? profSel.id : '',
+        ProfessorNome: profSel ? profSel.nome : '',
+        SalaID: salaSel ? salaSel.id : '',
+        SalaNome: salaSel ? salaSel.nome : '',
+        Instrumento: document.getElementById('aulaInstrumento').value,
+        StatusPresenca: status,
+        EhReposicao: document.getElementById('aulaReposicao').checked ? 'Sim' : 'Não',
+        Observacoes: document.getElementById('aulaObs').value
+      };
+
+      await executarComProgresso({
+        titulo: 'Salvando aula na Agenda...',
+        executar: async () => {
+          const r = await enviarParaGAS('salvarAula', payload);
+          const idx = db.agenda.findIndex(x => x.ID === payload.ID);
+          if (idx > -1) db.agenda[idx] = payload; else db.agenda.push(payload);
+          return r;
+        },
+        sucesso: '✅ Aula salva na agenda!'
+      });
+      fecharModal('modalAula'); renderAgenda(); renderDashboard();
+    }
+
+    async function deletarAula() {
+      const id = document.getElementById('aulaId').value;
+      if (!confirm('Excluir esta aula?')) return;
+      await executarComProgresso({
+        titulo: 'Excluindo aula...',
+        executar: async () => {
+          const r = await enviarParaGAS('excluirAula', { id });
+          db.agenda = db.agenda.filter(x => x.ID !== id);
+          return r;
+        },
+        sucesso: 'Aula excluída.'
+      });
+      fecharModal('modalAula'); renderAgenda();
+    }
+
+    // ==================== [BLOCO 30] SEÇÃO 3: CRM ====================
+    function renderCRM() {
+      const etapas = ['Novo Lead', 'Experimental Agendada', 'Realizada', 'Matriculado'];
+      document.getElementById('crmBoard').innerHTML = etapas.map(et => {
+        const cards = db.crm.filter(c => c.EtapaFunil === et);
+        return `<div class="bg-slate-100 rounded-xl p-3 space-y-2.5 min-h-[280px]">
+          <div class="flex justify-between items-center px-1"><h4 class="font-bold text-xs uppercase text-slate-600">${et}</h4><span class="bg-white px-2 py-0.5 rounded-full text-xs font-bold">${cards.length}</span></div>
+          ${cards.map(c => `<div class="bg-white p-3 rounded-lg shadow-xs border space-y-1.5 text-sm">
+            <div class="font-bold text-slate-800">${escapeHtml(c.NomeLead)}</div>
+            <div class="text-xs text-slate-500">${escapeHtml(c.Instrumento)} • ${escapeHtml(c.Telefone)}</div>
+            ${c.DataExperimental ? `<div class="text-xs text-indigo-600 font-medium">📅 ${formatarDataExibicao(c.DataExperimental)} ${c.Horario}</div>` : ''}
+            ${et !== 'Matriculado' ? `<button onclick="converterLeadParaMatricula('${c.ID}')" class="w-full mt-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-1 rounded font-medium">Matricular Aluno</button>` : ''}
+          </div>`).join('')}
+        </div>`;
+      }).join('');
+    }
+    function abrirModalCRM() { document.getElementById('modalCRM').classList.remove('hidden'); }
+    async function submitCRM(e) {
+      e.preventDefault();
+      const payload = {
+        ID: 'CRM_' + Date.now(), NomeLead: document.getElementById('crmNome').value,
+        Telefone: document.getElementById('crmTel').value, Instrumento: document.getElementById('crmInst').value,
+        DataExperimental: document.getElementById('crmData').value, Horario: document.getElementById('crmHora').value,
+        EtapaFunil: document.getElementById('crmEtapa').value
+      };
+      await executarComProgresso({
+        titulo: 'Salvando Lead...', executar: async () => { const r = await enviarParaGAS('salvarLeadCRM', payload); db.crm.push(payload); return r; },
+        sucesso: '✅ Lead registrado no CRM!'
+      });
+      fecharModal('modalCRM'); renderCRM();
+    }
+    function converterLeadParaMatricula(id) {
+      const lead = db.crm.find(x => x.ID === id);
+      if (!lead) return;
+      abrirModalCadastroAluno();
+      document.getElementById('cadAlunoNome').value = lead.NomeLead.toUpperCase();
+      document.getElementById('cadAlunoContato').value = lead.Telefone;
+      document.getElementById('cadAlunoLogin').value = 'aluno.' + lead.NomeLead.toLowerCase().split(' ')[0].replace(/[^a-z]/g, '');
+    }
