@@ -456,7 +456,7 @@
             <div id="frequenciaResultados" class="bg-white rounded-xl p-4 border text-sm text-slate-500">Selecione um curso.</div>
           </div>
         </section>
-<!-- ==================== [BLOCO 11] SEÇÃO 5: COORDENAÇÃO PEDAGÓGICA ==================== -->
+        <!-- ==================== [BLOCO 11] SEÇÃO 5: COORDENAÇÃO PEDAGÓGICA ==================== -->
         <section id="sec-pedagogico" class="secao hidden p-6 space-y-5">
           <h2 class="text-2xl font-bold text-slate-800">Coordenação Pedagógica</h2>
           <div class="flex gap-4 border-b overflow-x-auto text-sm">
@@ -2148,3 +2148,1192 @@
       document.getElementById('cadAlunoContato').value = lead.Telefone;
       document.getElementById('cadAlunoLogin').value = 'aluno.' + lead.NomeLead.toLowerCase().split(' ')[0].replace(/[^a-z]/g, '');
     }
+    // ==================== [BLOCO 31] SEÇÃO 4: ESCOLA / SECRETARIA ====================
+    function renderEscola() {
+      renderAlunosSecretaria(); renderMatriculasSecretaria(); renderProfessoresSecretaria();
+      document.getElementById('cursosGrid').innerHTML = CURSOS.map(c => {
+        const prof = getProfessorByCurso(c.id), als = getAlunosByCurso(c.id);
+        return `<div class="bg-white p-4 rounded-xl border border-l-4 border-l-indigo-500 shadow-xs">
+          <div class="font-bold text-slate-800">${c.nome}</div>
+          <div class="text-xs text-slate-500 mt-1">Prof: ${prof ? escapeHtml(prof.nome) : 'Não atribuído'}</div>
+          <div class="text-xs text-indigo-600 font-semibold mt-1">${als.length} aluno(s)</div>
+        </div>`;
+      }).join('');
+      const selFreq = document.getElementById('frequenciaCursoSelect');
+      if (selFreq.options.length <= 1) selFreq.innerHTML = '<option value="">-- Selecione curso --</option>' + CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    }
+
+    function renderAlunosSecretaria() {
+      const q = (document.getElementById('buscaAlunoSecretaria')?.value || '').toLowerCase();
+      const lista = escolaData.alunos.filter(a => !q || a.nome.toLowerCase().includes(q));
+      const ref = getAnoMesAtual();
+      document.getElementById('tabelaAlunosSecretaria').innerHTML = lista.length ? lista.map(a => {
+        const cursos = db.matriculas.filter(m => nomesIguais(m.aluno, a.nome) && m.status === 'ATIVO').map(m => labelCurso(m.curso)).join(', ') || '-';
+        const pg = getPagamentoMes(a.nome, ref);
+        const corPg = pg?.status === 'PAGO' ? 'bg-emerald-100 text-emerald-700' : pg?.status === 'ATRASADO' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700';
+        return `<tr class="hover:bg-slate-50">
+          <td class="p-3 font-bold">${escapeHtml(a.nome)}</td>
+          <td class="p-3">${a.dataNascimento || '-'}</td>
+          <td class="p-3 text-xs">${escapeHtml(a.responsavel || '-')}<br><span class="text-slate-400">${escapeHtml(a.contato || '-')}</span></td>
+          <td class="p-3 text-xs">${cursos}</td>
+          <td class="p-3">${fmtMoeda(a.mensalidade)} ${pg ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${corPg}">${pg.status}</span>` : ''}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${a.status === 'ATIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${a.status}</span></td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhum aluno encontrado.</td></tr>';
+    }
+
+    function renderMatriculasSecretaria() {
+      const sel = document.getElementById('filtroCursoMatricula');
+      if (sel.options.length <= 1) sel.innerHTML = '<option value="">Todos os Cursos</option>' + CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      const fCurso = sel.value, q = (document.getElementById('buscaMatriculaSecretaria')?.value || '').toLowerCase();
+      const lista = db.matriculas.filter(m => (!fCurso || m.curso === fCurso) && (!q || m.aluno.toLowerCase().includes(q)));
+      document.getElementById('tabelaMatriculasSecretaria').innerHTML = lista.length ? lista.map(m => `<tr>
+        <td class="p-3 font-bold">${escapeHtml(m.aluno)}</td>
+        <td class="p-3">${labelCurso(m.curso)}</td>
+        <td class="p-3">${escapeHtml(m.professor || '-')}</td>
+        <td class="p-3 font-semibold text-emerald-700">${fmtMoeda(m.mensalidade)}</td>
+        <td class="p-3">${m.dataMatricula || '-'}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${m.status === 'ATIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">${m.status}</span></td>
+        <td class="p-3"><button onclick="cancelarMatricula('${m.aluno.replace(/'/g,"\\'")}','${m.curso}')" class="text-rose-600 hover:underline text-xs font-bold">Cancelar</button></td>
+      </tr>`).join('') : '<tr><td colspan="7" class="p-6 text-center text-slate-400">Nenhuma matrícula.</td></tr>';
+    }
+
+    function renderProfessoresSecretaria() {
+      const q = (document.getElementById('buscaProfessorSecretaria')?.value || '').toLowerCase();
+      const lista = escolaData.professores.filter(p => !q || p.nome.toLowerCase().includes(q));
+      document.getElementById('tabelaProfessoresSecretaria').innerHTML = lista.map(p => `<tr>
+        <td class="p-3 font-bold">${escapeHtml(p.nome)}</td>
+        <td class="p-3">${escapeHtml(p.tipo || '-')}</td>
+        <td class="p-3 text-xs">${extrairCursosDoProfessor(p).map(labelCurso).join(', ') || '-'}</td>
+        <td class="p-3 text-xs">${escapeHtml(p.telefone || '-')}<br>${escapeHtml(p.email || '')}</td>
+        <td class="p-3 font-semibold">${fmtMoeda(p.valorHora)}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">${p.status}</span></td>
+      </tr>`).join('');
+    }
+
+    function carregarFrequenciaSecretaria() {
+      const cid = document.getElementById('frequenciaCursoSelect').value;
+      const box = document.getElementById('frequenciaResultados');
+      if (!cid) return;
+      const als = getAlunosByCurso(cid), pres = db.presencas[cid] || [];
+      if (!als.length) { box.innerHTML = 'Sem alunos matriculados neste curso.'; return; }
+      box.innerHTML = `<table class="w-full text-sm text-left"><thead class="bg-slate-50 border-b text-xs uppercase"><tr><th class="p-2">Aluno</th><th class="p-2">Presenças</th><th class="p-2">Faltas</th><th class="p-2">Frequência</th></tr></thead><tbody class="divide-y">` +
+        als.map(a => {
+          const p = pres.filter(x => x.presentes.some(n => nomesIguais(n, a.nome))).length;
+          const tot = pres.length || 1, pct = (p / tot * 100);
+          return `<tr><td class="p-2 font-bold">${escapeHtml(a.nome)}</td><td class="p-2">${p}</td><td class="p-2">${tot - p}</td><td class="p-2 font-bold ${pct >= 75 ? 'text-emerald-600' : 'text-rose-600'}">${pct.toFixed(1)}%</td></tr>`;
+        }).join('') + '</tbody></table>';
+    }
+
+    function abrirModalCadastroAluno() {
+      document.getElementById('formCadastroAluno').reset();
+      document.getElementById('cursosChecklist').innerHTML = CURSOS.map(c => `<label class="flex items-center gap-1.5 py-0.5"><input type="checkbox" value="${c.id}" class="curso-checkbox"> ${c.nome}</label>`).join('');
+      document.getElementById('modalCadastroAluno').classList.remove('hidden');
+    }
+
+    document.getElementById('formCadastroAluno').addEventListener('submit', async e => {
+      e.preventDefault();
+      const nome = document.getElementById('cadAlunoNome').value.trim().toUpperCase();
+      const dataNascimento = formatarDataExibicao(document.getElementById('cadAlunoNascimento').value);
+      const responsavel = document.getElementById('cadAlunoResponsavel').value.trim().toUpperCase();
+      const contato = document.getElementById('cadAlunoContato').value.trim();
+      const mensalidade = parseFloat(document.getElementById('cadAlunoMensalidade').value) || 0;
+      const vencimento = parseInt(document.getElementById('cadAlunoVencimento').value) || 10;
+      const login = document.getElementById('cadAlunoLogin').value.trim().toLowerCase();
+      const senha = document.getElementById('cadAlunoSenha').value;
+      const cursos = Array.from(document.querySelectorAll('.curso-checkbox:checked')).map(cb => cb.value);
+      if (!cursos.length) return alert('Selecione ao menos 1 curso.');
+
+      await executarComProgresso({
+        titulo: 'Matriculando aluno...', subtitulo: nome,
+        executar: async () => {
+          const r1 = await enviarParaGAS('salvarAluno', { nome, dataNascimento, responsavel, contato, status: 'ATIVO', mensalidade, vencimento });
+          if (!r1.success) throw new Error(r1.error || 'Erro ao salvar aluno');
+          const r2 = await enviarParaGAS('criarUsuarioAluno', { nome, usuario: login, senha });
+          if (!r2.success) throw new Error(r2.error || 'Erro ao criar login');
+          for (const cid of cursos) {
+            const prof = getProfessorByCurso(cid);
+            await enviarParaGAS('salvarMatricula', { aluno: nome, curso: cid, professor: prof?.nome || '', dataMatricula: getDataAtualFormatada(), anoLetivo: String(new Date().getFullYear()), status: 'ATIVO', mensalidade });
+          }
+          if (mensalidade > 0) await enviarParaGAS('salvarPagamento', { aluno: nome, valor: mensalidade, vencimento, status: 'PENDENTE', referencia: getAnoMesAtual() });
+          return { success: true };
+        },
+        sucesso: `✅ ${nome} matriculado! Login: ${login}`
+      });
+      fecharModal('modalCadastroAluno'); carregarDadosPlanilha();
+    });
+
+    function abrirModalNovaMatricula() {
+      document.getElementById('matriculaAluno').innerHTML = '<option value="">--</option>' + escolaData.alunos.map(a => `<option value="${escapeHtml(a.nome)}">${escapeHtml(a.nome)}</option>`).join('');
+      const selCur = document.getElementById('matriculaCurso');
+      selCur.innerHTML = '<option value="">--</option>' + CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      selCur.onchange = () => {
+        const p = getProfessorByCurso(selCur.value);
+        document.getElementById('matriculaProfessor').innerHTML = `<option value="${p?.nome || ''}">${p ? p.nome : 'Sem professor'}</option>`;
+      };
+      document.getElementById('modalNovaMatricula').classList.remove('hidden');
+    }
+
+    document.getElementById('formNovaMatricula').addEventListener('submit', async e => {
+      e.preventDefault();
+      const aluno = document.getElementById('matriculaAluno').value;
+      const curso = document.getElementById('matriculaCurso').value;
+      const mensalidade = parseFloat(document.getElementById('matriculaMensalidade').value) || 0;
+      const vencimento = parseInt(document.getElementById('matriculaVencimento').value) || 10;
+      const prof = getProfessorByCurso(curso);
+      await executarComProgresso({
+        titulo: 'Registrando matrícula...',
+        executar: async () => {
+          const r = await enviarParaGAS('salvarMatricula', { aluno, curso, professor: prof?.nome || '', dataMatricula: getDataAtualFormatada(), anoLetivo: document.getElementById('matriculaAno').value, status: 'ATIVO', mensalidade });
+          if (mensalidade > 0) await enviarParaGAS('atualizarAluno', { nome: aluno, mensalidade, vencimento });
+          return r;
+        },
+        sucesso: '✅ Matrícula registrada!'
+      });
+      fecharModal('modalNovaMatricula'); carregarDadosPlanilha();
+    });
+
+    async function cancelarMatricula(aluno, curso) {
+      if (!confirm(`Cancelar matrícula de ${aluno} em ${labelCurso(curso)}?`)) return;
+      await executarComProgresso({
+        titulo: 'Cancelando matrícula...',
+        executar: () => enviarParaGAS('atualizarMatricula', { aluno, curso, status: 'CANCELADO' }),
+        sucesso: 'Matrícula cancelada.'
+      });
+      carregarDadosPlanilha();
+    }
+
+    function abrirModalCadastroProfessor() {
+      document.getElementById('formCadastroProfessor').reset();
+      document.getElementById('cadProfessorID').value = 'PROF_' + Date.now();
+      document.getElementById('cadProfessorCurso').innerHTML = CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+      document.getElementById('cadProfessorCursosExtras').innerHTML = CURSOS.map(c => `<label class="flex items-center gap-1"><input type="checkbox" value="${c.id}" class="prof-extra"> ${c.nome}</label>`).join('');
+      document.getElementById('modalCadastroProfessor').classList.remove('hidden');
+    }
+
+    document.getElementById('formCadastroProfessor').addEventListener('submit', async e => {
+      e.preventDefault();
+      const extras = Array.from(document.querySelectorAll('.prof-extra:checked')).map(c => c.value);
+      const cursos = [...new Set([document.getElementById('cadProfessorCurso').value, ...extras])].join(',');
+      await executarComProgresso({
+        titulo: 'Salvando professor...',
+        executar: () => enviarParaGAS('salvarProfessor', {
+          id: document.getElementById('cadProfessorID').value, nome: document.getElementById('cadProfessorNome').value.trim().toUpperCase(),
+          tipo: document.getElementById('cadProfessorTipo').value, curso: cursos,
+          telefone: document.getElementById('cadProfessorTelefone').value, email: document.getElementById('cadProfessorEmail').value
+        }),
+        sucesso: '✅ Professor cadastrado!'
+      });
+      fecharModal('modalCadastroProfessor'); carregarDadosPlanilha();
+    });
+
+    // ==================== [BLOCO 32] SEÇÃO 5: COORDENAÇÃO ====================
+    function renderCoordenacao() {
+      document.getElementById('visaoGeralCursos').innerHTML = CURSOS.map(c => {
+        const als = getAlunosByCurso(c.id), prof = getProfessorByCurso(c.id), pres = db.presencas[c.id] || [];
+        let tp = 0, sm = 0, cm = 0;
+        als.forEach(a => {
+          pres.forEach(p => { if (p.presentes.some(n => nomesIguais(n, a.nome))) tp++; });
+          const m = getMediaAluno(a.nome, c.id); if (m > 0) { sm += m; cm++; }
+        });
+        const taxa = pres.length && als.length ? (tp / (pres.length * als.length) * 100) : 0;
+        return `<tr><td class="p-3 font-bold">${c.nome}</td><td class="p-3">${prof ? escapeHtml(prof.nome) : '-'}</td><td class="p-3">${cm ? (sm/cm).toFixed(1) : '0.0'}</td><td class="p-3">${taxa.toFixed(0)}%</td><td class="p-3">${als.length}</td></tr>`;
+      }).join('');
+
+      document.getElementById('selectProfAcompanhamento').innerHTML = '<option value="">-- Selecione professor --</option>' + escolaData.professores.map(p => `<option value="${escapeHtml(p.nome)}">${escapeHtml(p.nome)}</option>`).join('');
+      document.getElementById('professorSelect').innerHTML = '<option value="">--</option>' + escolaData.professores.map(p => `<option value="${p.id}">${escapeHtml(p.nome)}</option>`).join('');
+      document.getElementById('cursoSelect').innerHTML = '<option value="">--</option>' + CURSOS.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+      document.getElementById('professoresAtribuidos').innerHTML = escolaData.professores.map(p => `<div class="bg-white p-4 rounded-xl border">
+        <div class="font-bold text-slate-800">${escapeHtml(p.nome)}</div>
+        <div class="flex flex-wrap gap-1.5 mt-2">${extrairCursosDoProfessor(p).map(c => `<span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-xs font-semibold">${labelCurso(c)}</span>`).join('') || '<span class="text-xs text-slate-400">Sem cursos</span>'}</div>
+      </div>`).join('');
+
+      document.getElementById('listaRelatoriosRecebidos').innerHTML = db.relatorios.length
+        ? db.relatorios.slice().reverse().map(r => `<div class="bg-white p-4 rounded-xl border border-l-4 border-l-indigo-500">
+            <div class="font-bold text-sm">📄 ${escapeHtml(r.aluno)} — ${labelCurso(r.curso)} (${r.bimestre}º Bim) • ${r.data}</div>
+            <p class="text-sm text-slate-600 mt-1">${escapeHtml(r.relatorio)}</p>
+            <div class="text-xs text-slate-400 mt-1">Prof. ${escapeHtml(r.professor)}</div>
+          </div>`).join('')
+        : '<p class="text-slate-400 text-sm">Nenhum relatório recebido.</p>';
+    }
+
+    function renderAcompanhamentoProf() {
+      const pNome = document.getElementById('selectProfAcompanhamento').value;
+      const box = document.getElementById('acompanhamentoResultados');
+      if (!pNome) { box.innerHTML = ''; return; }
+      let aulas = [];
+      for (const cid in db.presencas) {
+        db.presencas[cid].forEach(a => { if (nomesIguais(a.professor, pNome)) aulas.push({ curso: cid, ...a }); });
+      }
+      box.innerHTML = aulas.length ? aulas.map(a => `<div class="bg-white p-3 rounded-xl border text-sm"><b>${a.data}</b> — ${labelCurso(a.curso)} (${a.presentes.length} presentes)<div class="text-xs text-slate-500">${escapeHtml(a.conteudo || 'Sem conteúdo')}</div></div>`).join('')
+        : '<p class="text-slate-400 text-sm">Nenhuma aula registrada por este professor.</p>';
+    }
+
+    async function atribuirCurso() {
+      const pid = document.getElementById('professorSelect').value, cid = document.getElementById('cursoSelect').value;
+      const prof = escolaData.professores.find(p => p.id === pid);
+      if (!prof || !cid) return alert('Selecione professor e curso.');
+      const lista = [...new Set([...extrairCursosDoProfessor(prof), cid])];
+      prof.curso = lista.join(',');
+      await executarComProgresso({ titulo: 'Atribuindo curso...', executar: () => enviarParaGAS('atualizarProfessor', { id: pid, curso: prof.curso }), sucesso: '✅ Curso atribuído!' });
+      renderCoordenacao();
+    }
+
+    async function removerCurso() {
+      const pid = document.getElementById('professorSelect').value, cid = document.getElementById('cursoSelect').value;
+      const prof = escolaData.professores.find(p => p.id === pid);
+      if (!prof || !cid) return;
+      prof.curso = extrairCursosDoProfessor(prof).filter(c => c !== cid).join(',');
+      await executarComProgresso({ titulo: 'Removendo curso...', executar: () => enviarParaGAS('atualizarProfessor', { id: pid, curso: prof.curso }), sucesso: 'Curso removido.' });
+      renderCoordenacao();
+    }
+
+    // ==================== [BLOCO 33] SEÇÃO 6: DIÁRIO DO PROFESSOR ====================
+    function renderAreaProfessor() {
+      const selSim = document.getElementById('selectProfSimular');
+      if (['direcao','admin'].includes(currentUser.perfil)) {
+        const atual = selSim.value;
+        selSim.innerHTML = escolaData.professores.map(p => `<option value="${p.id}">${escapeHtml(p.nome)}</option>`).join('');
+        if (atual) selSim.value = atual;
+        const pObj = escolaData.professores.find(p => p.id === selSim.value) || escolaData.professores[0];
+        if (pObj) { currentUser.professorData = pObj; currentUser.cursos = extrairCursosDoProfessor(pObj); }
+      }
+      const cursos = currentUser.cursos || [];
+      if (!cursoSelecionado || !cursos.includes(cursoSelecionado)) cursoSelecionado = cursos[0] || null;
+      document.getElementById('cursosContainer').innerHTML = cursos.length
+        ? cursos.map(cid => `<button onclick="selecionarCurso('${cid}')" class="p-4 rounded-xl border-2 text-left transition ${cursoSelecionado === cid ? 'border-indigo-600 bg-indigo-50' : 'border-slate-200 bg-white hover:border-indigo-300'}">
+            <div class="font-bold text-slate-800">${labelCurso(cid)}</div>
+            <div class="text-xs text-slate-500 mt-1">👥 ${getAlunosByCurso(cid).length} aluno(s)</div>
+          </button>`).join('')
+        : '<div class="col-span-full p-6 bg-white rounded-xl border text-center text-slate-400">Nenhum curso atribuído.</div>';
+      if (cursoSelecionado) selecionarCurso(cursoSelecionado, false);
+    }
+
+    function trocarProfessorAtivo() { cursoSelecionado = null; renderAreaProfessor(); }
+
+    function selecionarCurso(cid, rerenderCards = true) {
+      cursoSelecionado = cid;
+      document.getElementById('cursoSelecionadoNome').textContent = labelCurso(cid);
+      if (rerenderCards) renderAreaProfessor();
+      carregarTabelaNotas(); carregarPresenca(); carregarObservacoes(); carregarSelectsProfessor();
+    }
+
+    function carregarSelectsProfessor() {
+      const als = getAlunosByCurso(cursoSelecionado);
+      const opts = als.map(a => `<option value="${escapeHtml(a.nome)}">${escapeHtml(a.nome)}</option>`).join('');
+      ['alunoObservacao','alunoRelatorioPreencher'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opts || '<option value="">Sem alunos</option>'; });
+      ['uploadDestinatarios','msgDestinatarios'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<option value="__TODOS__">👥 Todos os alunos do curso</option>' + opts; });
+    }
+
+    function carregarTabelaNotas() {
+      const bim = parseInt(document.getElementById('bimestreNota').value);
+      const als = getAlunosByCurso(cursoSelecionado);
+      document.getElementById('tabelaNotasBody').innerHTML = als.length ? als.map((a, i) => {
+        const nota = getNotaAluno(a.nome, cursoSelecionado, bim), media = getMediaAluno(a.nome, cursoSelecionado);
+        const aid = a.nome.replace(/[^A-Za-z0-9]/g, '_');
+        return `<tr><td class="p-3">${i+1}</td><td class="p-3 font-bold">${escapeHtml(a.nome)}</td>
+          <td class="p-3"><input type="number" id="nota_${aid}" value="${nota}" min="0" max="10" step="0.5" class="w-20 border rounded px-2 py-1"></td>
+          <td class="p-3 font-bold">${media.toFixed(1)}</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ${media>=7?'bg-emerald-100 text-emerald-700':media>=5?'bg-amber-100 text-amber-700':'bg-rose-100 text-rose-700'}">${media>=7?'Aprovado':media>=5?'Recuperação':'Abaixo'}</span></td></tr>`;
+      }).join('') : '<tr><td colspan="5" class="p-5 text-center text-slate-400">Sem alunos.</td></tr>';
+    }
+
+    async function salvarNotas() {
+      const bim = parseInt(document.getElementById('bimestreNota').value);
+      const als = getAlunosByCurso(cursoSelecionado);
+      const avaliacoes = als.map(a => ({
+        aluno: a.nome, curso: cursoSelecionado, bimestre: bim,
+        nota: parseFloat(document.getElementById('nota_' + a.nome.replace(/[^A-Za-z0-9]/g, '_'))?.value) || 0,
+        professor: currentUser.professorData?.nome || currentUser.nome
+      }));
+      await executarComProgresso({
+        titulo: 'Salvando notas...',
+        executar: async () => {
+          const r = await enviarParaGAS('salvarAvaliacoes', { avaliacoes });
+          avaliacoes.forEach(av => {
+            const idx = db.avaliacoes.findIndex(x => nomesIguais(x.aluno, av.aluno) && x.curso === av.curso && x.bimestre === av.bimestre);
+            if (idx > -1) db.avaliacoes[idx] = av; else db.avaliacoes.push(av);
+          });
+          return r;
+        },
+        sucesso: '✅ Notas salvas!'
+      });
+      carregarTabelaNotas();
+    }
+
+    function carregarPresenca() {
+      const als = getAlunosByCurso(cursoSelecionado);
+      document.getElementById('alunosPresencaTabela').innerHTML = als.map((a, i) => `<tr><td class="p-2 text-center">${i+1}</td><td class="p-2">${escapeHtml(a.nome)}</td><td class="p-2 text-center"><input type="checkbox" class="pres-cb" data-aluno="${escapeHtml(a.nome)}" checked></td></tr>`).join('');
+      const regs = db.presencas[cursoSelecionado] || [];
+      document.getElementById('registrosPresenca').innerHTML = regs.slice(-8).reverse().map(r => `<div class="p-2.5 bg-slate-50 rounded-lg border-l-4 border-indigo-500 text-xs"><b>${r.data}</b> — ${r.presentes.length} presentes ${r.conteudo ? '| ' + escapeHtml(r.conteudo) : ''}</div>`).join('');
+    }
+
+    async function salvarPresenca() {
+      const data = formatarDataExibicao(document.getElementById('dataPresenca').value);
+      const presentes = Array.from(document.querySelectorAll('.pres-cb:checked')).map(c => c.dataset.aluno);
+      const faltantes = getAlunosByCurso(cursoSelecionado).map(a => a.nome).filter(n => !presentes.includes(n));
+      const conteudo = document.getElementById('obsPresenca').value.trim();
+      const professor = currentUser.professorData?.nome || currentUser.nome;
+      await executarComProgresso({
+        titulo: 'Registrando presença...',
+        executar: async () => {
+          const r = await enviarParaGAS('salvarPresenca', { curso: cursoSelecionado, data, presentes, faltantes, conteudo, professor });
+          if (!db.presencas[cursoSelecionado]) db.presencas[cursoSelecionado] = [];
+          db.presencas[cursoSelecionado].push({ data, presentes, faltantes, conteudo, professor });
+          return r;
+        },
+        sucesso: '✅ Presença salva!'
+      });
+      document.getElementById('obsPresenca').value = ''; carregarPresenca();
+    }
+
+    function carregarObservacoes() {
+      const regs = db.observacoes[cursoSelecionado] || [];
+      document.getElementById('registrosObservacoes').innerHTML = regs.slice(-8).reverse().map(o => `<div class="p-2.5 bg-slate-50 rounded-lg border text-xs"><b>${o.data} — ${escapeHtml(o.aluno)}</b> (${o.tipo}): ${escapeHtml(o.observacao)}</div>`).join('');
+    }
+
+    async function salvarObservacao() {
+      const payload = { curso: cursoSelecionado, data: formatarDataExibicao(document.getElementById('dataObservacao').value), aluno: document.getElementById('alunoObservacao').value, tipo: document.getElementById('tipoObservacao').value, observacao: document.getElementById('observacaoText').value.trim(), professor: currentUser.nome };
+      if (!payload.observacao) return alert('Digite a observação.');
+      await executarComProgresso({ titulo: 'Salvando observação...', executar: () => enviarParaGAS('salvarObservacao', payload), sucesso: '✅ Observação salva!' });
+      if (!db.observacoes[cursoSelecionado]) db.observacoes[cursoSelecionado] = [];
+      db.observacoes[cursoSelecionado].push(payload);
+      document.getElementById('observacaoText').value = ''; carregarObservacoes();
+    }
+
+    async function enviarRelatorioCoordenacao() {
+      const payload = { aluno: document.getElementById('alunoRelatorioPreencher').value, curso: cursoSelecionado, bimestre: document.getElementById('bimestreRelatorioPreencher').value, professor: currentUser.nome, relatorio: document.getElementById('relatorioTexto').value.trim(), data: getDataAtualFormatada() };
+      if (!payload.relatorio) return alert('Digite o relatório.');
+      await executarComProgresso({ titulo: 'Enviando relatório...', executar: () => enviarParaGAS('salvarRelatorio', payload), sucesso: '✅ Relatório enviado!' });
+      db.relatorios.push(payload); document.getElementById('relatorioTexto').value = '';
+    }
+
+    function selecionarArquivoUpload(ev) {
+      const f = ev.target.files?.[0]; if (!f) return;
+      arquivoUploadSelecionado = f;
+      const p = document.getElementById('filePreview');
+      p.classList.remove('hidden'); p.innerHTML = `<div class="p-2 bg-white border rounded text-xs flex justify-between"><span>📄 ${escapeHtml(f.name)} (${(f.size/1024).toFixed(1)} KB)</span><button onclick="arquivoUploadSelecionado=null;document.getElementById('filePreview').classList.add('hidden')" class="text-rose-600 font-bold">✕</button></div>`;
+      document.getElementById('btnEnviarArquivo').disabled = false;
+    }
+
+    async function enviarArquivoUpload() {
+      if (!arquivoUploadSelecionado) return;
+      const sel = Array.from(document.getElementById('uploadDestinatarios').selectedOptions).map(o => o.value);
+      const destinatarios = sel.includes('__TODOS__') ? getAlunosByCurso(cursoSelecionado).map(a => a.nome) : sel;
+      if (!destinatarios.length) return alert('Selecione destinatário(s).');
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = String(reader.result).split(',')[1];
+        await executarComProgresso({
+          titulo: 'Enviando arquivo...',
+          executar: () => enviarParaGAS('uploadArquivo', { professor: currentUser.nome, curso: cursoSelecionado, destinatarios: JSON.stringify(destinatarios), mensagem: document.getElementById('uploadMensagem').value, nomeArquivo: arquivoUploadSelecionado.name, mimeType: arquivoUploadSelecionado.type, file: base64 }),
+          sucesso: '✅ Arquivo enviado!'
+        });
+        arquivoUploadSelecionado = null; document.getElementById('filePreview').classList.add('hidden'); document.getElementById('btnEnviarArquivo').disabled = true;
+      };
+      reader.readAsDataURL(arquivoUploadSelecionado);
+    }
+
+    async function enviarMensagemAluno() {
+      const sel = Array.from(document.getElementById('msgDestinatarios').selectedOptions).map(o => o.value);
+      const destinatarios = sel.includes('__TODOS__') ? getAlunosByCurso(cursoSelecionado).map(a => a.nome) : sel;
+      const assunto = document.getElementById('msgAssunto').value.trim(), mensagem = document.getElementById('msgTexto').value.trim();
+      if (!destinatarios.length || !mensagem) return alert('Preencha destinatário e mensagem.');
+      await executarComProgresso({
+        titulo: 'Enviando mensagem...',
+        executar: () => enviarParaGAS('enviarMensagemAluno', { curso: cursoSelecionado, professor: currentUser.nome, destinatarios, assunto, mensagem }),
+        sucesso: '✅ Mensagem enviada!'
+      });
+      document.getElementById('msgAssunto').value = ''; document.getElementById('msgTexto').value = '';
+    }
+
+    // ==================== [BLOCO 34] SEÇÃO 7: FINANCEIRO COMPLETO ====================
+    function renderFinanceiroCompleto() {
+      renderMensalidadesFinanceiro();
+      calcularPagamentosProfessores();
+      prepararRegistroPagamento();
+      document.getElementById('tabelaValoresProfessores').innerHTML = escolaData.professores.map(p => `<tr>
+        <td class="p-3 font-bold">${escapeHtml(p.nome)}</td>
+        <td class="p-3"><input type="number" step="0.01" id="vh_${p.id}" value="${p.valorHora||0}" class="w-28 border rounded px-2 py-1"></td>
+        <td class="p-3"><button onclick="salvarValorHora('${p.id}')" class="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-semibold">Salvar</button></td>
+      </tr>`).join('');
+      const ref = document.getElementById('finMesReferencia').value || getAnoMesAtual();
+      const desps = db.despesas.filter(d => d.Data.startsWith(ref));
+      document.getElementById('tbodyDespesas').innerHTML = desps.length ? desps.map(d => `<tr><td class="p-3">${formatarDataExibicao(d.Data)}</td><td class="p-3">${escapeHtml(d.Categoria)}</td><td class="p-3">${escapeHtml(d.Descricao)}</td><td class="p-3 text-right font-bold text-rose-600">${fmtMoeda(d.Valor)}</td></tr>`).join('') : '<tr><td colspan="4" class="p-5 text-center text-slate-400">Nenhuma despesa no mês.</td></tr>';
+    }
+
+    function renderMensalidadesFinanceiro() {
+      const ref = document.getElementById('finMesReferencia').value || getAnoMesAtual();
+      const q = (document.getElementById('buscaMensalidadeFinanceiro')?.value || '').toLowerCase();
+      const fSt = document.getElementById('filtroStatusMensalidadeFinanceiro')?.value || '';
+      let tPago = 0, tPend = 0, tAtr = 0, nPago = 0, nPend = 0, nAtr = 0;
+      const rows = [];
+      escolaData.alunos.filter(a => a.status === 'ATIVO').forEach(a => {
+        const pg = getPagamentoMes(a.nome, ref); if (!pg) return;
+        if (pg.status === 'PAGO') { tPago += pg.valor; nPago++; } else if (pg.status === 'ATRASADO') { tAtr += pg.valor; nAtr++; } else { tPend += pg.valor; nPend++; }
+        if ((!q || a.nome.toLowerCase().includes(q)) && (!fSt || pg.status === fSt)) rows.push(pg);
+      });
+      document.getElementById('statsMensalidadesFinanceiro').innerHTML = `
+        <div class="bg-white p-4 rounded-xl border border-l-4 border-l-emerald-500"><div class="text-xs text-slate-500">Recebido (${nPago})</div><div class="text-xl font-bold text-emerald-700">${fmtMoeda(tPago)}</div></div>
+        <div class="bg-white p-4 rounded-xl border border-l-4 border-l-amber-500"><div class="text-xs text-slate-500">Pendente (${nPend})</div><div class="text-xl font-bold text-amber-600">${fmtMoeda(tPend)}</div></div>
+        <div class="bg-white p-4 rounded-xl border border-l-4 border-l-rose-500"><div class="text-xs text-slate-500">Atrasado (${nAtr})</div><div class="text-xl font-bold text-rose-600">${fmtMoeda(tAtr)}</div></div>
+        <div class="bg-white p-4 rounded-xl border border-l-4 border-l-indigo-500"><div class="text-xs text-slate-500">Previsto Total</div><div class="text-xl font-bold text-indigo-700">${fmtMoeda(tPago+tPend+tAtr)}</div></div>`;
+      document.getElementById('tabelaMensalidadesFinanceiro').innerHTML = rows.length ? rows.map(pg => `<tr>
+        <td class="p-3 font-bold">${escapeHtml(pg.aluno)}</td>
+        <td class="p-3 font-semibold">${fmtMoeda(pg.valor)}</td>
+        <td class="p-3">Dia ${pg.vencimento}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-bold ${pg.status==='PAGO'?'bg-emerald-100 text-emerald-700':pg.status==='ATRASADO'?'bg-rose-100 text-rose-700':'bg-amber-100 text-amber-700'}">${pg.status}</span></td>
+        <td class="p-3">${pg.dataPagamento || '-'}</td>
+        <td class="p-3 text-right space-x-1">
+          ${escolaData.config.ChavePix && pg.status !== 'PAGO' ? `<button onclick="copiarChavePix('${pg.aluno}',${pg.valor})" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-xs font-semibold"><i class="fa-brands fa-pix text-teal-600"></i> Pix</button>` : ''}
+          <button onclick="atalhoRegistrarPagamento('${pg.aluno.replace(/'/g,"\\'")}')" class="px-2.5 py-1 bg-emerald-600 text-white rounded text-xs font-semibold">Receber</button>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhum registro.</td></tr>';
+    }
+
+    function copiarChavePix(aluno, valor) {
+      navigator.clipboard.writeText(escolaData.config.ChavePix || '');
+      mostrarToast(`Chave Pix copiada! (${aluno} - ${fmtMoeda(valor)})`, 'info');
+    }
+
+    function prepararRegistroPagamento() {
+      const sel = document.getElementById('registrarPagamentoAluno');
+      sel.innerHTML = '<option value="">-- Selecione --</option>' + escolaData.alunos.filter(a => a.status === 'ATIVO').map(a => `<option value="${escapeHtml(a.nome)}">${escapeHtml(a.nome)}</option>`).join('');
+      sel.onchange = () => {
+        const al = encontrarAlunoPorNome(sel.value);
+        if (al) { document.getElementById('registrarPagamentoValor').value = al.mensalidade; document.getElementById('registrarPagamentoVencimento').value = al.vencimento; }
+      };
+    }
+
+    function atalhoRegistrarPagamento(nome) {
+      const btn = document.querySelector('#sec-financeiro button[onclick*="registrar"]');
+      mudarSubAba('fin', 'registrar', btn);
+      document.getElementById('registrarPagamentoAluno').value = nome;
+      document.getElementById('registrarPagamentoAluno').onchange();
+    }
+
+    async function registrarPagamentoManual() {
+      const payload = {
+        aluno: document.getElementById('registrarPagamentoAluno').value,
+        referencia: document.getElementById('registrarPagamentoMes').value,
+        dataPagamento: formatarDataExibicao(document.getElementById('registrarPagamentoData').value),
+        valor: parseFloat(document.getElementById('registrarPagamentoValor').value) || 0,
+        vencimento: parseInt(document.getElementById('registrarPagamentoVencimento').value) || 10,
+        status: 'PAGO'
+      };
+      if (!payload.aluno) return alert('Selecione o aluno.');
+      await executarComProgresso({
+        titulo: 'Registrando pagamento...',
+        executar: async () => {
+          const r = await enviarParaGAS('salvarPagamento', payload);
+          await enviarParaGAS('notificarPagamento', payload).catch(() => {});
+          db.pagamentosMensais = db.pagamentosMensais.filter(p => !(nomesIguais(p.aluno, payload.aluno) && p.referencia === payload.referencia));
+          db.pagamentosMensais.push(payload);
+          return r;
+        },
+        sucesso: '✅ Pagamento confirmado!'
+      });
+      renderMensalidadesFinanceiro();
+    }
+
+    function calcularPagamentosProfessores() {
+      const ref = document.getElementById('finMesReferencia').value || getAnoMesAtual();
+      const [ano, mes] = ref.split('-').map(Number);
+      const sem = {}, tot = {};
+      for (const cid in db.presencas) {
+        db.presencas[cid].forEach(p => {
+          const m = String(p.data).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+          if (!m || parseInt(m[2]) !== mes || parseInt(m[3]) !== ano) return;
+          const k = normalizarNome(p.professor || getProfessorByCurso(cid)?.nome || '');
+          if (!k) return;
+          const w = Math.min(5, Math.ceil(parseInt(m[1]) / 7));
+          if (!sem[k]) { sem[k] = {S1:0,S2:0,S3:0,S4:0,S5:0}; tot[k] = 0; }
+          sem[k]['S'+w]++; tot[k]++;
+        });
+      }
+      let tA = 0, tP = 0;
+      document.getElementById('tabelaPagamentosFinanceiro').innerHTML = escolaData.professores.map(p => {
+        const k = normalizarNome(p.nome), s = sem[k] || {S1:0,S2:0,S3:0,S4:0,S5:0}, t = tot[k] || 0, val = t * (p.valorHora || 0);
+        tA += t; tP += val;
+        return `<tr><td class="p-3 font-bold">${escapeHtml(p.nome)}</td><td class="p-3">${fmtMoeda(p.valorHora)}</td><td class="p-3 text-center">${s.S1}</td><td class="p-3 text-center">${s.S2}</td><td class="p-3 text-center">${s.S3}</td><td class="p-3 text-center">${s.S4}</td><td class="p-3 text-center">${s.S5}</td><td class="p-3 text-center font-bold">${t}</td><td class="p-3 text-right font-bold text-emerald-700">${fmtMoeda(val)}</td></tr>`;
+      }).join('') + `<tr class="bg-slate-50 font-bold"><td colspan="7" class="p-3">TOTAL</td><td class="p-3 text-center">${tA}</td><td class="p-3 text-right text-emerald-700">${fmtMoeda(tP)}</td></tr>`;
+    }
+
+    async function salvarValorHora(pid) {
+      const val = parseFloat(document.getElementById('vh_' + pid).value) || 0;
+      await executarComProgresso({
+        titulo: 'Atualizando valor hora...',
+        executar: async () => { const r = await enviarParaGAS('salvarValorProfessor', { id: pid, valorHora: val }); const p = escolaData.professores.find(x => x.id === pid); if (p) p.valorHora = val; return r; },
+        sucesso: '✅ Valor atualizado!'
+      });
+      calcularPagamentosProfessores();
+    }
+
+    function abrirModalDespesa() { document.getElementById('modalDespesa').classList.remove('hidden'); }
+    async function submitDespesa(e) {
+      e.preventDefault();
+      const payload = { Data: document.getElementById('despData').value, Categoria: document.getElementById('despCat').value, Descricao: document.getElementById('despDesc').value, Valor: parseFloat(document.getElementById('despValor').value) || 0 };
+      await executarComProgresso({ titulo: 'Salvando despesa...', executar: async () => { const r = await enviarParaGAS('salvarDespesa', payload); db.despesas.push(payload); return r; }, sucesso: '✅ Despesa lançada!' });
+      fecharModal('modalDespesa'); renderFinanceiroCompleto();
+    }
+
+    // ==================== [BLOCO 35] SEÇÃO 8: RELATÓRIOS & GRÁFICOS ====================
+    function renderRelatoriosGraficos() {
+      const ref = document.getElementById('finMesReferencia').value || getAnoMesAtual();
+      let rec = 0;
+      escolaData.alunos.forEach(a => { const pg = getPagamentoMes(a.nome, ref); if (pg?.status === 'PAGO') rec += pg.valor; });
+      const desp = db.despesas.filter(d => d.Data.startsWith(ref)).reduce((s, d) => s + d.Valor, 0);
+
+      if (chartFluxoInst) chartFluxoInst.destroy();
+      chartFluxoInst = new Chart(document.getElementById('chartFluxo'), {
+        type: 'bar',
+        data: { labels: ['Receitas Pagas', 'Despesas'], datasets: [{ label: ref, data: [rec, desp], backgroundColor: ['#10b981', '#f43f5e'], borderRadius: 8 }] },
+        options: { plugins: { legend: { display: false } } }
+      });
+
+      const mapa = {};
+      db.matriculas.filter(m => m.status === 'ATIVO').forEach(m => { const k = labelCurso(m.curso); mapa[k] = (mapa[k] || 0) + 1; });
+      if (chartInstInst) chartInstInst.destroy();
+      chartInstInst = new Chart(document.getElementById('chartInstrumentos'), {
+        type: 'doughnut',
+        data: { labels: Object.keys(mapa), datasets: [{ data: Object.values(mapa), backgroundColor: ['#4f46e5','#0ea5e9','#10b981','#f59e0b','#ec4899','#8b5cf6','#14b8a6'] }] }
+      });
+    }
+
+    function gerarRelatorioGeral() {
+      document.getElementById('relatorioConsolidado').innerHTML = `<div class="p-4 bg-slate-50 rounded-xl border space-y-1">
+        <b>📊 Relatório Geral (${getDataAtualFormatada()})</b>
+        <div>Alunos Ativos: <b>${escolaData.alunos.filter(a=>a.status==='ATIVO').length}</b> | Matrículas: <b>${db.matriculas.filter(m=>m.status==='ATIVO').length}</b> | Professores: <b>${escolaData.professores.length}</b></div>
+      </div>`;
+    }
+
+    function gerarRelatorioFinanceiroDirecao() {
+      const ref = getAnoMesAtual();
+      let pg = 0, pd = 0, at = 0;
+      escolaData.alunos.filter(a=>a.status==='ATIVO').forEach(a => {
+        const p = getPagamentoMes(a.nome, ref); if (!p) return;
+        if (p.status === 'PAGO') pg += p.valor; else if (p.status === 'ATRASADO') at += p.valor; else pd += p.valor;
+      });
+      document.getElementById('relatorioConsolidado').innerHTML = `<div class="p-4 bg-slate-50 rounded-xl border space-y-1">
+        <b>💰 Financeiro (${ref})</b>
+        <div>Recebido: <b class="text-emerald-700">${fmtMoeda(pg)}</b> | Pendente: <b class="text-amber-600">${fmtMoeda(pd)}</b> | Atrasado: <b class="text-rose-600">${fmtMoeda(at)}</b></div>
+      </div>`;
+    }
+
+    // ==================== [BLOCO 36] SEÇÃO 9: PORTAL DO ALUNO ====================
+    async function carregarDadosAluno() {
+      const nomeReal = encontrarAlunoPorNome(currentUser.alunoVinculado || currentUser.nome)?.nome || currentUser.nome;
+      const al = encontrarAlunoPorNome(nomeReal) || { nome: nomeReal, status: 'ATIVO' };
+      document.getElementById('alunoHeroNome').textContent = `🎓 Olá, ${nomeReal.split(' ')[0]}!`;
+      document.getElementById('alunoDadoNome').textContent = al.nome;
+      document.getElementById('alunoDadoNascimento').textContent = al.dataNascimento || '-';
+      document.getElementById('alunoDadoResponsavel').textContent = al.responsavel || '-';
+      document.getElementById('alunoDadoContato').textContent = al.contato || '-';
+      document.getElementById('alunoDadoStatus').textContent = al.status;
+
+      const mats = db.matriculas.filter(m => nomesIguais(m.aluno, nomeReal));
+      const aulas = [];
+      mats.forEach(m => (db.presencas[m.curso] || []).forEach(p => {
+        const ok = p.presentes.some(n => nomesIguais(n, nomeReal)), f = p.faltantes.some(n => nomesIguais(n, nomeReal));
+        if (ok || f) aulas.push({ curso: m.curso, data: p.data, status: ok ? 'PRESENTE' : 'FALTA', conteudo: p.conteudo, professor: p.professor });
+      }));
+      const freq = aulas.length ? (aulas.filter(a => a.status === 'PRESENTE').length / aulas.length * 100) : 0;
+      const pgAtual = getPagamentoMes(nomeReal, getAnoMesAtual());
+
+      document.getElementById('alunoStats').innerHTML = `
+        <div class="bg-white p-4 rounded-xl border"><div class="text-xs text-slate-500">Cursos</div><div class="text-2xl font-bold text-indigo-700">${mats.filter(m=>m.status==='ATIVO').length}</div></div>
+        <div class="bg-white p-4 rounded-xl border"><div class="text-xs text-slate-500">Frequência</div><div class="text-2xl font-bold text-emerald-600">${freq.toFixed(0)}%</div></div>
+        <div class="bg-white p-4 rounded-xl border"><div class="text-xs text-slate-500">Mensalidade</div><div class="text-xl font-bold">${pgAtual ? fmtMoeda(pgAtual.valor) : '-'}</div><div class="text-[11px] font-semibold">${pgAtual?.status || ''}</div></div>`;
+
+      const anoAtual = new Date().getFullYear();
+      document.getElementById('alunoAnoTabs').innerHTML = `<span class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">${anoAtual}</span>`;
+      document.getElementById('alunoMesesGrid').innerHTML = MESES_NOMES.map((nm, idx) => {
+        const pg = getPagamentoMes(nomeReal, `${anoAtual}-${String(idx+1).padStart(2,'0')}`);
+        if (!pg) return `<div class="bg-white p-3 rounded-xl border text-center opacity-50 text-xs"><div class="font-bold">${nm}</div>-</div>`;
+        const b = pg.status === 'PAGO' ? 'border-l-emerald-500' : pg.status === 'ATRASADO' ? 'border-l-rose-500' : 'border-l-amber-500';
+        return `<div class="bg-white p-3 rounded-xl border border-l-4 ${b} text-center text-xs"><div class="font-bold">${nm}</div><div class="text-sm font-bold my-1">${fmtMoeda(pg.valor)}</div><span class="font-semibold">${pg.status}</span></div>`;
+      }).join('');
+
+      document.getElementById('alunoTabelaNotas').innerHTML = mats.map(m => {
+        const ns = [1,2,3,4].map(b => getNotaAluno(nomeReal, m.curso, b) || '-');
+        const md = getMediaAluno(nomeReal, m.curso);
+        return `<tr><td class="p-3 font-bold">${labelCurso(m.curso)}</td><td class="p-3">${ns[0]}</td><td class="p-3">${ns[1]}</td><td class="p-3">${ns[2]}</td><td class="p-3">${ns[3]}</td><td class="p-3 font-bold">${md.toFixed(1)}</td><td class="p-3">${md>=7?'✅':'⚠️'}</td></tr>`;
+      }).join('');
+
+      document.getElementById('alunoTabelaFrequencia').innerHTML = aulas.slice().reverse().map(a => `<tr><td class="p-3">${labelCurso(a.curso)}</td><td class="p-3">${a.data}</td><td class="p-3 font-bold ${a.status==='PRESENTE'?'text-emerald-600':'text-rose-600'}">${a.status}</td><td class="p-3">${escapeHtml(a.conteudo||'-')}</td><td class="p-3">${escapeHtml(a.professor||'-')}</td></tr>`).join('');
+      document.getElementById('alunoListaArquivos').innerHTML = db.arquivos.filter(a => nomesIguais(a.aluno, nomeReal)).map(a => `<div class="p-2.5 bg-slate-50 rounded-lg border flex justify-between items-center"><div><b>${escapeHtml(a.nome)}</b><div class="text-xs text-slate-500">${labelCurso(a.curso)} • ${a.data}</div></div>${a.url ? `<a href="${escapeHtml(a.url)}" target="_blank" class="text-indigo-600 font-bold text-xs">Abrir</a>` : ''}</div>`).join('') || '<p class="text-slate-400">Nenhum arquivo.</p>';
+      document.getElementById('alunoListaMensagens').innerHTML = db.mensagens.filter(m => nomesIguais(m.aluno, nomeReal)).map(m => `<div class="p-2.5 bg-slate-50 rounded-lg border"><b>${escapeHtml(m.assunto)}</b><p class="text-xs text-slate-600">${escapeHtml(m.mensagem)}</p><div class="text-[11px] text-slate-400">${m.data}</div></div>`).join('') || '<p class="text-slate-400">Nenhuma mensagem.</p>';
+      document.getElementById('alunoListaRelatorios').innerHTML = db.relatorios.filter(r => nomesIguais(r.aluno, nomeReal)).map(r => `<div class="bg-white p-4 rounded-xl border"><b>${r.bimestre}º Bim — ${labelCurso(r.curso)}</b><p class="text-sm mt-1">${escapeHtml(r.relatorio)}</p></div>`).join('') || '<p class="text-slate-400 text-sm">Nenhum relatório.</p>';
+    }
+
+    // ==================== [BLOCO 37] SEÇÃO 10: ADMINISTRAÇÃO & DIAGNÓSTICO ====================
+    function renderAdmin() {
+      document.getElementById('listaSalas').innerHTML = escolaData.salas.map(s => `<div class="p-2.5 border rounded-lg flex justify-between"><div><b>${escapeHtml(s.nome)}</b><div class="text-xs text-slate-400">${escapeHtml(s.equipamentos||'Padrão')}</div></div><span class="text-xs text-slate-500">Cap: ${s.capacidade}</span></div>`).join('');
+      document.getElementById('cfgNome').value = escolaData.config.NomeEscola || '';
+      document.getElementById('cfgPix').value = escolaData.config.ChavePix || '';
+      document.getElementById('cfgCidade').value = escolaData.config.CidadePix || '';
+    }
+
+    function abrirModalSala() { document.getElementById('modalSala').classList.remove('hidden'); }
+    async function submitSala(e) {
+      e.preventDefault();
+      const payload = { id: 'SALA_' + Date.now(), nome: document.getElementById('salaNome').value, capacidade: document.getElementById('salaCap').value, equipamentos: document.getElementById('salaEquip').value };
+      await executarComProgresso({ titulo: 'Salvando sala...', executar: async () => { const r = await enviarParaGAS('salvarSala', payload); escolaData.salas.push(payload); return r; }, sucesso: '✅ Sala cadastrada!' });
+      fecharModal('modalSala'); renderAdmin();
+    }
+
+    async function salvarConfigEscola(e) {
+      e.preventDefault();
+      const payload = { NomeEscola: document.getElementById('cfgNome').value, ChavePix: document.getElementById('cfgPix').value, CidadePix: document.getElementById('cfgCidade').value };
+      await executarComProgresso({ titulo: 'Salvando configurações...', executar: async () => { const r = await enviarParaGAS('salvarConfiguracoes', payload); escolaData.config = payload; return r; }, sucesso: '✅ Configurações salvas!' });
+      if (payload.NomeEscola) document.getElementById('headerNomeEscola').textContent = payload.NomeEscola;
+    }
+
+    function abrirModalCriarUsuario() { document.getElementById('formCriarUsuario').reset(); document.getElementById('modalCriarUsuario').classList.remove('hidden'); }
+    document.getElementById('formCriarUsuario').addEventListener('submit', async e => {
+      e.preventDefault();
+      await executarComProgresso({
+        titulo: 'Criando usuário...',
+        executar: () => enviarParaGAS('criarUsuario', { nome: document.getElementById('userNome').value.trim().toUpperCase(), perfil: document.getElementById('userPerfil').value, usuario: document.getElementById('userLogin').value.trim().toLowerCase(), senha: document.getElementById('userSenha').value }),
+        sucesso: '✅ Usuário criado!'
+      });
+      fecharModal('modalCriarUsuario'); carregarUsuariosTabela();
+    });
+
+    async function carregarUsuariosTabela() {
+      const tb = document.getElementById('tabelaUsuariosGeral');
+      tb.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Carregando...</td></tr>';
+      const r = await enviarParaGAS('listarUsuarios', {});
+      const list = r.usuarios || db.usuarios;
+      tb.innerHTML = list.map(u => `<tr>
+        <td class="p-3 font-mono text-xs">${escapeHtml(u.usuario)}</td><td class="p-3 font-bold">${escapeHtml(u.nome)}</td>
+        <td class="p-3"><span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-xs font-semibold">${escapeHtml(u.perfil)}</span></td>
+        <td class="p-3 text-xs">${escapeHtml(u.alunoVinculado || '-')}</td>
+        <td class="p-3 text-xs font-bold">${escapeHtml(u.status)}</td>
+        <td class="p-3"><button onclick="resetarSenha('${u.usuario}','${u.perfil}')" class="px-2 py-1 bg-amber-500 text-white rounded text-xs">🔑 Senha</button></td>
+      </tr>`).join('');
+    }
+
+    async function resetarSenha(usuario, perfil) {
+      const nova = prompt(`Nova senha para ${usuario} (${perfil}):`);
+      if (!nova || nova.length < 4) return;
+      await executarComProgresso({ titulo: 'Redefinindo senha...', executar: () => enviarParaGAS('atualizarSenha', { usuario, perfil, senhaNova: nova }), sucesso: '✅ Senha atualizada!' });
+    }
+
+    async function adminRodarDiagnostico() {
+      const box = document.getElementById('adminDiagnosticoResult');
+      box.innerHTML = 'Executando...';
+      const ping = await enviarParaGAS('ping', {});
+      box.innerHTML = `
+        <div class="p-3 rounded-lg ${ping.success ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'}">${ping.success ? '✅ GAS respondendo normalmente.' : '❌ Falha no GAS.'}</div>
+        <div class="p-3 rounded-lg bg-slate-100">📊 Alunos: <b>${escolaData.alunos.length}</b> | Professores: <b>${escolaData.professores.length}</b> | Salas: <b>${escolaData.salas.length}</b> | Agenda: <b>${db.agenda.length}</b></div>`;
+    }
+
+    function adminGerarBugsAutomaticos() {
+      const alertas = [];
+      escolaData.alunos.filter(a => a.status === 'ATIVO' && !a.mensalidade).forEach(a => alertas.push(`⚠️ Aluno ${a.nome} sem mensalidade definida.`));
+      db.matriculas.filter(m => m.status === 'ATIVO' && !getProfessorByCurso(m.curso)).forEach(m => alertas.push(`⚠️ Curso ${labelCurso(m.curso)} sem professor atribuído.`));
+      document.getElementById('adminDiagnosticoResult').innerHTML = alertas.length
+        ? alertas.map(x => `<div class="p-2.5 bg-amber-50 border-l-4 border-amber-500 rounded text-xs">${x}</div>`).join('')
+        : '<div class="p-3 bg-emerald-50 text-emerald-800 rounded">✅ Nenhuma inconsistência encontrada.</div>';
+    }
+
+    async function adminCarregarLogs() {
+      const pre = document.getElementById('adminLogsContainer');
+      pre.textContent = 'Carregando...';
+      const r = await enviarParaGAS('adminListarLogs', { limite: 100 });
+      pre.textContent = (r.logs || []).map(l => `[${l.data || '?'}] ${l.perfil} | ${l.usuario} | ${l.acao}`).join('\n') || 'Sem logs.';
+    }
+
+    // ==================== [BLOCO 38] NOTIFICAÇÕES, POPUPS & SOM ====================
+    function tocarSomNotificacao() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = 880; o.type = 'sine';
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+        o.start(); o.stop(ctx.currentTime + 0.4);
+      } catch (e) {}
+    }
+
+    function mostrarPopupNotificacao(n, onClickCallback = null) {
+      const container = document.getElementById('popupContainer');
+      if (!container) return;
+      const icones = { nota: '📝', arquivo: '📎', mensagem: '💬', geral: '🔔', pagamento: '💰', atraso: '⚠️' };
+
+      if (n.popupDomId) {
+        const antigo = document.getElementById(n.popupDomId);
+        if (antigo) antigo.remove();
+      }
+
+      const popup = document.createElement('div');
+      if (n.popupDomId) popup.id = n.popupDomId;
+      popup.className = `popup-notif tipo-${n.tipo || 'geral'} ${onClickCallback ? 'cursor-pointer' : ''}`;
+      popup.innerHTML = `
+        <div class="text-2xl flex-shrink-0">${n.iconeCustom || icones[n.tipo] || '🔔'}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-slate-800 text-xs leading-snug mb-0.5">${n.tituloHtml || escapeHtml(n.titulo || 'Notificação')}</div>
+          <div class="text-slate-600 text-xs break-words">${escapeHtml(n.descricao || '')}</div>
+          <div class="text-slate-400 text-[10px] mt-1">${escapeHtml(n.data || getDataHoraAtual())}</div>
+        </div>
+        <button class="popup-close text-slate-400 hover:text-slate-700 text-lg leading-none" aria-label="Fechar">×</button>
+      `;
+
+      if (onClickCallback) {
+        popup.addEventListener('click', (e) => {
+          if (e.target.classList.contains('popup-close')) return;
+          onClickCallback();
+          popup.classList.remove('show');
+          setTimeout(() => popup.remove(), 300);
+        });
+      }
+
+      popup.querySelector('.popup-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        popup.classList.remove('show');
+        setTimeout(() => popup.remove(), 300);
+      });
+
+      container.appendChild(popup);
+      tocarSomNotificacao();
+      requestAnimationFrame(() => popup.classList.add('show'));
+
+      setTimeout(() => {
+        if (popup.parentNode) {
+          popup.classList.remove('show');
+          setTimeout(() => popup.remove(), 350);
+        }
+      }, 9000);
+    }
+
+    function iniciarPollingNotificacoes() {
+      if (notifPollInterval) clearInterval(notifPollInterval);
+      if (currentUser.perfil !== 'aluno') return;
+
+      const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
+      db.notificacoes.filter(n => nomesIguais(n.aluno, aluno)).forEach(n => popupIdsMostrados.add('n_' + texto(n.id)));
+      db.mensagens.filter(m => nomesIguais(m.aluno, aluno)).forEach(m => popupIdsMostrados.add('m_' + texto(m.id)));
+      db.arquivos.filter(a => nomesIguais(a.aluno, aluno)).forEach(a => popupIdsMostrados.add('a_' + texto(a.id)));
+
+      notifPollInterval = setInterval(() => {
+        if (currentUser.perfil === 'aluno') atualizarNotificacoesAluno();
+      }, 15000);
+    }
+
+    async function atualizarNotificacoesAluno() {
+      const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
+      if (!aluno) return;
+      let houveNovidade = false;
+
+      try {
+        const r = await enviarParaGAS('listarNotificacoes', { aluno });
+        if (r && r.success && Array.isArray(r.notificacoes)) {
+          r.notificacoes.forEach(n => {
+            const key = 'n_' + (texto(n.id) || `${n.titulo}_${n.data}`);
+            if (!popupIdsMostrados.has(key)) {
+              popupIdsMostrados.add(key);
+              const novo = {
+                id: texto(n.id), aluno: texto(n.aluno).toUpperCase(),
+                tipo: texto(n.tipo || 'geral').toLowerCase(),
+                titulo: texto(n.titulo), descricao: texto(n.descricao),
+                lida: !!n.lida, data: formatarDataExibicao(n.data) || getDataHoraAtual()
+              };
+              db.notificacoes.push(novo);
+              houveNovidade = true;
+              mostrarPopupNotificacao(novo, () => navegar('aluno'));
+            }
+          });
+        }
+      } catch (e) {}
+
+      try {
+        const r = await enviarParaGAS('listarMensagens', { aluno });
+        if (r && r.success && Array.isArray(r.mensagens)) {
+          r.mensagens.forEach(m => {
+            const key = 'm_' + (texto(m.id) || `${m.assunto}_${m.data}`);
+            if (!popupIdsMostrados.has(key)) {
+              popupIdsMostrados.add(key);
+              const novo = {
+                id: texto(m.id), aluno: texto(m.aluno).toUpperCase(),
+                curso: normalizarCursoId(m.curso), professor: texto(m.professor).toUpperCase(),
+                assunto: texto(m.assunto), mensagem: texto(m.mensagem),
+                lida: !!m.lida, data: formatarDataExibicao(m.data) || getDataHoraAtual()
+              };
+              db.mensagens.push(novo);
+              houveNovidade = true;
+              mostrarPopupNotificacao({
+                tipo: 'mensagem',
+                titulo: `Nova mensagem: ${novo.assunto || '(sem assunto)'}`,
+                descricao: `Prof. ${novo.professor}: ${(novo.mensagem || '').substring(0, 110)}`,
+                data: novo.data
+              }, () => {
+                navegar('aluno');
+                const btn = document.querySelector('#sec-aluno button[onclick*="materiais"]');
+                mudarSubAba('aluno', 'materiais', btn);
+              });
+            }
+          });
+        }
+      } catch (e) {}
+
+      try {
+        const r = await enviarParaGAS('listarArquivos', { aluno });
+        if (r && r.success && Array.isArray(r.arquivos)) {
+          r.arquivos.forEach(a => {
+            const key = 'a_' + (texto(a.id) || `${a.nome}_${a.data}`);
+            if (!popupIdsMostrados.has(key)) {
+              popupIdsMostrados.add(key);
+              const novo = {
+                id: texto(a.id), aluno: texto(a.aluno).toUpperCase(),
+                curso: normalizarCursoId(a.curso), professor: texto(a.professor).toUpperCase(),
+                nome: texto(a.nome), url: texto(a.url),
+                mensagem: texto(a.mensagem), data: formatarDataExibicao(a.data) || getDataHoraAtual()
+              };
+              db.arquivos.push(novo);
+              houveNovidade = true;
+              mostrarPopupNotificacao({
+                tipo: 'arquivo',
+                titulo: `Novo arquivo: ${novo.nome || 'Material'}`,
+                descricao: novo.mensagem || `Enviado pelo Prof. ${novo.professor}`,
+                data: novo.data
+              }, () => {
+                navegar('aluno');
+                const btn = document.querySelector('#sec-aluno button[onclick*="materiais"]');
+                mudarSubAba('aluno', 'materiais', btn);
+              });
+            }
+          });
+        }
+      } catch (e) {}
+
+      if (houveNovidade) {
+        renderNotificacoes();
+        carregarDadosAluno();
+      }
+    }
+
+    function toggleNotifPanel() {
+      document.getElementById('notifPanel').classList.toggle('hidden');
+      renderNotificacoes();
+    }
+
+    function renderNotificacoes() {
+      const lista = [];
+      if (currentUser.perfil === 'aluno') {
+        const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
+        db.notificacoes.filter(n => nomesIguais(n.aluno, aluno)).forEach(n => lista.push(n));
+        db.mensagens.filter(m => nomesIguais(m.aluno, aluno)).forEach(m => lista.push({
+          tipo: 'mensagem', titulo: `💬 ${m.assunto || 'Mensagem'}`, descricao: m.mensagem, lida: m.lida, data: m.data
+        }));
+        db.arquivos.filter(a => nomesIguais(a.aluno, aluno)).forEach(a => lista.push({
+          tipo: 'arquivo', titulo: `📎 Arquivo: ${a.nome}`, descricao: a.mensagem || `Prof. ${a.professor}`, lida: false, data: a.data
+        }));
+      }
+
+      const nlNotif = lista.filter(n => !n.lida).length;
+      const nlChat = CHAT.contatos.reduce((s, c) => s + (Number(c.naoLidas) || 0), 0);
+      const totalBadge = currentUser.perfil === 'aluno' ? (nlNotif + nlChat) : nlChat;
+
+      const b = document.getElementById('notifBadge');
+      if (b) {
+        if (totalBadge > 0) { b.textContent = totalBadge > 99 ? '99+' : totalBadge; b.classList.remove('hidden'); }
+        else b.classList.add('hidden');
+      }
+
+      const cont = document.getElementById('notifList');
+      if (!cont) return;
+      const itensChat = CHAT.contatos.filter(c => Number(c.naoLidas) > 0).map(c => `
+        <div onclick="document.getElementById('notifPanel').classList.add('hidden'); if(!CHAT.aberto) chatToggle(); chatAbrirContato('${escapeHtml(c.usuario)}','${escapeHtml(c.perfil)}','${escapeHtml(c.nome||c.usuario)}');"
+             class="p-3 text-xs bg-indigo-50 hover:bg-indigo-100 cursor-pointer flex items-center justify-between">
+          <div><b>📩 ${escapeHtml(c.nome || c.usuario)}</b> <span class="text-[10px] uppercase text-indigo-700 font-semibold">(${escapeHtml(c.perfil)})</span>
+          <div class="text-slate-600">${c.naoLidas} mensagem(ns) não lida(s) no chat</div></div>
+          <span class="bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">${c.naoLidas}</span>
+        </div>`).join('');
+
+      const itensGerais = lista.slice().reverse().map(n => `
+        <div class="p-3 text-xs ${n.lida ? '' : 'bg-indigo-50'}">
+          <b>${escapeHtml(n.titulo)}</b>
+          <div class="text-slate-600">${escapeHtml(n.descricao)}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(n.data || '')}</div>
+        </div>`).join('');
+
+      cont.innerHTML = (itensChat + itensGerais) || '<div class="p-6 text-center text-xs text-slate-400">Nenhuma notificação.</div>';
+    }
+
+    async function marcarTodasNotificacoesLidas() {
+      const aluno = (currentUser.alunoVinculado || currentUser.nome || '').toUpperCase();
+      db.notificacoes.forEach(n => { if (nomesIguais(n.aluno, aluno)) n.lida = true; });
+      db.mensagens.forEach(m => { if (nomesIguais(m.aluno, aluno)) m.lida = true; });
+      await enviarParaGAS('marcarNotificacoesLidas', { aluno }).catch(() => {});
+      renderNotificacoes();
+      mostrarToast('✅ Notificações marcadas como lidas.', 'info');
+    }
+
+    // ==================== [BLOCO 39] CHAT INTERNO ====================
+    const CHAT = {
+      aberto: false, contatoAtual: null, contatos: [], mensagens: [],
+      usuario: null, perfil: null, nome: null,
+      pollContatos: null, pollMsg: null, enviando: false,
+      naoLidasAnteriores: {}, primeiroCarregamento: true
+    };
+
+    const normChatKey = v => String(v == null ? '' : v).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const isMsgChatLida = v => v === true || ['true','sim','1','yes','lida'].includes(normChatKey(v));
+
+    function chatInit(usuario, perfil, nome) {
+      CHAT.usuario = String(usuario).toLowerCase();
+      CHAT.perfil = String(perfil).toLowerCase();
+      CHAT.nome = nome || usuario;
+      CHAT.naoLidasAnteriores = {};
+      CHAT.primeiroCarregamento = true;
+      document.getElementById('chatFloatBtn').classList.remove('hidden');
+
+      carregarContatosChat();
+      if (CHAT.pollContatos) clearInterval(CHAT.pollContatos);
+      if (CHAT.pollMsg) clearInterval(CHAT.pollMsg);
+
+      CHAT.pollContatos = setInterval(() => { if (CHAT.usuario) carregarContatosChat(); }, 9000);
+      CHAT.pollMsg = setInterval(() => { if (CHAT.usuario && CHAT.aberto && CHAT.contatoAtual) carregarMensagensChat(true); }, 6000);
+    }
+
+    function chatLogout() {
+      if (CHAT.pollContatos) clearInterval(CHAT.pollContatos);
+      if (CHAT.pollMsg) clearInterval(CHAT.pollMsg);
+      CHAT.usuario = null; CHAT.aberto = false; CHAT.contatoAtual = null;
+      CHAT.contatos = []; CHAT.naoLidasAnteriores = {}; CHAT.primeiroCarregamento = true;
+      document.getElementById('chatFloatBtn').classList.add('hidden');
+      document.getElementById('chatPanel').classList.remove('open');
+      atualizarBadgeChat(0);
+    }
+
+    function chatToggle() {
+      CHAT.aberto = !CHAT.aberto;
+      document.getElementById('chatPanel').classList.toggle('open', CHAT.aberto);
+      if (CHAT.aberto) {
+        carregarContatosChat();
+        if (CHAT.contatoAtual) carregarMensagensChat(true);
+      }
+    }
+
+    async function lerAbaChatDiretoPlanilha() {
+      for (const nomeAba of ['Chat', 'CHAT']) {
+        try {
+          const url = `https://docs.google.com/spreadsheets/d/${SHEET_CONFIG.sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(nomeAba)}&_=${Date.now()}`;
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const txt = await res.text();
+          const data = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+          const cols = data.table.cols.map((c, i) => texto(c.label) || c.id || `col_${i}`);
+          return (data.table.rows || []).map(row => {
+            const obj = {};
+            (row.c || []).forEach((cell, i) => { obj[cols[i]] = cell ? (cell.v ?? cell.f ?? '') : ''; });
+            return obj;
+          });
+        } catch (e) {}
+      }
+      return [];
+    }
+
+    function dispararPopupChatNaoLida(contato, qtd, ultimaMsg) {
+      const nomeExib = contato.nome || contato.usuario;
+      const perfilExib = (contato.perfil || 'USUÁRIO').toUpperCase();
+      const resumo = ultimaMsg
+        ? `“${String(ultimaMsg).substring(0, 90)}${String(ultimaMsg).length > 90 ? '...' : ''}”`
+        : (qtd === 1 ? 'Enviou 1 nova mensagem não lida.' : `Enviou ${qtd} mensagens não lidas.`);
+
+      mostrarPopupNotificacao({
+        popupDomId: 'popup_chat_' + normChatKey(contato.usuario),
+        tipo: 'mensagem',
+        iconeCustom: '📩',
+        tituloHtml: `🔔 Nova mensagem de ${escapeHtml(nomeExib)} <span class="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-[10px] font-bold">${escapeHtml(perfilExib)}</span>`,
+        descricao: resumo,
+        data: `💬 ${qtd} não lida(s) • Clique para responder`
+      }, () => {
+        if (!CHAT.aberto) chatToggle();
+        chatAbrirContato(contato.usuario, contato.perfil, nomeExib);
+      });
+    }
+
+    function verificarNovasMensagensPopup(contatosNovos) {
+      contatosNovos.forEach(c => {
+        const key = normChatKey(c.usuario);
+        const qtdAtual = Number(c.naoLidas) || 0;
+        const qtdAnt = Number(CHAT.naoLidasAnteriores[key]) || 0;
+        const conversaAbertaComEle = CHAT.aberto && CHAT.contatoAtual && normChatKey(CHAT.contatoAtual.usuario) === key;
+
+        if (!conversaAbertaComEle && qtdAtual > 0 && (CHAT.primeiroCarregamento || qtdAtual > qtdAnt)) {
+          dispararPopupChatNaoLida(c, qtdAtual, c.ultimaMsgNaoLida || '');
+        }
+        CHAT.naoLidasAnteriores[key] = qtdAtual;
+      });
+      CHAT.primeiroCarregamento = false;
+    }
+
+    async function carregarContatosChat() {
+      if (!CHAT.usuario) return;
+
+      let contatosBase = [];
+      try {
+        const res = await enviarParaGAS('carregarContatosChat', { usuario: CHAT.usuario, perfil: CHAT.perfil });
+        if (res && res.ok && Array.isArray(res.contatos) && res.contatos.length) contatosBase = res.contatos;
+      } catch (e) {}
+
+      if (!contatosBase.length) {
+        contatosBase = db.usuarios
+          .filter(u => u.usuario !== CHAT.usuario && !(CHAT.perfil === 'aluno' && u.perfil === 'aluno'))
+          .map(u => ({ usuario: u.usuario, nome: u.nome, perfil: u.perfil, naoLidas: 0 }));
+      }
+
+      const mapUnread = {}, mapUltima = {};
+      try {
+        const linhas = await lerAbaChatDiretoPlanilha();
+        const meuU = normChatKey(CHAT.usuario), meuN = normChatKey(CHAT.nome);
+        linhas.forEach(r => {
+          const deU = normChatKey(getColuna(r, 'DeUsuario', 'col_2'));
+          const paraU = normChatKey(getColuna(r, 'ParaUsuario', 'col_5'));
+          const paraN = normChatKey(getColuna(r, 'ParaNome', 'col_7'));
+          const msg = texto(getColuna(r, 'Mensagem', 'col_8'));
+          const lida = isMsgChatLida(getColuna(r, 'Lida', 'col_9'));
+          if (((paraU && paraU === meuU) || (paraN && meuN && paraN === meuN)) && deU !== meuU && !lida) {
+            mapUnread[deU] = (mapUnread[deU] || 0) + 1;
+            mapUltima[deU] = msg;
+          }
+        });
+      } catch (e) {}
+
+      const finais = contatosBase.map(c => {
+        const k = normChatKey(c.usuario);
+        const naoLidas = Math.max(Number(c.naoLidas) || 0, mapUnread[k] || 0);
+        return { ...c, naoLidas, ultimaMsgNaoLida: mapUltima[k] || '' };
+      });
+
+      const total = finais.reduce((s, c) => s + c.naoLidas, 0);
+      verificarNovasMensagensPopup(finais);
+      CHAT.contatos = finais;
+      renderContatosChat();
+      atualizarBadgeChat(total);
+      renderNotificacoes();
+    }
+
+    function atualizarBadgeChat(n) {
+      const badge = document.getElementById('chatFloatBadge');
+      if (badge) {
+        if (n > 0) { badge.textContent = n > 99 ? '99+' : n; badge.classList.remove('hidden'); }
+        else badge.classList.add('hidden');
+      }
+    }
+
+    function renderContatosChat() {
+      const q = (document.getElementById('chatBuscaContato')?.value || '').toLowerCase();
+      const filtrados = CHAT.contatos
+        .filter(c => (c.nome || c.usuario).toLowerCase().includes(q) || (c.perfil || '').toLowerCase().includes(q))
+        .sort((a, b) => (b.naoLidas - a.naoLidas) || String(a.nome || a.usuario).localeCompare(String(b.nome || b.usuario), 'pt-BR'));
+
+      document.getElementById('chatContatosLista').innerHTML = filtrados.map(c => {
+        const qtd = Number(c.naoLidas) || 0;
+        const tem = qtd > 0;
+        const ativo = CHAT.contatoAtual?.usuario === c.usuario;
+        const inicial = (c.nome || c.usuario || '?')[0].toUpperCase();
+        return `
+          <div onclick="chatAbrirContato('${escapeHtml(c.usuario)}','${escapeHtml(c.perfil)}','${escapeHtml(c.nome||c.usuario)}')"
+               class="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-slate-200 transition ${ativo ? 'bg-indigo-100' : ''} ${tem ? 'chat-contato-nao-lida' : ''}">
+            <div class="w-8 h-8 rounded-full ${tem ? 'bg-rose-600' : 'bg-indigo-600'} text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+              ${tem ? '📩' : escapeHtml(inicial)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1 font-semibold text-xs ${tem ? 'text-rose-700 font-bold' : 'text-slate-800'}">
+                <span class="truncate">${escapeHtml(c.nome || c.usuario)}</span>
+                ${tem ? `<span class="pulse-unread text-xs" title="${qtd} nova(s)">🔔</span>` : ''}
+              </div>
+              <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                <span class="text-[10px] text-slate-500 uppercase">${escapeHtml(c.perfil)}</span>
+                ${tem ? `<span class="bg-rose-100 text-rose-700 font-bold px-1.5 py-0.2 rounded-full text-[10px]">📩 ${qtd} nova(s)</span>` : ''}
+              </div>
+            </div>
+            ${tem ? `<span class="bg-rose-600 text-white text-[10px] font-bold min-w-[20px] h-5 px-1.5 rounded-full flex items-center justify-center">${qtd > 99 ? '99+' : qtd}</span>` : ''}
+          </div>`;
+      }).join('') || '<p class="text-xs text-slate-400 p-2">Sem contatos.</p>';
+    }
+
+    function chatAbrirContato(usuario, perfil, nome) {
+      CHAT.contatoAtual = { usuario, perfil, nome };
+      const k = normChatKey(usuario);
+      CHAT.naoLidasAnteriores[k] = 0;
+      CHAT.contatos.forEach(c => { if (normChatKey(c.usuario) === k) c.naoLidas = 0; });
+
+      const totalRestante = CHAT.contatos.reduce((s, c) => s + (Number(c.naoLidas) || 0), 0);
+      atualizarBadgeChat(totalRestante);
+      renderNotificacoes();
+
+      document.getElementById('chatPanel')?.classList.add('mobile-in-chat');
+      document.getElementById('chatVazio').classList.add('hidden');
+      document.getElementById('chatConversa').classList.remove('hidden');
+      document.getElementById('chatComTitulo').textContent = nome;
+      document.getElementById('chatComSubtitulo').textContent = perfil;
+      document.getElementById('chatComAvatar').textContent = nome[0].toUpperCase();
+      renderContatosChat();
+      carregarMensagensChat(true);
+    }
+
+    async function carregarMensagensChat(marcarLidas) {
+      if (!CHAT.contatoAtual) return;
+      const res = await enviarParaGAS('carregarMensagensChat', {
+        usuario: CHAT.usuario, perfil: CHAT.perfil,
+        contatoUsuario: CHAT.contatoAtual.usuario, contatoPerfil: CHAT.contatoAtual.perfil,
+        marcarLidas: !!marcarLidas
+      });
+      if (res && res.ok && Array.isArray(res.mensagens)) {
+        CHAT.mensagens = res.mensagens;
+        const box = document.getElementById('chatMensagens');
+        box.innerHTML = CHAT.mensagens.map(m => {
+          const dt = new Date(m.timestamp);
+          const hora = !isNaN(dt.getTime()) ? dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+          return `<div class="max-w-[78%] flex flex-col ${m.minha ? 'self-end items-end' : 'self-start'}">
+            <div class="px-3 py-2 rounded-xl text-xs ${m.minha ? 'bg-indigo-600 text-white' : 'bg-white border text-slate-800'}">${escapeHtml(m.mensagem)}</div>
+            <span class="text-[10px] text-slate-400 mt-0.5">${hora}${m.minha && m.lida ? ' ✓✓' : ''}</span>
+          </div>`;
+        }).join('') || '<p class="text-center text-xs text-slate-400 my-auto">Diga olá! 👋</p>';
+        box.scrollTop = box.scrollHeight;
+        if (marcarLidas) carregarContatosChat();
+      }
+    }
+
+    async function enviarMensagemChatSubmit(e) {
+      e.preventDefault();
+      if (CHAT.enviando || !CHAT.contatoAtual) return;
+      const inp = document.getElementById('chatInputMsg'), txt = inp.value.trim();
+      if (!txt) return;
+      CHAT.enviando = true; inp.value = '';
+      await enviarParaGAS('enviarMensagemChat', {
+        deUsuario: CHAT.usuario, dePerfil: CHAT.perfil, deNome: CHAT.nome,
+        paraUsuario: CHAT.contatoAtual.usuario, paraPerfil: CHAT.contatoAtual.perfil, paraNome: CHAT.contatoAtual.nome,
+        mensagem: txt
+      });
+      CHAT.enviando = false;
+      carregarMensagensChat(false);
+    }
+
+    // ==================== [BLOCO 40] BOOT INICIAL ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+      const hoje = new Date().toISOString().slice(0, 10);
+      ['agendaData','dataPresenca','dataObservacao','registrarPagamentoData','despData'].forEach(id => { const el = document.getElementById(id); if (el) el.value = hoje; });
+      ['finMesReferencia','registrarPagamentoMes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = getAnoMesAtual(); });
+
+      const sess = lerSessao();
+      if (sess) {
+        currentUser = sess;
+        await carregarDadosPlanilha();
+        entrarNoApp();
+      } else {
+        carregarDadosPlanilha();
+      }
+    });
+  </script>
+</body>
+</html>
+  
